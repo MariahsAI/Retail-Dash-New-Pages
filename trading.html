@@ -852,8 +852,11 @@
      width resolving against a max-content parent is circular, which is
      what blew the panel out to 433px the first time. Stretch gets the
      full-width rows with no cycle. */
-  .navmenu[data-open="true"] .navmenu-panel { display:flex; flex-direction:column;
-                                              align-items:stretch; gap:2px; }
+  /* The panel is moved to <body> on boot (see navMenus), so it is no longer a
+     descendant of .navmenu — the open state has to key off its own class
+     rather than the parent's attribute. */
+  .navmenu-panel.open { display:flex; flex-direction:column;
+                        align-items:stretch; gap:2px; }
   @supports not (backdrop-filter: blur(2px)) { .navmenu-panel { background:var(--panel); } }
 
   .navmenu-item {
@@ -884,7 +887,10 @@
   const menus = [...document.querySelectorAll(".navmenu")];
   if (!menus.length) return;
 
-  const close = m => m.setAttribute("data-open", "false");
+  const close = m => {
+    m.setAttribute("data-open", "false");
+    m._panel?.classList.remove("open");
+  };
   const closeAll = except => menus.forEach(m => { if (m !== except) close(m); });
 
   menus.forEach(m => {
@@ -892,6 +898,14 @@
     const items = () => [...m.querySelectorAll(".navmenu-item:not(.soon)")];
 
     const panel = m.querySelector(".navmenu-panel");
+
+    /* Reparent to <body>. .topbar/.nav carry backdrop-filter on some pages, and
+       a backdrop-filter makes an element the containing block for fixed-position
+       descendants — so the panel stopped being viewport-fixed and got clipped by
+       .nav's overflow:auto. Clicks then landed on the page behind it. Pages
+       without backdrop-filter on the nav were unaffected, which is why this only
+       bit Overview and Portfolio. */
+    document.body.appendChild(panel);
 
     /* Place the fixed panel under its trigger, and keep it on screen if the
        trigger sits near the right edge. */
@@ -917,6 +931,7 @@
       const open = m.getAttribute("data-open") !== "true";
       closeAll(m);
       m.setAttribute("data-open", open);
+      panel.classList.toggle("open", open);
       trigger.setAttribute("aria-expanded", open);
       /* preventScroll: focusing inside the scrollable nav would otherwise
          scroll the whole row out from under the cursor. */
@@ -924,9 +939,12 @@
     });
 
     addEventListener("resize", () => { if (m.getAttribute("data-open") === "true") place(); });
-    m.querySelector(".navmenu-panel").addEventListener("click", e => e.stopPropagation());
+    panel.addEventListener("click", e => e.stopPropagation());
 
-    m.addEventListener("keydown", e => {
+    m._panel = panel;
+    /* Keydown has to be bound to the panel too: it is no longer inside .navmenu,
+       so events from the items cannot bubble to it. */
+    [m, panel].forEach(node => node.addEventListener("keydown", e => {
       const list = items();
       const i = list.indexOf(document.activeElement);
       if (e.key === "Escape") { close(m); trigger.setAttribute("aria-expanded","false"); trigger.focus(); }
@@ -934,7 +952,7 @@
         list[Math.min(i + 1, list.length - 1)]?.focus({ preventScroll: true }); }
       if (e.key === "ArrowUp")   { e.preventDefault();
         (i <= 0 ? trigger : list[i - 1]).focus({ preventScroll: true }); }
-    });
+    }));
 
     /* A placeholder item shouldn't jump the page to the top. */
     m.querySelectorAll(".navmenu-item.soon").forEach(a =>
