@@ -607,13 +607,180 @@
 
 <nav class="nav">
   <a href="index.html"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2.5" y="2.5" width="5.5" height="5.5" rx="1"/><rect x="10" y="2.5" width="5.5" height="5.5" rx="1"/><rect x="2.5" y="10" width="5.5" height="5.5" rx="1"/><rect x="10" y="10" width="5.5" height="5.5" rx="1"/></svg>Overview</a>
-  <a href="trading.html"><svg viewBox="0 0 18 18" aria-hidden="true"><polyline points="2 12.5 6.3 8.2 9.8 11 15.5 4.5"/><polyline points="11.6 4.5 15.5 4.5 15.5 8.4"/></svg>Trading</a>
+  <span class="navmenu" data-open="false">
+    <button class="nav-trigger" aria-haspopup="true" aria-expanded="false">
+      <svg class="ico" viewBox="0 0 18 18" aria-hidden="true"><polyline points="2 12.5 6.3 8.2 9.8 11 15.5 4.5"/><polyline points="11.6 4.5 15.5 4.5 15.5 8.4"/></svg>Trading
+      <svg class="caret" viewBox="0 0 12 12" aria-hidden="true"><polyline points="2.5 4.5 6 8 9.5 4.5"/></svg>
+    </button>
+    <span class="navmenu-panel" role="menu">
+      <a class="navmenu-item" role="menuitem" href="trading.html">
+        <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M3 15V7.5M7 15V3M11 15v-5M15 15V5.5"/></svg>
+        <span>Manual Trade<small>Chart, order book, Fusion controller</small></span>
+      </a>
+      <a class="navmenu-item" role="menuitem" href="auto-autonomous.html">
+        <svg viewBox="0 0 18 18" aria-hidden="true"><rect x="3" y="6.2" width="12" height="8" rx="2.6"/><circle cx="6.9" cy="10.2" r=".95" fill="currentColor" stroke="none"/><circle cx="11.1" cy="10.2" r=".95" fill="currentColor" stroke="none"/><path d="M9 6.2V3.8"/><circle cx="9" cy="2.9" r="1.1"/></svg>
+        <span>Auto Autonomous<small>Hands-off — Fusion runs the book</small></span>
+      </a>
+    </span>
   <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="6.6" cy="6" r="2.7"/><path d="M2 15.2c0-2.6 2.1-4.2 4.6-4.2s4.6 1.6 4.6 4.2"/><path d="M12.1 3.7a2.7 2.7 0 0 1 0 5.2"/><path d="M13.2 11.2c1.9.5 2.9 1.9 2.9 4"/></svg>Community</a>
   <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="3" y="6.2" width="12" height="8" rx="2.6"/><circle cx="6.9" cy="10.2" r=".95" fill="currentColor" stroke="none"/><circle cx="11.1" cy="10.2" r=".95" fill="currentColor" stroke="none"/><path d="M9 6.2V3.8"/><circle cx="9" cy="2.9" r="1.1"/></svg>AI Assistant</a>
   <a href="chat.html"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M15.2 10.4A2.6 2.6 0 0 1 12.6 13H6.2l-3.4 2.7V4.9A2.6 2.6 0 0 1 5.4 2.3h7.2a2.6 2.6 0 0 1 2.6 2.6z"/></svg>Chat</a>
   <a href="portfolio.html" class="on"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2" y="5.4" width="14" height="9.8" rx="2.2"/><path d="M6.4 5.4V4a1.6 1.6 0 0 1 1.6-1.6h2A1.6 1.6 0 0 1 11.6 4v1.4"/><path d="M2 9.6h14"/></svg>Portfolio</a>
   <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="2.5"/><path d="M9 1.7v1.7M9 14.6v1.7M2.7 9H1M17 9h-1.7M4.6 4.6 3.4 3.4M14.6 14.6l-1.2-1.2M4.6 13.4l-1.2 1.2M14.6 3.4l-1.2 1.2"/></svg>Settings</a>
 </nav>
+
+<style>
+  /* ---- nav dropdown ------------------------------------------------------
+     Trading is two products now — the manual desk and the autonomous engine.
+     A submenu keeps them under one nav item instead of widening a nav that
+     already scrolls at laptop widths. Class names are namespaced because
+     trading.html already owns .menu / .menu-item for the indicator picker.
+   */
+  .navmenu { position:relative; display:inline-flex; }
+  .navmenu > .nav-trigger {
+    display:inline-flex; align-items:center; gap:8px; background:none; font:inherit;
+    color:var(--muted); font-size:13.5px; padding:8px 13px; border-radius:9px;
+    border:1px solid transparent; white-space:nowrap; cursor:pointer;
+    transition:background .25s, box-shadow .35s, color .25s;
+  }
+  .navmenu > .nav-trigger svg.ico { width:16px; height:16px; fill:none; stroke:currentColor;
+    stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; opacity:.8; flex:0 0 auto; }
+  .navmenu > .nav-trigger svg.caret { width:9px; height:9px; fill:none; stroke:currentColor;
+    stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; flex:0 0 auto;
+    transition:transform .2s ease; opacity:.7; }
+  .navmenu > .nav-trigger:hover { color:var(--text); background:rgba(255,255,255,.05); }
+  .navmenu > .nav-trigger:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
+  /* Lit when this section is the page you're on, matching .nav a.on exactly. */
+  .navmenu > .nav-trigger.on { color:#fff; background:rgba(59,130,246,.16);
+    border-color:rgba(59,130,246,.45); box-shadow:0 0 22px -9px rgba(59,130,246,.9); }
+  .navmenu > .nav-trigger.on svg.ico { color:var(--brand-2); opacity:1; }
+  .navmenu[data-open="true"] > .nav-trigger svg.caret { transform:rotate(180deg); }
+
+  /* Fixed, not absolute: .nav is overflow-x:auto, which makes it a scroll
+     container and clips any absolutely-positioned child. Fixed escapes it;
+     the position is written from the trigger's rect on open. */
+  /* An explicit width, because width:100% on the items resolved against an
+     indefinite width and blew the shrink-to-fit panel out to fill the
+     viewport — 433px of item holding 165px of text. */
+  .navmenu-panel {
+    /* Width is measured and written by place() below. Doing it in JS makes it
+       font-agnostic and immune to the circular case where an item's
+       width:100% resolves against an indefinite max-content parent. */
+    position:fixed; z-index:80; min-width:200px;
+    background:rgba(11,20,36,.97); backdrop-filter:blur(18px) saturate(1.4);
+    -webkit-backdrop-filter:blur(18px) saturate(1.4);
+    border:1px solid rgba(96,165,250,.42); border-radius:12px; padding:6px;
+    box-shadow:0 0 0 1px rgba(2,6,14,.9), 0 26px 52px -26px rgba(0,0,0,.95);
+    display:none;
+  }
+  /* Flex column with stretch, not width:100% on the items — a percentage
+     width resolving against a max-content parent is circular, which is
+     what blew the panel out to 433px the first time. Stretch gets the
+     full-width rows with no cycle. */
+  .navmenu[data-open="true"] .navmenu-panel { display:flex; flex-direction:column;
+                                              align-items:stretch; gap:2px; }
+  @supports not (backdrop-filter: blur(2px)) { .navmenu-panel { background:var(--panel); } }
+
+  .navmenu-item {
+    display:flex; align-items:flex-start; gap:10px; text-align:left; width:100%;
+    background:none; border:0; color:var(--muted); font:inherit; font-size:13px;
+    padding:9px 11px; border-radius:8px; cursor:pointer; text-decoration:none;
+    transition:background .18s, color .18s;
+  }
+  .navmenu-item > span { min-width:0; line-height:1.35; }
+  .navmenu-item:hover { background:rgba(96,165,250,.10); color:var(--text); }
+  .navmenu-item:focus-visible { outline:2px solid var(--brand); outline-offset:-2px; }
+  .navmenu-item svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.6;
+    stroke-linecap:round; stroke-linejoin:round; flex:0 0 auto; opacity:.8; }
+  .navmenu-item small { display:block; font-size:10.5px; color:var(--dim); margin-top:3px;
+                        line-height:1.4; }
+  .navmenu-item svg { margin-top:1px; }
+  .navmenu-item[aria-current="page"] { color:#fff; background:rgba(59,130,246,.15); }
+  .navmenu-item[aria-current="page"] svg { color:var(--brand-2); opacity:1; }
+  /* Not built yet: dimmed, not clickable, and says so rather than 404ing. */
+  .navmenu-item.soon { opacity:.5; cursor:not-allowed; }
+  .navmenu-item.soon:hover { background:none; color:var(--muted); }
+</style>
+
+<script>
+/* One dropdown, wired generically so adding a second section later is markup
+   only. Click-outside and Escape both close; arrow keys walk the items. */
+(function navMenus() {
+  const menus = [...document.querySelectorAll(".navmenu")];
+  if (!menus.length) return;
+
+  const close = m => m.setAttribute("data-open", "false");
+  const closeAll = except => menus.forEach(m => { if (m !== except) close(m); });
+
+  menus.forEach(m => {
+    const trigger = m.querySelector(".nav-trigger");
+    const items = () => [...m.querySelectorAll(".navmenu-item:not(.soon)")];
+
+    const panel = m.querySelector(".navmenu-panel");
+
+    /* Place the fixed panel under its trigger, and keep it on screen if the
+       trigger sits near the right edge. */
+    /* Two passes: let the panel size to its content, read that, then pin it as
+       a definite px width. The items' width:100% then resolves against a real
+       number and every row fills the panel — no trailing gap at any font. */
+    const sizeToContent = () => {
+      panel.style.width = "max-content";
+      const w = Math.min(Math.ceil(panel.getBoundingClientRect().width), 360);
+      panel.style.width = w + "px";
+      return w;
+    };
+
+    const place = () => {
+      const w = sizeToContent();
+      const r = trigger.getBoundingClientRect();
+      panel.style.top = (r.bottom + 6) + "px";
+      panel.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + "px";
+    };
+
+    trigger.addEventListener("click", e => {
+      e.stopPropagation();
+      const open = m.getAttribute("data-open") !== "true";
+      closeAll(m);
+      m.setAttribute("data-open", open);
+      trigger.setAttribute("aria-expanded", open);
+      /* preventScroll: focusing inside the scrollable nav would otherwise
+         scroll the whole row out from under the cursor. */
+      if (open) { place(); items()[0]?.focus({ preventScroll: true }); }
+    });
+
+    addEventListener("resize", () => { if (m.getAttribute("data-open") === "true") place(); });
+    m.querySelector(".navmenu-panel").addEventListener("click", e => e.stopPropagation());
+
+    m.addEventListener("keydown", e => {
+      const list = items();
+      const i = list.indexOf(document.activeElement);
+      if (e.key === "Escape") { close(m); trigger.setAttribute("aria-expanded","false"); trigger.focus(); }
+      if (e.key === "ArrowDown") { e.preventDefault();
+        list[Math.min(i + 1, list.length - 1)]?.focus({ preventScroll: true }); }
+      if (e.key === "ArrowUp")   { e.preventDefault();
+        (i <= 0 ? trigger : list[i - 1]).focus({ preventScroll: true }); }
+    });
+
+    /* A placeholder item shouldn't jump the page to the top. */
+    m.querySelectorAll(".navmenu-item.soon").forEach(a =>
+      a.addEventListener("click", e => e.preventDefault()));
+
+    /* The item for the page you are already on is a no-op: navigating to your
+       own URL is a full reload, which reseeds the chart, empties the tape and
+       resets the dock. Close the menu and stay put. */
+    m.querySelectorAll('.navmenu-item[aria-current="page"]').forEach(a =>
+      a.addEventListener("click", e => {
+        e.preventDefault();
+        close(m);
+        trigger.setAttribute("aria-expanded", "false");
+        trigger.focus({ preventScroll: true });
+      }));
+  });
+
+  document.addEventListener("click", () => closeAll(null));
+})();
+</script>
+
 
 <div class="page">
   <div class="page-head">
