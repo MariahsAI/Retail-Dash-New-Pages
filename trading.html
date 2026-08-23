@@ -11,6 +11,15 @@
     --edge: rgba(59,130,246,.22); --head: #122140; --chart: #60a5fa; --warn: #fbbf24;
     --accent: var(--brand); --accent-soft: rgba(59,130,246,.16); --accent-edge: rgba(59,130,246,.34);
     --pos: #34d399; --neg: #fb7185;
+    --hero: #0d1730;   /* hero surfaces — navy, so they read blue */
+
+    /* Defined here as well as in mx1.css: .pos-card uses var(--well) inside a
+       box-shadow, and if the shared sheet 404s the whole declaration is thrown
+       out — the cards silently lose their recessed treatment AND their
+       long/short edge. A local fallback keeps the page standalone. */
+    --well: inset 0 1px 0 rgba(0,0,0,.6),
+            inset 0 0 22px -14px rgba(96,165,250,.55),
+            0 1px 0 rgba(255,255,255,.035);
   }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
@@ -61,8 +70,6 @@
   .avatar { width:26px; height:26px; border-radius:50%; display:grid; place-items:center;
             background:linear-gradient(140deg,var(--brand),var(--brand-2));
             font-size:10px; font-weight:700; color:#04121c; }
-
-
 
   /* One height across the three columns — otherwise the chart header (big
      price, two lines) sits taller than the book and rail and the tops stagger. */
@@ -219,8 +226,10 @@
     --panel: #0a0f19; --panel-2: #080d15;
     --hair: rgba(255,255,255,.055); --edge: rgba(96,165,250,.26); --head: #122140;
     --text: #ffffff; --muted: #6f8098; --dim: #47566c;
+    /* Restated because body.sharp out-specifies :root — a token defined only
+       there silently does nothing on a page that boots into sharp. */
+    --hero: #0d1730;
   }
-
 
   body.sharp .work { gap:1px; }
   body.sharp .card-head { padding:15px 15px; }
@@ -281,11 +290,6 @@
                 height:100vh; padding:14px 18px; }
   .chart.full svg { height:calc(100vh - 28px); }
 
-  /* ---- three-column desk -------------------------------------------------
-     A 1fr chart on a 1680px page gets ~1000px of candles, which is more width
-     than the series has information. Giving that space to the book and the
-     rail packs more of the decision onto one screen. */
-
   /* ---- 24h stats strip ---- */
   .stats { display:flex; gap:0; flex-wrap:wrap; border-bottom:1px solid var(--hair); }
   .stats div { padding:8px 16px; border-left:1px solid var(--hair); min-width:0; }
@@ -312,7 +316,6 @@
             background:rgba(255,255,255,.02); }
   .spread b { font-family:Georgia,serif; font-size:17px; }
   .spread small { color:var(--dim); font-size:11px; }
-
 
   /* ---- fusion read on this pair ---- */
   .verdict-row { display:flex; align-items:center; justify-content:space-between; gap:12px;
@@ -352,12 +355,7 @@
   .modal-close:hover { color:var(--text); border-color:var(--edge); }
   @supports not (backdrop-filter: blur(2px)) { .modal { background:var(--panel); } }
 
-  /* ---- deck alignment ----------------------------------------------------
-     Matching header heights isn't enough: the second row only lines up if the
-     first row's CARDS are the same height. One shared height, and each card's
-     body flexes to fill whatever the chrome above it didn't use. */
-  /* Book columns flex inside their region — the card-era deck heights are
-     gone with the cards themselves. */
+  /* Book columns flex inside their region. */
   .book { display:flex; flex-direction:column; min-height:0; }
   .book #asks, .book #bids { flex:1 1 auto; min-height:0; overflow:hidden; }
 
@@ -438,14 +436,8 @@
   html, body { height:100%; }
   body { overflow:hidden; }
 
-  /* The chrome is a grid row, not a magic offset. Guessing its height with
-     calc(100vh - 96px) is what pushed the dock over the work area. */
-  /* The work row gets a floor. Squeezing it to whatever is left over is what
-     buried the Fusion rail behind a scrollbar on a laptop. If the viewport
-     genuinely can't fit the floor plus the dock, the page scrolls — better
-     than silently crushing the controls. */
   /* The window never scrolls. Each pane scrolls under the cursor, which is why
-     the work row can go back to taking whatever is left. */
+     the work row can take whatever is left. */
   .app { display:grid; height:100vh; overflow:hidden;
          grid-template-rows:auto auto auto minmax(0,1fr) auto; }
   /* The dock is a sized grid TRACK, not a sized element — an element height
@@ -486,15 +478,12 @@
   .ticker button[aria-pressed="true"] { background:rgba(59,130,246,.14); color:#fff; }
   .ticker .sym { font-weight:600; }
 
-  /* work area fills the middle row */
   /* Chart, market, dock and rail live in ONE grid. The rail spans both rows,
      the way an exchange's order panel runs the full height beside the position
      dock — that is what stops it being squeezed into whatever is left over. */
   .work { display:grid; gap:1px; background:rgba(96,165,250,.34); min-height:0; overflow:hidden;
           grid-template-columns:minmax(0,1fr);
           grid-template-rows:minmax(0,1fr) var(--dock-h,344px); }
-  /* Same three-column shape from 1200 up — the side columns narrow rather than
-     one of them being dropped, because every one of them is load-bearing. */
   /* 1200 was too high — a 1190px viewport fell through to the stacked layout
      and pushed the whole Fusion column off screen. */
   @media (min-width:1040px) {
@@ -556,7 +545,6 @@
   .dock-body table { min-width:940px; }
   .dock-empty { padding:40px; text-align:center; color:var(--dim); font-size:13px; }
 
-
   /* ---- rounding -----------------------------------------------------------
    * The shell stays square: a terminal is panes meeting at seams, and rounded
    * corners there would leave gaps the seam colour shows through. Controls
@@ -594,13 +582,7 @@
   .bars.s2 i:nth-child(-n+2) { background:var(--warn); }
   .bars.s1 i:nth-child(1) { background:var(--neg); }
 
-  /* ---- fusion rail: fits without scrolling -------------------------------
-     Every control on this panel is part of one decision, so hiding half of it
-     behind a scrollbar breaks the decision in two. Pair the short fields and
-     tighten the spacing until the whole thing fits the row. */
-  .rail { display:flex; flex-direction:column; min-height:0; }
-
-
+  /* ---- fusion rail ------------------------------------------------------- */
   .rail .inp, .rail .sel { padding:8px 10px; font-size:13px; }
   .rail .quick { margin-top:0; gap:5px; }
   .rail .quick button { padding:6px 0; font-size:11px; }
@@ -610,13 +592,10 @@
   .rail .run { padding:12px; font-size:13.5px; }
   .rail .run-note { font-size:10.5px; margin-top:7px; }
 
-  /* The run action stays put at the bottom of the rail. */
-  /* Pinned: the action stays put while the parameters scroll above it. */
-
   /* ---- compact chrome ----------------------------------------------------
      Four stacked bars (topbar, nav, instrument, ticker) were eating 202px of a
-     718px viewport before a single candle drew. Merging the nav into the top
-     bar and the watchlist into the instrument row halves that. */
+     718px viewport before a single candle drew. Merging the watchlist into the
+     instrument row halves that. */
   .topbar { padding:7px 14px; gap:10px; row-gap:6px; }
 
   .inst-lead { padding:7px 14px; }
@@ -649,6 +628,7 @@
   .pane-scroll::-webkit-scrollbar-thumb:hover { background:rgba(96,165,250,.8); }
   .pane-scroll::-webkit-scrollbar-track { background:rgba(255,255,255,.03); }
   .pane-scroll { scrollbar-width:thin; scrollbar-color:rgba(96,165,250,.5) rgba(255,255,255,.03); }
+
   /* ---- drag-resize the dock ---- */
   .dock-grip { height:5px; cursor:row-resize; background:transparent; flex:0 0 auto;
                margin-top:-3px; position:relative; z-index:6; }
@@ -656,15 +636,15 @@
 
   /* ---- position cards ----------------------------------------------------
      A ten-column table forces every value into the same narrow column and
-     needs horizontal scroll. Bitunix uses a card per position: identity on one
-     line, the numbers in a labelled grid, actions underneath. Reads better and
-     fits the dock without scrolling sideways. */
-  /* The card is a recessed well: near-black fill on a lifted dock surface.
+     needs horizontal scroll. A card per position reads better and fits the
+     dock without scrolling sideways.
+     The card is a recessed well: near-black fill on a lifted dock surface.
      A card lighter than its background reads as a raised chip, which fights
      the dense-terminal look — recessed is sharper and lets the numbers sit
      on true black. */
   .pos-list { padding:10px 12px; display:flex; flex-direction:column; gap:9px; }
-  .pos-card { border-radius:11px; padding:11px 13px; }
+  .pos-card { border-radius:11px; padding:11px 13px;
+              background:var(--panel); border:1px solid rgba(96,165,250,.26); }
   .pos-card.long  { border-left:3px solid var(--pos);
                     box-shadow: inset 12px 0 22px -18px var(--pos), var(--well); }
   .pos-card.short { border-left:3px solid var(--neg);
@@ -678,8 +658,8 @@
   .pc-badge.short { background:rgba(251,113,133,.16); color:var(--neg); border-color:transparent; }
   .pc-actions { margin-left:auto; display:flex; gap:6px; flex-wrap:wrap; }
 
-  /* Four across, two down — the same shape as the exchange, so the second row
-     (entry, liq, margin rate, realized) is always on screen. */
+  /* Five across, two down — so the second row (entry, liq, margin rate,
+     realized) is always on screen. */
   .pc-grid { display:grid; gap:10px 22px; grid-template-columns:repeat(5, minmax(0,1fr)); }
   @media (max-width:1280px) { .pc-grid { grid-template-columns:repeat(3, minmax(0,1fr)); } }
   .pc-grid .k { font-size:9.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--dim);
@@ -738,9 +718,9 @@
 
   /* ---- book pressure ------------------------------------------------------
      Cumulative bid vs ask depth across the visible book. It answers "which
-     side is stacked" faster than reading twenty rows of sizes. */
-  /* One thick bar with the readings inside it — a 5px sliver plus a separate
-     label row was two things saying one thing. */
+     side is stacked" faster than reading twenty rows of sizes. One thick bar
+     with the readings inside it — a 5px sliver plus a separate label row was
+     two things saying one thing. */
   .ratio { flex:0 0 auto; padding:8px 10px 10px; border-top:1px solid var(--hair);
            background:rgba(255,255,255,.015); }
   .ratio-bar { display:flex; height:24px; border-radius:6px; overflow:hidden;
@@ -799,18 +779,183 @@
   <span style="color:var(--muted);font-size:13px">MX1 Trade</span>
 </div>
 
-
-
-
 <nav class="nav">
   <a href="index.html"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2.5" y="2.5" width="5.5" height="5.5" rx="1"/><rect x="10" y="2.5" width="5.5" height="5.5" rx="1"/><rect x="2.5" y="10" width="5.5" height="5.5" rx="1"/><rect x="10" y="10" width="5.5" height="5.5" rx="1"/></svg>Overview</a>
-  <a href="trading.html" class="on"><svg viewBox="0 0 18 18" aria-hidden="true"><polyline points="2 12.5 6.3 8.2 9.8 11 15.5 4.5"/><polyline points="11.6 4.5 15.5 4.5 15.5 8.4"/></svg>Trading</a>
+  <span class="navmenu" data-open="false">
+    <button class="nav-trigger on" aria-haspopup="true" aria-expanded="false">
+      <svg class="ico" viewBox="0 0 18 18" aria-hidden="true"><polyline points="2 12.5 6.3 8.2 9.8 11 15.5 4.5"/><polyline points="11.6 4.5 15.5 4.5 15.5 8.4"/></svg>Trading
+      <svg class="caret" viewBox="0 0 12 12" aria-hidden="true"><polyline points="2.5 4.5 6 8 9.5 4.5"/></svg>
+    </button>
+    <span class="navmenu-panel" role="menu">
+      <a class="navmenu-item" role="menuitem" href="trading.html" aria-current="page">
+        <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M3 15V7.5M7 15V3M11 15v-5M15 15V5.5"/></svg>
+        <span>Manual Trade<small>Chart, order book, Fusion controller</small></span>
+      </a>
+      <a class="navmenu-item" role="menuitem" href="auto-autonomous.html">
+        <svg viewBox="0 0 18 18" aria-hidden="true"><rect x="3" y="6.2" width="12" height="8" rx="2.6"/><circle cx="6.9" cy="10.2" r=".95" fill="currentColor" stroke="none"/><circle cx="11.1" cy="10.2" r=".95" fill="currentColor" stroke="none"/><path d="M9 6.2V3.8"/><circle cx="9" cy="2.9" r="1.1"/></svg>
+        <span>Auto Autonomous<small>Hands-off — Fusion runs the book</small></span>
+      </a>
+    </span>
+  </span>
   <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="6.6" cy="6" r="2.7"/><path d="M2 15.2c0-2.6 2.1-4.2 4.6-4.2s4.6 1.6 4.6 4.2"/><path d="M12.1 3.7a2.7 2.7 0 0 1 0 5.2"/><path d="M13.2 11.2c1.9.5 2.9 1.9 2.9 4"/></svg>Community</a>
   <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="3" y="6.2" width="12" height="8" rx="2.6"/><circle cx="6.9" cy="10.2" r=".95" fill="currentColor" stroke="none"/><circle cx="11.1" cy="10.2" r=".95" fill="currentColor" stroke="none"/><path d="M9 6.2V3.8"/><circle cx="9" cy="2.9" r="1.1"/></svg>AI Assistant</a>
-  <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M15.2 10.4A2.6 2.6 0 0 1 12.6 13H6.2l-3.4 2.7V4.9A2.6 2.6 0 0 1 5.4 2.3h7.2a2.6 2.6 0 0 1 2.6 2.6z"/></svg>Chat</a>
+  <a href="chat.html"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M15.2 10.4A2.6 2.6 0 0 1 12.6 13H6.2l-3.4 2.7V4.9A2.6 2.6 0 0 1 5.4 2.3h7.2a2.6 2.6 0 0 1 2.6 2.6z"/></svg>Chat</a>
   <a href="portfolio.html"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2" y="5.4" width="14" height="9.8" rx="2.2"/><path d="M6.4 5.4V4a1.6 1.6 0 0 1 1.6-1.6h2A1.6 1.6 0 0 1 11.6 4v1.4"/><path d="M2 9.6h14"/></svg>Portfolio</a>
   <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="2.5"/><path d="M9 1.7v1.7M9 14.6v1.7M2.7 9H1M17 9h-1.7M4.6 4.6 3.4 3.4M14.6 14.6l-1.2-1.2M4.6 13.4l-1.2 1.2M14.6 3.4l-1.2 1.2"/></svg>Settings</a>
 </nav>
+
+<style>
+  /* ---- nav dropdown ------------------------------------------------------
+     Trading is two products now — the manual desk and the autonomous engine.
+     A submenu keeps them under one nav item instead of widening a nav that
+     already scrolls at laptop widths. Class names are namespaced because
+     trading.html already owns .menu / .menu-item for the indicator picker.
+   */
+  .navmenu { position:relative; display:inline-flex; }
+  .navmenu > .nav-trigger {
+    display:inline-flex; align-items:center; gap:8px; background:none; font:inherit;
+    color:var(--muted); font-size:13.5px; padding:8px 13px; border-radius:9px;
+    border:1px solid transparent; white-space:nowrap; cursor:pointer;
+    transition:background .25s, box-shadow .35s, color .25s;
+  }
+  .navmenu > .nav-trigger svg.ico { width:16px; height:16px; fill:none; stroke:currentColor;
+    stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; opacity:.8; flex:0 0 auto; }
+  .navmenu > .nav-trigger svg.caret { width:9px; height:9px; fill:none; stroke:currentColor;
+    stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; flex:0 0 auto;
+    transition:transform .2s ease; opacity:.7; }
+  .navmenu > .nav-trigger:hover { color:var(--text); background:rgba(255,255,255,.05); }
+  .navmenu > .nav-trigger:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
+  /* Lit when this section is the page you're on, matching .nav a.on exactly. */
+  .navmenu > .nav-trigger.on { color:#fff; background:rgba(59,130,246,.16);
+    border-color:rgba(59,130,246,.45); box-shadow:0 0 22px -9px rgba(59,130,246,.9); }
+  .navmenu > .nav-trigger.on svg.ico { color:var(--brand-2); opacity:1; }
+  .navmenu[data-open="true"] > .nav-trigger svg.caret { transform:rotate(180deg); }
+
+  /* Fixed, not absolute: .nav is overflow-x:auto, which makes it a scroll
+     container and clips any absolutely-positioned child. Fixed escapes it;
+     the position is written from the trigger's rect on open. */
+  /* An explicit width, because width:100% on the items resolved against an
+     indefinite width and blew the shrink-to-fit panel out to fill the
+     viewport — 433px of item holding 165px of text. */
+  .navmenu-panel {
+    /* Width is measured and written by place() below. Doing it in JS makes it
+       font-agnostic and immune to the circular case where an item's
+       width:100% resolves against an indefinite max-content parent. */
+    position:fixed; z-index:80; min-width:200px;
+    background:rgba(11,20,36,.97); backdrop-filter:blur(18px) saturate(1.4);
+    -webkit-backdrop-filter:blur(18px) saturate(1.4);
+    border:1px solid rgba(96,165,250,.42); border-radius:12px; padding:6px;
+    box-shadow:0 0 0 1px rgba(2,6,14,.9), 0 26px 52px -26px rgba(0,0,0,.95);
+    display:none;
+  }
+  /* Flex column with stretch, not width:100% on the items — a percentage
+     width resolving against a max-content parent is circular, which is
+     what blew the panel out to 433px the first time. Stretch gets the
+     full-width rows with no cycle. */
+  .navmenu[data-open="true"] .navmenu-panel { display:flex; flex-direction:column;
+                                              align-items:stretch; gap:2px; }
+  @supports not (backdrop-filter: blur(2px)) { .navmenu-panel { background:var(--panel); } }
+
+  .navmenu-item {
+    display:flex; align-items:flex-start; gap:10px; text-align:left; width:100%;
+    background:none; border:0; color:var(--muted); font:inherit; font-size:13px;
+    padding:9px 11px; border-radius:8px; cursor:pointer; text-decoration:none;
+    transition:background .18s, color .18s;
+  }
+  .navmenu-item > span { min-width:0; line-height:1.35; }
+  .navmenu-item:hover { background:rgba(96,165,250,.10); color:var(--text); }
+  .navmenu-item:focus-visible { outline:2px solid var(--brand); outline-offset:-2px; }
+  .navmenu-item svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.6;
+    stroke-linecap:round; stroke-linejoin:round; flex:0 0 auto; opacity:.8; }
+  .navmenu-item small { display:block; font-size:10.5px; color:var(--dim); margin-top:3px;
+                        line-height:1.4; }
+  .navmenu-item svg { margin-top:1px; }
+  .navmenu-item[aria-current="page"] { color:#fff; background:rgba(59,130,246,.15); }
+  .navmenu-item[aria-current="page"] svg { color:var(--brand-2); opacity:1; }
+  /* Not built yet: dimmed, not clickable, and says so rather than 404ing. */
+  .navmenu-item.soon { opacity:.5; cursor:not-allowed; }
+  .navmenu-item.soon:hover { background:none; color:var(--muted); }
+</style>
+
+<script>
+/* One dropdown, wired generically so adding a second section later is markup
+   only. Click-outside and Escape both close; arrow keys walk the items. */
+(function navMenus() {
+  const menus = [...document.querySelectorAll(".navmenu")];
+  if (!menus.length) return;
+
+  const close = m => m.setAttribute("data-open", "false");
+  const closeAll = except => menus.forEach(m => { if (m !== except) close(m); });
+
+  menus.forEach(m => {
+    const trigger = m.querySelector(".nav-trigger");
+    const items = () => [...m.querySelectorAll(".navmenu-item:not(.soon)")];
+
+    const panel = m.querySelector(".navmenu-panel");
+
+    /* Place the fixed panel under its trigger, and keep it on screen if the
+       trigger sits near the right edge. */
+    /* Two passes: let the panel size to its content, read that, then pin it as
+       a definite px width. The items' width:100% then resolves against a real
+       number and every row fills the panel — no trailing gap at any font. */
+    const sizeToContent = () => {
+      panel.style.width = "max-content";
+      const w = Math.min(Math.ceil(panel.getBoundingClientRect().width), 360);
+      panel.style.width = w + "px";
+      return w;
+    };
+
+    const place = () => {
+      const w = sizeToContent();
+      const r = trigger.getBoundingClientRect();
+      panel.style.top = (r.bottom + 6) + "px";
+      panel.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + "px";
+    };
+
+    trigger.addEventListener("click", e => {
+      e.stopPropagation();
+      const open = m.getAttribute("data-open") !== "true";
+      closeAll(m);
+      m.setAttribute("data-open", open);
+      trigger.setAttribute("aria-expanded", open);
+      /* preventScroll: focusing inside the scrollable nav would otherwise
+         scroll the whole row out from under the cursor. */
+      if (open) { place(); items()[0]?.focus({ preventScroll: true }); }
+    });
+
+    addEventListener("resize", () => { if (m.getAttribute("data-open") === "true") place(); });
+    m.querySelector(".navmenu-panel").addEventListener("click", e => e.stopPropagation());
+
+    m.addEventListener("keydown", e => {
+      const list = items();
+      const i = list.indexOf(document.activeElement);
+      if (e.key === "Escape") { close(m); trigger.setAttribute("aria-expanded","false"); trigger.focus(); }
+      if (e.key === "ArrowDown") { e.preventDefault();
+        list[Math.min(i + 1, list.length - 1)]?.focus({ preventScroll: true }); }
+      if (e.key === "ArrowUp")   { e.preventDefault();
+        (i <= 0 ? trigger : list[i - 1]).focus({ preventScroll: true }); }
+    });
+
+    /* A placeholder item shouldn't jump the page to the top. */
+    m.querySelectorAll(".navmenu-item.soon").forEach(a =>
+      a.addEventListener("click", e => e.preventDefault()));
+
+    /* The item for the page you are already on is a no-op: navigating to your
+       own URL is a full reload, which reseeds the chart, empties the tape and
+       resets the dock. Close the menu and stay put. */
+    m.querySelectorAll('.navmenu-item[aria-current="page"]').forEach(a =>
+      a.addEventListener("click", e => {
+        e.preventDefault();
+        close(m);
+        trigger.setAttribute("aria-expanded", "false");
+        trigger.focus({ preventScroll: true });
+      }));
+  });
+
+  document.addEventListener("click", () => closeAll(null));
+})();
+</script>
+
 
   <!-- ---------------------------------------------------- instrument bar -->
   <div class="inst-bar">
@@ -838,8 +983,6 @@
     <div class="inst-stat" style="border-left:1px solid var(--hair)">
       <span class="chip">OKX Account</span></div>
   </div>
-
-
 
   <!-- ------------------------------------------------------- work area -->
   <div class="work">
@@ -1242,7 +1385,6 @@ function tickPrice() {
   if (rnd() > 0.35) pushTape();
 }
 
-
 /* ---- indicators -------------------------------------------------------------
  * Computed from closes on every draw. At 120 candles that's trivial; if the
  * series grows, cache these against the candle array instead.
@@ -1312,7 +1454,7 @@ function drawChart() {
 
   const padR = 78, padB = 24, padT = 10;
   const volH = 54;
-  const plotW = W - padR, plotH = H - padB - padT - volH;
+  const plotW = W - padR;
 
   const volH2 = S.ind.vol ? volH : 0;
   const plotH2 = H - padB - padT - volH2;
@@ -1494,7 +1636,6 @@ if (window.ResizeObserver) {
   });
 })();
 
-
 /* ---- market depth ----------------------------------------------------------
  * Synthesised around the live mark for the demo. On the real feed these come
  * from the books channel; the render is the same either way.
@@ -1577,8 +1718,6 @@ function pushTape() {
       <span class="p">${px(t.p)}</span><span>${t.size.toFixed(3)}</span>
     </div>`).join("");
 }
-
-
 
 /* ---- status bar ------------------------------------------------------------
  * Feed health is derived from how long it has been since a tick, not from a
@@ -1931,12 +2070,11 @@ function bindPosTable(tbodyId, full) {
   const body = $(tbodyId);
 
   body.addEventListener("click", e => {
-    /* Buttons act; anything else on the row toggles the detail. */
+    /* Buttons act; anything else on the row is inert — the cards already show
+       everything, so there is nothing left to expand. */
     const btn = e.target.closest("[data-close],[data-flash],[data-reverse],[data-add],[data-savetpsl]");
     if (btn) { handleAction(btn); return; }
     if (e.target.closest("input")) return;
-
-    /* Cards show everything, so there is nothing left to expand. */
   });
 }
 
@@ -2003,7 +2141,6 @@ $("scrim").addEventListener("click", closePositions);
 addEventListener("keydown", e => {
   if (e.key === "Escape" && $("posModal").classList.contains("open")) closePositions();
 });
-
 
 $("closeAll").addEventListener("click", () => {
   S.positions.forEach(p => S.equity += uplOf(p));
@@ -2118,7 +2255,6 @@ $("runFusion").addEventListener("click", () => {
   }, 1400);
 });
 
-
 /* ---- toolbar --------------------------------------------------------------- */
 $("ctype").addEventListener("click", e => {
   const b = e.target.closest("button[data-type]");
@@ -2224,7 +2360,7 @@ seedCandles();
 drawChart(); renderHeader(); renderPositions(); updateRunNote();
 renderBook(); render24h(); renderFusionRead(); renderTicker(); renderStatus();
 for (let i = 0; i < 18; i++) pushTape();
-/* Seed a few positions so the table, the chart overlays and the modal have
+/* Seed a few positions so the cards, the chart overlays and the modal have
    something to show on first load. */
 [ ["BTC/USDT","long", 10,"med", 0.0016, 76210,  0.021, 0.011],
   ["ETH/USDT","short", 5,"low",  0.62,   3138,   0.018, 0.010],
