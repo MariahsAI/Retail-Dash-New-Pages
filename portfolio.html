@@ -109,12 +109,12 @@
   .tab:hover { color: var(--text); }
   .tab[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
   .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  .tab-link { text-decoration: none; color: var(--dim); border-right: 1px solid var(--hair);
-              border-radius: 0; margin-right: 3px; padding-right: 13px;
-              display: inline-flex; align-items: center; gap: 6px; }
-  .tab-link:hover { color: var(--brand); }
-  .tab-link .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--pos);
-                   animation: pulse 1.6s ease-in-out infinite; }
+  #tabs .tab[data-r="live"] { display:inline-flex; align-items:center; gap:6px;
+                              border-right:1px solid var(--hair); border-radius:7px 0 0 7px;
+                              margin-right:3px; padding-right:13px; }
+  #tabs .tab[data-r="live"] .dot { width:6px; height:6px; border-radius:50%; background:var(--pos);
+                                   animation:pulse 1.6s ease-in-out infinite; }
+  #tabs .tab[data-r="live"][aria-pressed="false"] .dot { background:var(--dim); animation:none; }
   @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: .3 } }
   @media (prefers-reduced-motion: reduce) { .tab-link .dot { animation: none; } }
 
@@ -467,6 +467,75 @@
     .topbar, .nav { background: var(--bar); }
     .drawer { background: var(--panel); }
   }
+
+  .live-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--pos);
+              margin-right:5px; vertical-align:middle; animation:pulse 1.6s ease-in-out infinite; }
+  .live-dot.off { background:var(--dim); animation:none; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+  @media (prefers-reduced-motion: reduce) { .live-dot { animation:none; } }
+  .flash-up { color: var(--pos) !important; }
+  .flash-down { color: var(--neg) !important; }
+  .num { transition: color .3s ease; }
+
+  /* ---- composition cards ------------------------------------------------ */
+  .balcard { position:relative; overflow:hidden; }
+  .balcard::after {                      /* corner wash, tinted per card */
+    content:""; position:absolute; inset:0; pointer-events:none;
+    background:radial-gradient(120% 90% at 100% 0%, var(--tint, transparent), transparent 58%);
+  }
+  .balcard > * { position:relative; z-index:1; }
+  .bal-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
+  .bal-icon { width:26px; height:26px; border-radius:8px; display:grid; place-items:center;
+              background:rgba(255,255,255,.04); border:1px solid var(--hair); flex:0 0 auto; }
+  .bal-icon svg { width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:1.7;
+                  stroke-linecap:round; stroke-linejoin:round; }
+
+  .share { height:3px; border-radius:2px; background:rgba(255,255,255,.07);
+           overflow:hidden; margin-top:13px; }
+  .share i { display:block; height:100%; border-radius:2px; transition:width .5s ease; }
+  .share-note { display:flex; justify-content:space-between; margin-top:7px;
+                font-size:11px; color:var(--dim); }
+
+  .spark { width:100%; height:34px; display:block; margin-top:12px; }
+
+  /* ---- pagination -------------------------------------------------------- */
+  .pager { display:flex; align-items:center; justify-content:space-between; gap:14px;
+           flex-wrap:wrap; padding:14px 16px; margin-top:12px;
+           background:var(--panel); border:1px solid var(--edge); border-radius:13px; }
+  .pager-info { font-size:12px; color:var(--dim); font-variant-numeric:tabular-nums; }
+  .pager-ctrls { display:flex; align-items:center; gap:6px; }
+  .pg { background:rgba(255,255,255,.02); border:1px solid var(--hair); color:var(--muted);
+        font:inherit; font-size:12px; min-width:34px; padding:7px 11px; border-radius:8px;
+        cursor:pointer; font-variant-numeric:tabular-nums;
+        transition:color .2s ease, border-color .2s ease, background .2s ease; }
+  .pg:hover:not(:disabled) { color:var(--text); border-color:var(--edge); }
+  .pg:disabled { opacity:.32; cursor:default; }
+  .pg[aria-current="true"] { background:var(--brand); border-color:var(--brand); color:#fff; }
+  .pg:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
+  .pg-gap { color:var(--dim); padding:0 2px; font-size:12px; }
+  .pg-size { background:rgba(255,255,255,.02); border:1px solid var(--hair); color:var(--muted);
+             font:inherit; font-size:12px; padding:6px 9px; border-radius:8px; cursor:pointer; }
+
+  /* ---- statements -------------------------------------------------------- */
+  .stmt-head { display:flex; align-items:center; justify-content:space-between; gap:14px;
+               flex-wrap:wrap; margin-bottom:10px; }
+  .btn { display:inline-flex; align-items:center; gap:8px; background:rgba(59,130,246,.10);
+         border:1px solid var(--edge); color:var(--brand-2); font:inherit; font-size:12px;
+         padding:8px 15px; border-radius:9px; cursor:pointer; white-space:nowrap;
+         transition:background .2s ease, border-color .2s ease, color .2s ease; }
+  .btn:hover { background:rgba(59,130,246,.2); border-color:var(--brand); }
+  .btn:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
+  .btn svg { width:13px; height:13px; flex:0 0 auto; fill:none; stroke:currentColor;
+             stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+  .btn.ghost { background:rgba(255,255,255,.02); color:var(--muted); }
+  .btn.ghost:hover { color:var(--text); border-color:var(--edge); background:rgba(255,255,255,.05); }
+
+  .dl-cell { display:flex; gap:6px; justify-content:flex-end; }
+  .dl { background:none; border:1px solid var(--hair); color:var(--muted); font:inherit;
+        font-size:11px; padding:5px 11px; border-radius:7px; cursor:pointer;
+        transition:color .2s ease, border-color .2s ease; }
+  .dl:hover { color:var(--brand-2); border-color:var(--edge); }
+  .dl:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
 </style>
 
 <!-- ============================================================== chrome -->
@@ -526,7 +595,7 @@
         <div class="num" id="curDelta" style="font-size:13.5px;margin-top:3px">&mdash;</div>
       </div>
       <div class="tabs" id="tabs">
-        <a class="tab tab-link" href="index.html"><span class="dot"></span>Live</a>
+        <button class="tab" data-r="live" aria-pressed="false"><span class="dot"></span>Live</button>
         <button class="tab" data-r="7"   aria-pressed="false">7D</button>
         <button class="tab" data-r="30"  aria-pressed="true">1M</button>
         <button class="tab" data-r="90"  aria-pressed="false">3M</button>
@@ -564,26 +633,57 @@
   </section>
 
   <!-- ============================================ account composition -->
-  <div class="section-title"><h2>Account Composition</h2><span>&middot; What the balance is made of right now</span></div>
+  <div class="section-title"><h2>Account Composition</h2>
+    <span><span class="live-dot" id="compDot"></span> Live &middot; what the balance is made of right now</span></div>
 
   <div class="balrow">
-    <div class="balcard">
-      <div class="label">CEX balance</div>
-      <div class="v num" id="cexBal">&mdash;</div>
-      <div class="n">Trading account</div>
-      <span class="pill">OKX</span>
+    <div class="balcard" style="--tint:rgba(59,130,246,.10)">
+      <div class="bal-top">
+        <div>
+          <div class="label">CEX balance</div>
+          <div class="v num" id="cexBal">&mdash;</div>
+          <div class="n">Trading account &middot; OKX</div>
+        </div>
+        <span class="bal-icon" style="color:var(--brand-2)">
+          <svg viewBox="0 0 18 18"><rect x="2" y="4" width="14" height="10.5" rx="2"/>
+            <path d="M2 7.6h14"/><path d="M5 11.2h3"/></svg>
+        </span>
+      </div>
+      <div class="share"><i id="cexShare" style="background:var(--brand-2)"></i></div>
+      <div class="share-note"><span>Share of total</span><span class="num" id="cexPct">&mdash;</span></div>
     </div>
-    <div class="balcard">
-      <div class="label">DEX balance</div>
-      <div class="v num" id="dexBal">&mdash;</div>
-      <div class="n" id="dexNote">Not connected</div>
-      <span class="pill" id="dexPill">0 wallets</span>
+
+    <div class="balcard" style="--tint:rgba(167,139,250,.10)">
+      <div class="bal-top">
+        <div>
+          <div class="label">DEX balance</div>
+          <div class="v num" id="dexBal">&mdash;</div>
+          <div class="n" id="dexNote">Not connected</div>
+        </div>
+        <span class="bal-icon" style="color:#a78bfa">
+          <svg viewBox="0 0 18 18"><path d="M2.5 5.5A2 2 0 0 1 4.5 3.5h9a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2z"/>
+            <path d="M12 9h2"/></svg>
+        </span>
+      </div>
+      <div class="share"><i id="dexShare" style="background:#a78bfa"></i></div>
+      <div class="share-note"><span id="dexPill">0 wallets</span><span class="num" id="dexPct">&mdash;</span></div>
     </div>
-    <div class="balcard total">
-      <div class="label">Total equity</div>
-      <div class="v num" id="totBal">&mdash;</div>
-      <div class="n" id="totNote">CEX + DEX</div>
-      <span class="pill" id="totPill">&mdash;</span>
+
+    <div class="balcard total" style="--tint:rgba(52,211,153,.10)">
+      <div class="bal-top">
+        <div>
+          <div class="label">Total equity</div>
+          <div class="v num" id="totBal">&mdash;</div>
+          <div class="n" id="totNote">CEX + DEX</div>
+        </div>
+        <span class="bal-icon" style="color:var(--pos)">
+          <svg viewBox="0 0 18 18"><polyline points="2.5 12.5 6.5 8.2 10 11 15.5 4.8"/>
+            <polyline points="11.6 4.8 15.5 4.8 15.5 8.6"/></svg>
+        </span>
+      </div>
+      <svg class="spark" id="totSpark" preserveAspectRatio="none" aria-hidden="true"></svg>
+      <div class="share-note"><span id="totPill">&mdash;</span>
+        <span class="num" id="totDelta">&mdash;</span></div>
     </div>
   </div>
 
@@ -671,6 +771,50 @@
       <tfoot id="logFoot"></tfoot>
     </table>
   </div>
+
+  <div class="pager" id="pager" hidden>
+    <span class="pager-info" id="pagerInfo"></span>
+    <div class="pager-ctrls">
+      <select class="pg-size" id="pageSize" aria-label="Rows per page">
+        <option value="10">10 / page</option>
+        <option value="25">25 / page</option>
+        <option value="50">50 / page</option>
+        <option value="100">100 / page</option>
+      </select>
+      <button class="pg" id="pgFirst" aria-label="First page">&laquo;</button>
+      <button class="pg" id="pgPrev" aria-label="Previous page">&lsaquo;</button>
+      <span id="pgNums" style="display:flex;gap:6px;align-items:center"></span>
+      <button class="pg" id="pgNext" aria-label="Next page">&rsaquo;</button>
+      <button class="pg" id="pgLast" aria-label="Last page">&raquo;</button>
+    </div>
+  </div>
+
+  <!-- ==================================================== statements -->
+  <div class="section-title"><h2>Statements</h2><span>&middot; Download for records or tax</span></div>
+
+  <div class="stmt-head">
+    <span style="font-size:12px;color:var(--dim)" id="stmtNote"></span>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <button class="btn ghost" id="dlFiltered">
+        <svg viewBox="0 0 16 16"><path d="M8 2v8"/><polyline points="4.8 7 8 10.2 11.2 7"/>
+          <path d="M2.5 12.5h11"/></svg>
+        Export current view
+      </button>
+      <button class="btn" id="dlAll">
+        <svg viewBox="0 0 16 16"><path d="M8 2v8"/><polyline points="4.8 7 8 10.2 11.2 7"/>
+          <path d="M2.5 12.5h11"/></svg>
+        Full history (CSV)
+      </button>
+    </div>
+  </div>
+
+  <div class="scroller">
+    <table>
+      <thead><tr><th>Period</th><th>Trades</th><th>Realized P&amp;L</th>
+        <th>Cash in/out</th><th>Closing balance</th><th>Statement</th></tr></thead>
+      <tbody id="stmtBody"></tbody>
+    </table>
+  </div>
 </div>
 
 
@@ -700,6 +844,8 @@ const CONFIG = {
   tradesUrl: "",     // e.g. "/api/trades" — blank uses the sample set below
   equityUrl: "",     // e.g. "/api/equity" — daily closes [{ d, eq }]
   balancesUrl: "",   // e.g. "/api/balances"
+  wsUrl: "",         // same relay as the Overview — keeps composition live
+  pageSize: 10,      // trade log rows per page
 };
 
 const $ = id => document.getElementById(id);
@@ -722,6 +868,7 @@ addEventListener("keydown", e => {
   }
 });
 let F = { result:"all", dir:"all", mode:"all", venue:"all", type:"all" };
+let page = 1;
 
 const typeOf  = t => (t.instId || "").includes("SWAP") ? "perp" : "spot";
 const venueOf = t => t.venue || "cex";
@@ -752,9 +899,128 @@ async function load() {
     catch { BALANCES = sampleBalances(); }
   } else BALANCES = sampleBalances();
 
-  drawCurve(); renderKpis(); renderBalances(); renderMonths(); renderLog();
+  drawCurve(); renderKpis(); renderBalances(); renderMonths(); renderLog(); renderStatements();
+  connectLive();
 }
 
+
+
+/* ---- live composition ------------------------------------------------------
+ * The KPI strip and the equity curve are deliberately static: they describe a
+ * finished period, and a win rate that twitches is a win rate you can't trust.
+ * Account Composition is the opposite — it says "right now" — so it ticks.
+ */
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+function ticker(el, { signed = false, flash = true } = {}) {
+  let cur = 0, target = 0, raf = null, last = 0, prev = 0;
+  const paint = () => { el.textContent = money(cur, signed); };
+  const step = now => {
+    const dt = Math.min(now - last, 64); last = now;
+    cur += (target - cur) * (1 - Math.exp(-dt / 110));
+    if (Math.abs(target - cur) < .0005) cur = target;
+    paint();
+    raf = cur === target ? null : requestAnimationFrame(step);
+  };
+  return v => {
+    if (v === target) return;
+    if (flash && v !== prev) {
+      const c = v > prev ? "flash-up" : "flash-down";
+      el.classList.add(c); setTimeout(() => el.classList.remove(c), 420);
+    }
+    prev = v; target = v;
+    if (reduce) { cur = v; return paint(); }
+    if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); }
+  };
+}
+
+let T = null;
+function initTickers() {
+  T = {
+    cex: ticker($("cexBal"), { flash:false }),
+    dex: ticker($("dexBal"), { flash:false }),
+    tot: ticker($("totBal"), { flash:false }),
+  };
+}
+
+/* Live marks for anything that isn't a stablecoin. */
+const MARKS = new Map();
+
+/* Session tape for the Live range. Same {d, eq} shape the historical series
+   uses, so drawCurve doesn't need to know which one it's plotting. */
+const LIVE = [];
+const LIVE_SECONDS = 900;
+
+function pushLive() {
+  const eq = BALANCES.reduce((a, r) => a + r.usd, 0);
+  if (!eq) return;
+  LIVE.push({ d: Date.now(), eq });
+  if (LIVE.length > LIVE_SECONDS) LIVE.shift();
+  if (range === "live") { drawCurve(); drawTotalSpark(); }
+}
+setInterval(pushLive, 1000);
+
+function connectLive() {
+  if (!CONFIG.wsUrl) return demoLive();
+  let attempt = 0;
+  const open = () => {
+    const ws = new WebSocket(CONFIG.wsUrl);
+    ws.onopen = () => { attempt = 0; $("compDot").classList.remove("off"); };
+    ws.onmessage = ev => {
+      let m; try { m = JSON.parse(ev.data); } catch { return; }
+      if (m.type === "mark") { MARKS.set(String(m.instId).split("-")[0], Number(m.markPx)); repriceBalances(); }
+      if (m.type === "account" && Array.isArray(m.details)) {
+        BALANCES = m.details.map(d => ({
+          ccy: d.ccy, bal: Number(d.cashBal ?? d.bal) || 0,
+          usd: Number(d.eqUsd ?? d.usdValue) || 0, network: d.network || "CEX",
+        }));
+        renderBalances();
+      }
+    };
+    ws.onclose = () => {
+      $("compDot").classList.add("off");
+      setTimeout(open, Math.min(1000 * 2 ** attempt++, 15000) + Math.random() * 400);
+    };
+    ws.onerror = () => ws.close();
+  };
+  open();
+}
+
+/* Reprice holdings off the live marks; stables stay at 1. */
+function repriceBalances() {
+  let touched = false;
+  BALANCES.forEach(r => {
+    const px = MARKS.get(r.ccy);
+    if (px && r.bal) { r.usd = r.bal * px; touched = true; }
+  });
+  if (touched) renderBalances();
+}
+
+function demoLive() {
+  const seed = { BNB: 695.5, ETH: 3120, BTC: 64200, SOL: 148 };
+  for (const k in seed) MARKS.set(k, seed[k]);
+
+  /* Pre-fill a few minutes so the Live range has a curve the moment it's
+     selected, rather than a blank panel that fills in over 15 minutes. */
+  const base = BALANCES.reduce((a, r) => a + r.usd, 0);
+  if (base) {
+    let v = base * 0.997, now0 = Date.now();
+    for (let i = 300; i > 0; i--) {
+      v *= 1 + (Math.random() - 0.492) * 0.00035;
+      LIVE.push({ d: now0 - i * 1000, eq: Number(v.toFixed(4)) });
+    }
+  }
+  /* Give the demo a non-stable holding so there is something to watch. */
+  const STABLE = new Set(["USDT","USDC","DAI","TUSD","FDUSD","BUSD"]);
+  if (!BALANCES.some(r => r.bal > 0 && !STABLE.has(r.ccy))) return;
+  setInterval(() => {
+    for (const k in seed) {
+      seed[k] *= 1 + (Math.random() - 0.5) * 0.0012;
+      MARKS.set(k, seed[k]);
+    }
+    repriceBalances();
+  }, 900);
+}
 
 /* -------------------------------------------------- account composition --
  * The Overview shows what you hold; this view adds the historical columns —
@@ -816,12 +1082,22 @@ function renderBalances() {
   const dex = total - cex;
   const wallets = new Set(rows.filter(r => (r.network||"CEX") !== "CEX").map(r => r.wallet || "w")).size;
 
-  $("cexBal").textContent = money(cex);
-  $("dexBal").textContent = money(dex);
-  $("totBal").textContent = money(total);
+  if (!T) initTickers();
+  T.cex(cex); T.dex(dex); T.tot(total);
   $("dexNote").textContent = wallets ? "On-chain holdings" : "Not connected";
   $("dexPill").textContent = wallets + " wallet" + (wallets === 1 ? "" : "s");
   $("totPill").textContent = rows.filter(r => r.usd > 0).length + " assets held";
+
+  /* Share bars: each venue against the whole, so the two cards say something
+     about each other rather than sitting as isolated figures. */
+  const cexPct = total ? (cex / total) * 100 : 0;
+  const dexPct = total ? (dex / total) * 100 : 0;
+  $("cexShare").style.width = cexPct.toFixed(2) + "%";
+  $("dexShare").style.width = dexPct.toFixed(2) + "%";
+  $("cexPct").textContent = cexPct.toFixed(1) + "%";
+  $("dexPct").textContent = dexPct.toFixed(1) + "%";
+
+  drawTotalSpark();
 
   renderRollup(rows, total);
 
@@ -854,12 +1130,57 @@ function renderBalances() {
   }).join("");
 }
 
+
+/* Sparkline on the total card — the same series the big curve draws, at a
+   glanceable size, so the card carries trend and not just a level. */
+function drawTotalSpark() {
+  const svg = $("totSpark");
+  if (!svg) return;
+  const d = windowed();
+  if (d.length < 2) return;
+
+  const box = svg.getBoundingClientRect();
+  const W = box.width || 260, H = 34;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+
+  const vals = d.map(p => p.eq);
+  const lo = Math.min(...vals), hi = Math.max(...vals);
+  const span = (hi - lo) || 1;
+  const pad = 4;
+  const xOf = i => (i / (d.length - 1)) * W;
+  const yOf = v => H - pad - ((v - lo) / span) * (H - pad * 2);
+
+  let path = "";
+  d.forEach((p, i) => path += (i ? "L" : "M") + xOf(i).toFixed(1) + "," + yOf(p.eq).toFixed(2) + " ");
+
+  const rising = vals[vals.length - 1] >= vals[0];
+  const tone = rising ? "#34d399" : "#fb7185";
+
+  svg.innerHTML =
+    `<defs><linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
+       <stop offset="0%" stop-color="${tone}" stop-opacity=".26"/>
+       <stop offset="100%" stop-color="${tone}" stop-opacity="0"/>
+     </linearGradient></defs>
+     <path d="${path}L${W},${H} L0,${H} Z" fill="url(#sparkFill)"/>
+     <path d="${path}" fill="none" stroke="${tone}" stroke-width="1.4"
+           vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>
+     <circle cx="${xOf(d.length-1).toFixed(1)}" cy="${yOf(vals[vals.length-1]).toFixed(2)}"
+             r="2.4" fill="${tone}"/>`;
+
+  const delta = vals[vals.length - 1] - vals[0];
+  const el2 = $("totDelta");
+  el2.textContent = money(delta, true) + "  " + pct(vals[0] ? (delta / vals[0]) * 100 : 0);
+  el2.className = "num " + cls(delta);
+}
+addEventListener("resize", drawTotalSpark);
+
 function sampleBalances() {
   return [
-    { ccy:"USDT", bal:466.48, usd:466.48, network:"CEX" },
-    { ccy:"BNB",  bal:0.027209, usd:18.92, network:"CEX", chg24h:1.42, avgCost:672.10, pnl:-0.36 },
+    { ccy:"USDT", bal:466.48,   usd:466.48, network:"CEX" },
+    { ccy:"BNB",  bal:0.027209, usd:18.92,  network:"CEX", chg24h: 1.42, avgCost:672.10, pnl:-0.36 },
+    { ccy:"ETH",  bal:0.0182,   usd:56.78,  network:"DEX", chg24h:-0.61, avgCost:3102.4, pnl: 0.28 },
+    { ccy:"USDC", bal:12.40,    usd:12.40,  network:"DEX" },
     { ccy:"BTC",  bal:0, usd:0, network:"CEX" },
-    { ccy:"USDC", bal:0, usd:0, network:"CEX" },
     { ccy:"DOGE", bal:0, usd:0, network:"CEX" },
   ];
 }
@@ -896,11 +1217,12 @@ function maxDrawdown(series) {
 
 /* The range selector on the equity curve now drives the whole panel. A stat
    panel with a hardcoded window quietly disagrees with the chart above it. */
-const RANGE_LABEL = { 7:"Last 7 days", 30:"Last 30 days", 90:"Last 90 days",
-                      ytd:"Year to date", all:"All time" };
+const RANGE_LABEL = { live:"This session", 7:"Last 7 days", 30:"Last 30 days",
+                      90:"Last 90 days", ytd:"Year to date", all:"All time" };
 
 function windowStart() {
   if (range === "all") return -Infinity;
+  if (range === "live") return new Date().setHours(0,0,0,0);   // today's fills
   if (range === "ytd") return new Date(new Date().getFullYear(), 0, 1).getTime();
   return Date.now() - range * 86400000;
 }
@@ -943,6 +1265,7 @@ function renderKpis() {
 
 /* ---------------------------------------------------------- equity curve */
 function windowed() {
+  if (range === "live") return LIVE.length > 1 ? LIVE : EQUITY.slice(-2);
   if (!EQUITY.length) return [];
   if (range === "all") return EQUITY;
   if (range === "ytd") {
@@ -963,7 +1286,9 @@ const el = (tag, attrs, text) => {
   return n;
 };
 const clear = n => { while (n.firstChild) n.removeChild(n.firstChild); };
-const dayLabel = ts => new Date(ts).toLocaleDateString(undefined, { month:"short", day:"numeric" });
+const dayLabel = ts => range === "live"
+  ? new Date(ts).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" })
+  : new Date(ts).toLocaleDateString(undefined, { month:"short", day:"numeric" });
 
 /* Round a raw step up to something a human reads without decoding. */
 function niceStep(raw) {
@@ -1062,6 +1387,8 @@ function drawCurve() {
   const last = d[d.length - 1].eq;
   const delta = last - open;
   $("curEq").textContent = money(last);
+  const liveTab = document.querySelector('#tabs .tab[data-r="live"]');
+  if (liveTab) liveTab.setAttribute("aria-pressed", range === "live");
   $("curDelta").textContent = money(delta, true) + "   " + pct(open ? (delta/open)*100 : 0);
   $("curDelta").className = "num " + cls(delta);
 }
@@ -1114,9 +1441,9 @@ addEventListener("resize", drawCurve);
 $("tabs").addEventListener("click", e => {
   const b = e.target.closest(".tab");
   if (!b || !b.dataset.r) return;          // the Live link navigates instead
-  range = (b.dataset.r === "all" || b.dataset.r === "ytd") ? b.dataset.r : Number(b.dataset.r);
+  range = ["all","ytd","live"].includes(b.dataset.r) ? b.dataset.r : Number(b.dataset.r);
   [...$("tabs").children].forEach(x => x.dataset.r && x.setAttribute("aria-pressed", x === b));
-  drawCurve(); renderKpis();
+  drawCurve(); renderKpis(); drawTotalSpark();
 });
 
 /* -------------------------------------------------------- monthly table */
@@ -1160,10 +1487,19 @@ function renderLog() {
 
   $("logCount").textContent = rows.length + " of " + TRADES.length + " trades";
 
+  /* Page the rows. An active trader's log runs to thousands — rendering all of
+     them costs a long first paint and a scrollbar nobody can navigate. */
+  const size = CONFIG.pageSize;
+  const pages = Math.max(1, Math.ceil(rows.length / size));
+  if (page > pages) page = pages;
+  const from = (page - 1) * size;
+  const paged = rows.slice(from, from + size);
+  renderPager(rows.length, pages, from, paged.length);
+
   const fmt = ts => new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric" }) +
     " " + new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 
-  $("logBody").innerHTML = rows.map(t => {
+  $("logBody").innerHTML = paged.map(t => {
     const ret = t.entry ? ((t.exit - t.entry) / t.entry) * 100 * (t.dir === "short" ? -1 : 1) : 0;
     return `<tr data-i="${t.id}" tabindex="0" role="button"
       aria-label="Trade ${t.id}, ${t.instId}, ${money(t.pnl, true)}">
@@ -1184,13 +1520,218 @@ function renderLog() {
   }).join("") ||
     '<tr><td colspan="14" style="text-align:center;color:var(--dim);padding:26px">No trades match this filter</td></tr>';
 
+  /* Totals stay on the whole filtered set — a footer that only sums the visible
+     page would quietly change meaning as you page through. */
   const s = stats(rows);
   $("logFoot").innerHTML = rows.length ? `<tr>
-    <td colspan="9" class="lt" style="color:var(--muted)">${rows.length} trades &middot; ${s.wins}W / ${s.losses}L</td>
+    <td colspan="9" class="lt" style="color:var(--muted)">${rows.length} trades &middot; ${s.wins}W / ${s.losses}L
+      ${pages > 1 ? `<span style="color:var(--dim)">&middot; all pages</span>` : ""}</td>
     <td class="${cls(s.net)}">${money(s.net, true)}</td>
     <td colspan="4"></td>
   </tr>` : "";
 }
+
+
+
+/* ---- statements ------------------------------------------------------------
+ * CSV is generated in the browser: no backend, works offline, and the file is
+ * the raw record rather than a rendering of it. A PDF statement with a
+ * statement ID has to come from the server to be worth anything for tax — that
+ * one is deliberately not faked here.
+ */
+function csvEscape(v) {
+  const t = String(v ?? "");
+  return /[",\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
+}
+
+/* A statement that's only a row dump makes you total it yourself. Lead with the
+   summary, then the detail, then a totals row that ties back to it. */
+function statementSummary(rows) {
+  const st = stats(rows);
+  const cash = rows.reduce((a, t) => a + (t.cash || 0), 0);
+  const sorted = rows.slice().sort((a, b) => a.closed - b.closed);
+  const closing = sorted.length ? sorted[sorted.length - 1].balance : 0;
+  const opening = sorted.length
+    ? sorted[0].balance - sorted[0].pnl - (sorted[0].cash || 0) : 0;
+  return { st, cash, opening, closing,
+           ret: opening ? ((closing - opening - cash) / opening) * 100 : 0 };
+}
+
+function tradesToCsv(rows, meta = {}) {
+  const { st, cash, opening, closing, ret } = statementSummary(rows);
+  const n2 = v => v.toFixed(2);
+  const L = [];
+
+  L.push(["MX1 Trade — Account Statement"].map(csvEscape).join(","));
+  L.push(["Period", meta.period || "All time"].map(csvEscape).join(","));
+  L.push(["Generated", new Date().toISOString()].map(csvEscape).join(","));
+  if (meta.filters) L.push(["Filters", meta.filters].map(csvEscape).join(","));
+  L.push("");
+
+  L.push("SUMMARY");
+  [ ["Trades", st.n],
+    ["Wins", st.wins],
+    ["Losses", st.losses],
+    ["Win rate", st.winRate.toFixed(1) + "%"],
+    ["Gross profit", n2(st.gw)],
+    ["Gross loss", n2(-st.gl)],
+    ["Net realized P&L", n2(st.net)],
+    ["Profit factor", st.pf === null ? "n/a" : st.pf.toFixed(2)],
+    ["Avg win", n2(st.avgWin)],
+    ["Avg loss", n2(-st.avgLoss)],
+    ["Expectancy per trade", n2(st.expectancy)],
+    ["Opening balance", n2(opening)],
+    ["Deposits / withdrawals", n2(cash)],
+    ["Closing balance", n2(closing)],
+    ["Return on opening balance", (ret >= 0 ? "+" : "") + ret.toFixed(2) + "%"],
+  ].forEach(r => L.push(r.map(csvEscape).join(",")));
+  L.push("");
+
+  L.push("TRADES");
+  const head = ["#","Instrument","Direction","Mode","Venue","Type","Opened","Closed",
+                "Held","Size","Entry","Exit","PnL","Return %","Cash in/out","Balance","Notes"];
+  L.push(head.join(","));
+
+  const iso = ts => new Date(ts).toISOString();
+  rows.slice().sort((a, b) => a.closed - b.closed).forEach(t => {
+    const r = t.entry ? ((t.exit - t.entry) / t.entry) * 100 * (t.dir === "short" ? -1 : 1) : 0;
+    L.push([t.id, t.instId, t.dir, modeOf(t), venueOf(t), typeOf(t),
+            iso(t.opened), iso(t.closed), heldFor(t.opened, t.closed), t.size,
+            t.entry, t.exit, n2(t.pnl), r.toFixed(2),
+            n2(t.cash || 0), n2(t.balance), t.note || ""].map(csvEscape).join(","));
+  });
+
+  /* Totals row so the detail visibly reconciles with the summary above. */
+  L.push(["TOTAL", st.n + " trades", st.wins + "W / " + st.losses + "L", "", "", "", "", "",
+          "", "", "", "", n2(st.net), (ret >= 0 ? "+" : "") + ret.toFixed(2) + "%",
+          n2(cash), n2(closing), ""].map(csvEscape).join(","));
+
+  return L.join("\n");
+}
+
+function download(name, text) {
+  const blob = new Blob([text], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+const stamp = () => new Date().toISOString().slice(0, 10);
+
+function renderStatements() {
+  const by = new Map();
+  TRADES.forEach(t => {
+    const k = new Date(t.closed).toISOString().slice(0, 7);
+    if (!by.has(k)) by.set(k, []);
+    by.get(k).push(t);
+  });
+
+  const months = [...by.entries()].sort((a, b) => b[0].localeCompare(a[0]));
+  $("stmtNote").textContent = TRADES.length + " trades across " + months.length +
+    " month" + (months.length === 1 ? "" : "s");
+
+  $("stmtBody").innerHTML = months.map(([k, rs]) => {
+    const st = stats(rs);
+    const cash = rs.reduce((a, t) => a + (t.cash || 0), 0);
+    const bal = rs.slice().sort((a, b) => a.closed - b.closed).pop().balance;
+    const nice = new Date(k + "-01T00:00:00")
+      .toLocaleDateString(undefined, { month:"long", year:"numeric" });
+    return `<tr>
+      <td class="lt">${nice}</td>
+      <td>${st.n}</td>
+      <td class="${cls(st.net)}">${money(st.net, true)}</td>
+      <td class="${cash ? cls(cash) : ""}">${cash ? money(cash, true) : "\u2014"}</td>
+      <td>${money(bal)}</td>
+      <td><div class="dl-cell"><button class="dl" data-month="${k}">CSV</button></div></td>
+    </tr>`;
+  }).join("") ||
+    '<tr><td colspan="6" style="text-align:center;color:var(--dim);padding:26px">No statements yet</td></tr>';
+}
+
+$("stmtBody").addEventListener("click", e => {
+  const b = e.target.closest("[data-month]");
+  if (!b) return;
+  const k = b.dataset.month;
+  const rows = TRADES.filter(t => new Date(t.closed).toISOString().slice(0,7) === k)
+                     .sort((a, b2) => a.closed - b2.closed);
+  const period = new Date(k + "-01T00:00:00")
+    .toLocaleDateString(undefined, { month:"long", year:"numeric" });
+  download(`mx1-statement-${k}.csv`, tradesToCsv(rows, { period }));
+});
+
+$("dlAll").addEventListener("click", () =>
+  download(`mx1-trades-all-${stamp()}.csv`, tradesToCsv(TRADES, { period: "All time" })));
+
+/* "Current view" means exactly what's on screen — same filters, same order. */
+$("dlFiltered").addEventListener("click", () => {
+  const rows = TRADES.filter(passes);
+  /* Record which filters produced this file — a filtered export with no note of
+     the filter is a number you can't reproduce later. */
+  const active = Object.entries(F).filter(([, v]) => v !== "all")
+    .map(([k, v]) => k + "=" + v).join(" ");
+  download(`mx1-trades-filtered-${stamp()}.csv`,
+           tradesToCsv(rows, { period: RANGE_LABEL[range] || "Filtered",
+                               filters: active || "none" }));
+});
+
+/* ---- pager ---------------------------------------------------------------- */
+function renderPager(total, pages, from, shown) {
+  const box = $("pager");
+
+  /* Show it whenever there are rows, even on a single page: the count and the
+     rows-per-page control are useful regardless, and a control that only
+     materialises once your data grows is one you never learn exists. */
+  box.hidden = total === 0;
+  if (!total) return;
+
+  $("pagerInfo").textContent = pages > 1
+    ? "Showing " + (from + 1) + "\u2013" + (from + shown) + " of " + total + " trades"
+    : total + (total === 1 ? " trade" : " trades") + " \u00b7 one page";
+
+  $("pgFirst").disabled = $("pgPrev").disabled = page === 1;
+  $("pgLast").disabled  = $("pgNext").disabled = page === pages;
+
+  if (pages <= 1) { $("pgNums").innerHTML =
+    '<button class="pg" data-page="1" aria-current="true">1</button>'; return; }
+
+  /* Window the numbers: first, last, and a run around the current page. */
+  const want = new Set([1, pages, page, page - 1, page + 1]);
+  if (page <= 3) [2, 3, 4].forEach(n => want.add(n));
+  if (page >= pages - 2) [pages-1, pages-2, pages-3].forEach(n => want.add(n));
+  const list = [...want].filter(n => n >= 1 && n <= pages).sort((a, b) => a - b);
+
+  let html = "", prev = 0;
+  list.forEach(n => {
+    if (n - prev > 1) html += '<span class="pg-gap">\u2026</span>';
+    html += `<button class="pg" data-page="${n}" aria-current="${n === page}">${n}</button>`;
+    prev = n;
+  });
+  $("pgNums").innerHTML = html;
+}
+
+function goPage(n) {
+  page = Math.max(1, n);
+  renderLog();
+  /* Jump back to the table head, not the top of the document. */
+  document.querySelector("#logBody").closest(".scroller")
+    .scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+$("pgFirst").addEventListener("click", () => goPage(1));
+$("pgPrev").addEventListener("click", () => goPage(page - 1));
+$("pgNext").addEventListener("click", () => goPage(page + 1));
+$("pgLast").addEventListener("click", () => goPage(Infinity));
+$("pgNums").addEventListener("click", e => {
+  const b = e.target.closest("[data-page]");
+  if (b) goPage(Number(b.dataset.page));
+});
+$("pageSize").addEventListener("change", e => {
+  CONFIG.pageSize = Number(e.target.value);
+  page = 1;
+  renderLog();
+});
 
 $("toolbar").addEventListener("click", e => {
   const b = e.target.closest("button[data-v]");
@@ -1198,6 +1739,7 @@ $("toolbar").addEventListener("click", e => {
   const set = b.parentElement;
   F[set.dataset.f] = b.dataset.v;
   [...set.children].forEach(x => x.setAttribute("aria-pressed", x === b));
+  page = 1;
   renderLog();
 });
 
@@ -1212,6 +1754,8 @@ let drOrder = [], drPos = -1;
 function openTrade(id) {
   const t = TRADES.find(x => x.id === id);
   if (!t) return;
+  /* Walk every filtered trade, not just the visible page — paging is a display
+     concern and shouldn't stop you stepping past the bottom row. */
   drOrder = TRADES.filter(passes).slice().sort((a,b) => b.closed - a.closed).map(x => x.id);
   drPos = drOrder.indexOf(id);
   paintTrade(t);
@@ -1382,11 +1926,14 @@ function sampleTrades() {
     ["BTC-USDT-SWAP", "long",   1,  1, 1, 63980, 63510, -0.47, 0, "Open risk trimmed"],
   ];
 
+  /* raw is already oldest-first. Reversing it made the running balance
+     accumulate backwards through time — balances fell as P&L rose, so the
+     statement's opening/closing never reconciled with net P&L. */
   let bal = 338.50;
   let seed = 11;
   const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
 
-  return raw.slice().reverse().map((r, i) => {
+  return raw.map((r, i) => {
     const [instId, dir, dOpen, dClose, size, entry, exit, pnl, cash, note] = r;
     bal += pnl + cash;
 
