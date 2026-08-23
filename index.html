@@ -566,6 +566,62 @@
   .frow:last-child { border-bottom:0; }
   .frow span { color:var(--dim); }
   .frow b { font-weight:600; font-variant-numeric:tabular-nums; }
+
+  /* ---- edge definition ---------------------------------------------------
+   * What makes a surface read as a crisp physical object is two edges, not
+   * one: a light specular line along the top where light catches it, and a
+   * dark ring just outside the border that separates it from the page. Panels
+   * with a single flat border look printed on; these look placed.
+   */
+  .panel, .card, .scroller, .balcard, .rollup, .stripwrap, .feed, .modal, .drawer, .pdrawer, .pager {
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, .075),          /* top specular */
+      inset 0 0 0 1px rgba(255, 255, 255, .012),        /* inner containment */
+      0 0 0 1px rgba(2, 6, 14, .85),                    /* dark separation ring */
+      0 20px 44px -30px rgba(0, 0, 0, .95);             /* grounding shadow */
+    border-color: rgba(96, 165, 250, .30);
+  }
+
+  /* The primary panel sits a step brighter than the supporting ones. */
+  .stripwrap, .panel {
+    border-color: rgba(96, 165, 250, .42);
+    box-shadow:
+      inset 0 1px 0 rgba(255, 255, 255, .09),
+      inset 0 0 0 1px rgba(96, 130, 246, .05),
+      0 0 0 1px rgba(2, 6, 14, .9),
+      0 24px 52px -32px rgba(0, 0, 0, 1);
+  }
+
+  /* Header bands get their own top line so the band edge stays crisp. */
+  .card-head, .modal-head, .pd-head, thead th {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05);
+  }
+
+  /* Alert states keep priority: they override the resting edge entirely. */
+  .card.attn-warn, .cell.attn-warn, .card.attn-neg, .cell.attn-neg { border-color: currentColor; }
+
+  /* Hairlines inside a panel stay hairlines — sharpening the outside only. */
+  tbody tr:hover { background: rgba(255, 255, 255, .028); }
+
+  /* Glow must win over the edge treatment — it is the alert channel. */
+  .stripwrap { box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.09),
+      inset 70px -50px 130px -70px rgba(59,130,246,.40),
+      0 0 0 1px rgba(2,6,14,.9),
+      0 24px 52px -32px rgba(0,0,0,1),
+      0 0 34px -14px rgba(59,130,246,.30); }
+  .card.attn-warn, .cell.attn-warn {
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.07),
+                inset 60px -45px 120px -70px rgba(251,191,36,.45),
+                0 0 0 1px rgba(2,6,14,.85),
+                0 0 26px -12px rgba(251,191,36,.32); }
+  .card.attn-neg, .cell.attn-neg {
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.07),
+                inset 60px -45px 120px -70px rgba(251,113,133,.50),
+                0 0 0 1px rgba(2,6,14,.85),
+                0 0 30px -12px rgba(251,113,133,.4); }
+  body.glow-off .stripwrap, body.glow-off .card, body.glow-off .cell {
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 0 0 1px rgba(2,6,14,.85); }
 </style>
 
 <div class="topbar">
