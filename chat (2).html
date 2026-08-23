@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MX1 Trade — Chat</title>
+
+<style>
+  :root {
+    --bg: #050b16; --bar: #070e1c; --panel: #0b1424; --panel-2: #0a1220;
+    --hair: rgba(255,255,255,.07);
+    --text: #e9eff8; --muted: #8093ab; --dim: #4c5a70;
+    --brand: #3b82f6; --brand-2: #60a5fa; --brand-strong: #2563eb;
+    --edge: rgba(59,130,246,.22); --head: #122140; --warn: #fbbf24;
+    --accent: var(--brand); --accent-soft: rgba(59,130,246,.16);
+    --accent-edge: rgba(59,130,246,.34);
+    --pos: #34d399; --neg: #fb7185;
+    --hero: #0d1730;
+
+    /* Seams carry a trace of the brand rather than neutral white — the same
+       ring hierarchy the strip uses on Overview. */
+    --ring-seam: rgba(96,165,250,.18);
+    --ring-card: rgba(96,165,250,.26);
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { height: 100%; }
+  body { margin:0; background:var(--bg); color:var(--text); font-size:14px; overflow:hidden;
+         font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+         -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+         font-feature-settings:"tnum" 1,"kern" 1; }
+  .label { font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); }
+  .num { font-variant-numeric:tabular-nums; }
+  .up { color:var(--pos); } .down { color:var(--neg); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  /* ------------------------------------------------------------- chrome */
+  .topbar { display:flex; align-items:center; gap:10px; padding:7px 14px;
+            background:var(--bar); border-bottom:1px solid var(--hair);
+            flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; }
+  .topbar::-webkit-scrollbar { display:none; }
+  .brand { display:flex; flex-direction:column; line-height:1; margin-right:4px; }
+  .brand b { font-size:19px; letter-spacing:.06em; }
+  .brand b i { font-style:normal; color:var(--brand); }
+  .brand span { font-size:9px; color:var(--dim); margin-top:2px; }
+  .seg { display:inline-flex; border:1px solid var(--hair); border-radius:10px; padding:3px; }
+  .seg button { background:none; border:0; color:var(--muted); font:inherit; font-size:12px;
+                font-weight:600; padding:6px 15px; cursor:pointer; border-radius:7px; }
+  .seg button[aria-pressed="true"] { background:linear-gradient(135deg,#60a5fa,#6366f1); color:#fff;
+                                     box-shadow:0 0 20px -5px rgba(99,102,241,.8); }
+  .chip { font:inherit; display:inline-flex; align-items:center; gap:7px; border:1px solid var(--hair);
+          border-radius:999px; padding:5px 13px; font-size:11.5px; color:var(--muted);
+          background:rgba(255,255,255,.02); white-space:nowrap; }
+  button.chip { cursor:pointer; }
+  .chip.online { border-color:rgba(52,211,153,.45); color:var(--pos);
+                 box-shadow:0 0 22px -9px rgba(52,211,153,.75); }
+  .chip.kill { border-color:rgba(251,113,133,.32); color:var(--neg);
+               transition:box-shadow .25s, border-color .25s; }
+  .chip.kill:hover { border-color:rgba(251,113,133,.75);
+                     box-shadow:0 0 24px -8px rgba(251,113,133,.8); }
+  .toggle { width:34px; height:18px; border-radius:999px; background:#16233a; position:relative;
+            transition:background .3s, box-shadow .3s; }
+  .toggle::after { content:""; position:absolute; top:2px; left:2px; width:14px; height:14px;
+                   border-radius:50%; background:#e9eff8; transition:left .28s cubic-bezier(.4,0,.2,1); }
+  .toggle.on { background:linear-gradient(135deg,#60a5fa,#6366f1);
+               box-shadow:0 0 18px -4px rgba(99,102,241,.85); }
+  .toggle.on::after { left:18px; }
+  .uid { border:1px solid var(--hair); border-radius:999px; padding:5px 13px; font-size:11px;
+         color:var(--muted); font-family:ui-monospace,monospace; margin-left:auto; }
+  .avatar { width:26px; height:26px; border-radius:50%; display:grid; place-items:center;
+            background:linear-gradient(140deg,var(--brand),var(--brand-2));
+            font-size:10px; font-weight:700; color:#04121c; flex:0 0 auto; }
+
+  .nav { display:flex; gap:4px; padding:6px 14px; background:var(--bar);
+         border-bottom:1px solid var(--hair); overflow-x:auto; scrollbar-width:none; }
+  .nav::-webkit-scrollbar { display:none; }
+  .nav a { display:inline-flex; align-items:center; gap:8px; color:var(--muted);
+           text-decoration:none; font-size:13.5px; padding:8px 13px; border-radius:9px;
+           border:1px solid transparent; white-space:nowrap;
+           transition:background .25s, box-shadow .35s, color .25s; }
+  .nav a svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.6;
+               stroke-linecap:round; stroke-linejoin:round; opacity:.8; flex:0 0 auto; }
+  .nav a:hover { color:var(--text); background:rgba(255,255,255,.05); }
+  .nav a.on { color:#fff; background:rgba(59,130,246,.16); border-color:rgba(59,130,246,.45);
+              box-shadow:0 0 22px -9px rgba(59,130,246,.9); }
+  .nav a.on svg { color:var(--brand-2); opacity:1; }
+  .nav a.soon { opacity:.5; cursor:not-allowed; }
+  .nav a.soon:hover { background:none; color:var(--muted); }
+
+  /* ---- shell -------------------------------------------------------------
+     The window never scrolls; each pane scrolls under the cursor. Same model
+     as the trading terminal, so the two pages behave the same way. */
+  .app { display:grid; height:100vh; overflow:hidden;
+         grid-template-rows:auto auto minmax(0,1fr); }
+  .app > * { min-width:0; max-width:100vw; }
+
+  /* Two panes, seam between them. The list is a fixed rail; the thread takes
+     the rest. An empty thread should never be the widest thing on screen —
+     the composer stays mounted so the page has a shape before any message
+     exists. */
+  .work { display:grid; min-height:0; overflow:hidden; background:var(--ring-seam);
+          gap:1px; grid-template-columns:minmax(0,1fr); }
+  @media (min-width:880px)  { .work { grid-template-columns:320px minmax(0,1fr); } }
+  @media (min-width:1400px) { .work { grid-template-columns:360px minmax(0,1fr); } }
+
+  .region { background:var(--bg); min-height:0; min-width:0;
+            display:flex; flex-direction:column; overflow:hidden; }
+
+  /* ---- list rail ---- */
+  .rail-head { flex:0 0 auto; display:flex; align-items:center; justify-content:space-between;
+               gap:12px; min-height:56px; padding:10px 16px; background:var(--head);
+               border-bottom:2px solid var(--ring-card); }
+  /* Sans, not serif. On Overview and Portfolio the serif is reserved for the
+     figures you actually read — equity, P&L. A panel title in Georgia breaks
+     that rule and makes the page look like a different product. */
+  .rail-head h1 { margin:0; font-size:13px; letter-spacing:.05em; text-transform:uppercase;
+                  font-weight:700; }
+  .icon-btn { width:30px; height:30px; border-radius:9px; display:grid; place-items:center;
+              background:rgba(59,130,246,.12); border:1px solid var(--edge); color:var(--brand-2);
+              cursor:pointer; flex:0 0 auto; transition:background .2s, border-color .2s; }
+  .icon-btn:hover { background:rgba(59,130,246,.24); border-color:var(--brand); }
+  .icon-btn svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.9;
+                  stroke-linecap:round; }
+
+  .searchbar { flex:0 0 auto; padding:10px 12px; border-bottom:1px solid var(--ring-seam); }
+  .search { position:relative; display:flex; align-items:center; }
+  .search svg { position:absolute; left:11px; width:14px; height:14px; fill:none;
+                stroke:var(--dim); stroke-width:1.8; pointer-events:none; }
+  .search input { width:100%; background:rgba(255,255,255,.03); border:1px solid var(--ring-seam);
+                  color:var(--text); font:inherit; font-size:13px; padding:9px 34px 9px 33px;
+                  border-radius:9px; }
+  .search input::placeholder { color:var(--dim); }
+  .search input:focus { outline:none; border-color:var(--brand); background:rgba(59,130,246,.07); }
+  .search kbd { position:absolute; right:9px; font:inherit; font-size:10px; color:var(--dim);
+                border:1px solid var(--hair); border-radius:5px; padding:1px 5px;
+                background:rgba(255,255,255,.03); }
+  .search input:focus + kbd, .search input:not(:placeholder-shown) + kbd { display:none; }
+
+  .list { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; }
+
+  .conv { display:grid; grid-template-columns:auto minmax(0,1fr) auto; gap:11px;
+          align-items:start; width:100%; text-align:left; background:none; border:0;
+          border-bottom:1px solid rgba(255,255,255,.04); color:inherit; font:inherit;
+          padding:12px 14px; cursor:pointer; transition:background .18s; }
+  .conv:hover { background:rgba(96,165,250,.05); }
+  .conv[aria-selected="true"] { background:rgba(59,130,246,.13);
+                                box-shadow:inset 2px 0 0 var(--brand); }
+  .conv:focus-visible { outline:2px solid var(--brand); outline-offset:-2px; }
+  .conv .who { display:flex; align-items:baseline; gap:8px; min-width:0; }
+  .conv .who b { font-size:13.5px; font-weight:600; white-space:nowrap;
+                 overflow:hidden; text-overflow:ellipsis; }
+  .conv .tagline { font-size:9.5px; letter-spacing:.08em; text-transform:uppercase;
+                   color:var(--dim); border:1px solid var(--hair); border-radius:5px;
+                   padding:1px 5px; flex:0 0 auto; }
+  .conv .last { font-size:12px; color:var(--muted); margin-top:3px;
+                display:-webkit-box; -webkit-line-clamp:1; -webkit-box-orient:vertical;
+                overflow:hidden; }
+  .conv .meta { display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex:0 0 auto; }
+  .conv .when { font-size:10.5px; color:var(--dim); font-variant-numeric:tabular-nums;
+                white-space:nowrap; }
+  .badge { min-width:19px; height:19px; padding:0 6px; border-radius:999px; display:grid;
+           place-items:center; font-size:10.5px; font-weight:700; color:#04121c;
+           background:var(--brand-2); font-variant-numeric:tabular-nums; }
+
+  .ava-wrap { position:relative; flex:0 0 auto; }
+  .ava { width:36px; height:36px; border-radius:50%; display:grid; place-items:center;
+         font-size:13px; font-weight:700; color:#071018; }
+  .presence { position:absolute; right:-1px; bottom:-1px; width:10px; height:10px;
+              border-radius:50%; border:2px solid var(--bg); background:var(--dim); }
+  .presence.on { background:var(--pos); }
+
+  /* ---- thread ---- */
+  .thread-head { flex:0 0 auto; display:flex; align-items:center; gap:12px;
+                 min-height:56px; padding:10px 18px; background:var(--head);
+                 border-bottom:2px solid var(--ring-card); }
+  .thread-head .title { min-width:0; }
+  .thread-head b { display:block; font-size:14px; font-weight:600; }
+  .thread-head .sub { font-size:11.5px; color:var(--dim); margin-top:2px; }
+  .thread-head .spacer { margin-left:auto; }
+
+  .msgs { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain;
+          padding:18px 18px 8px; display:flex; flex-direction:column; gap:3px; }
+
+  .daysep { display:flex; align-items:center; gap:12px; margin:16px 0 12px; }
+  .daysep::before, .daysep::after { content:""; flex:1; height:1px;
+                                    background:rgba(255,255,255,.06); }
+  .daysep span { font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+                 color:var(--dim); }
+
+  /* Without align-self the wrapper stretches to the column and every bubble
+     renders at the full 78%, so a three-word reply looked the same size as a
+     paragraph. width:fit-content lets it shrink to what was actually said. */
+  .msg { max-width:min(620px, 78%); width:fit-content; display:flex; flex-direction:column;
+         align-self:flex-start; align-items:flex-start; }
+  .msg.me { align-self:flex-end; align-items:flex-end; }
+  .msg .who { font-size:10.5px; color:var(--dim); margin:9px 0 3px; }
+  .msg:first-child .who { margin-top:0; }
+  .bubble { padding:10px 13px; border-radius:14px; font-size:13.5px; line-height:1.5;
+            border:1px solid var(--ring-seam); background:rgba(255,255,255,.035);
+            border-bottom-left-radius:5px; }
+  .msg.me .bubble { background:rgba(59,130,246,.16); border-color:var(--accent-edge);
+                    border-bottom-left-radius:14px; border-bottom-right-radius:5px; }
+  /* Runs of messages from one person collapse their tails, so a burst reads as
+     one turn rather than five separate shouts. */
+  .msg.run .bubble { border-bottom-left-radius:14px; border-top-left-radius:5px; }
+  .msg.me.run .bubble { border-bottom-right-radius:14px; border-top-right-radius:5px; }
+  .msg.run .who { display:none; }
+  /* A timestamp under every bubble is noise — the eye reads a run as one turn,
+     so only its final message is stamped. Which one that is gets decided in
+     renderThread(), where the run is already known. */
+  .stamp { font-size:10px; color:var(--dim); margin-top:3px; font-variant-numeric:tabular-nums;
+           display:flex; align-items:center; gap:5px; }
+  .stamp .tick { color:var(--brand-2); }
+
+  /* A trading chat's most-sent artifact isn't a sentence, it's a position. This
+     is the one bespoke message type: it stays a quotation of what was open at
+     the time, not a live tile, so scrollback doesn't silently rewrite itself. */
+  .pos-quote { margin-top:6px; border:1px solid var(--ring-card); border-radius:11px;
+               background:var(--hero); padding:10px 12px; min-width:230px; }
+  .pos-quote .pq-top { display:flex; align-items:center; gap:8px; }
+  .pos-quote .sym { font-size:13px; font-weight:700; }
+  .tag { font-size:9.5px; letter-spacing:.07em; padding:2px 7px; border-radius:5px; }
+  .tag.long { background:rgba(52,211,153,.16); color:var(--pos); }
+  .tag.short { background:rgba(251,113,133,.16); color:var(--neg); }
+  .pq-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:9px; margin-top:9px; }
+  .pq-grid .k { font-size:9px; letter-spacing:.13em; text-transform:uppercase; color:var(--dim); }
+  .pq-grid .v { font-size:12.5px; font-weight:600; margin-top:2px;
+                font-variant-numeric:tabular-nums; }
+  .pq-note { font-size:10px; color:var(--dim); margin-top:8px; }
+
+  .typing { display:flex; align-items:center; gap:7px; padding:0 18px 8px;
+            font-size:11.5px; color:var(--dim); flex:0 0 auto; min-height:22px; }
+  .typing i { width:5px; height:5px; border-radius:50%; background:var(--dim);
+              animation:pulse 1.2s ease-in-out infinite; }
+  .typing i:nth-child(2) { animation-delay:.18s; }
+  .typing i:nth-child(3) { animation-delay:.36s; }
+
+  /* ---- composer ----------------------------------------------------------
+     Mounted whether or not a conversation is open. A page whose shape only
+     appears after you click something teaches you nothing about what it does. */
+  .composer { flex:0 0 auto; padding:12px 16px 14px; border-top:1px solid var(--ring-card);
+              background:rgba(255,255,255,.015); }
+  .cbox { display:flex; align-items:flex-end; gap:9px; border:1px solid var(--ring-seam);
+          border-radius:13px; background:rgba(255,255,255,.03); padding:7px 8px 7px 12px;
+          transition:border-color .2s, background .2s; }
+  .cbox:focus-within { border-color:var(--brand); background:rgba(59,130,246,.06); }
+  .cbox textarea { flex:1 1 auto; background:none; border:0; color:var(--text); font:inherit;
+                   font-size:13.5px; line-height:1.5; resize:none; padding:6px 0;
+                   max-height:132px; min-height:26px; }
+  .cbox textarea:focus { outline:none; }
+  .cbox textarea::placeholder { color:var(--dim); }
+  .cbox textarea:disabled { cursor:not-allowed; }
+  .send { width:34px; height:34px; border-radius:10px; border:0; cursor:pointer; flex:0 0 auto;
+          display:grid; place-items:center; color:#fff;
+          background:linear-gradient(135deg,#3b82f6,#6366f1);
+          box-shadow:0 0 22px -8px rgba(99,102,241,.9);
+          transition:filter .18s, opacity .18s; }
+  .send:hover:not(:disabled) { filter:brightness(1.12); }
+  .send:disabled { opacity:.32; cursor:not-allowed; box-shadow:none; }
+  .send svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.9;
+              stroke-linecap:round; stroke-linejoin:round; }
+  .chint { display:flex; gap:14px; margin-top:7px; font-size:10.5px; color:var(--dim); }
+  .chint kbd { border:1px solid var(--hair); border-radius:4px; padding:0 4px;
+               background:rgba(255,255,255,.03); font:inherit; font-size:10px; }
+
+  /* ---- empty states ------------------------------------------------------
+     An empty screen is an invitation to act, not a description of absence.
+     The old pair said "No conversations yet" on the left and "select one on
+     the left" on the right — the second instructing you to click something the
+     first had just said doesn't exist. */
+  .empty { flex:1 1 auto; display:grid; place-items:center; padding:32px 26px; }
+  .empty-in { text-align:center; max-width:330px; }
+  .empty-mark { width:46px; height:46px; margin:0 auto 14px; border-radius:14px;
+                display:grid; place-items:center; background:rgba(59,130,246,.10);
+                border:1px solid var(--edge); color:var(--brand-2); }
+  .empty-mark svg { width:21px; height:21px; fill:none; stroke:currentColor; stroke-width:1.6;
+                    stroke-linecap:round; stroke-linejoin:round; }
+  .empty h2 { margin:0 0 6px; font-size:15px; font-weight:600; }
+  .empty p { margin:0; font-size:12.5px; color:var(--muted); line-height:1.6; }
+  .empty .btn { margin-top:15px; display:inline-flex; align-items:center; gap:8px;
+                background:rgba(59,130,246,.12); border:1px solid var(--edge);
+                color:var(--brand-2); font:inherit; font-size:12.5px; padding:9px 17px;
+                border-radius:10px; cursor:pointer; transition:background .2s, border-color .2s; }
+  .empty .btn:hover { background:rgba(59,130,246,.24); border-color:var(--brand); }
+  .empty .btn svg { width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:1.9;
+                    stroke-linecap:round; }
+
+  /* ---- scroll affordance + bars ---- */
+  .list, .msgs { scrollbar-width:thin; scrollbar-color:rgba(96,165,250,.45) transparent; }
+  .list::-webkit-scrollbar, .msgs::-webkit-scrollbar { width:10px; }
+  .list::-webkit-scrollbar-thumb, .msgs::-webkit-scrollbar-thumb {
+    background:rgba(96,165,250,.45); border-radius:5px;
+    border:2px solid transparent; background-clip:padding-box; }
+  .list::-webkit-scrollbar-track, .msgs::-webkit-scrollbar-track { background:transparent; }
+
+  :focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
+
+  /* ---- ambient + dither, matching the other pages ---- */
+  body::before { content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(1100px 520px at 15% -8%, rgba(59,130,246,.13), transparent 62%),
+      radial-gradient(820px 420px at 88% 4%,   rgba(99,102,241,.09), transparent 60%); }
+  body::after { content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    opacity:.035; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size:140px 140px; }
+  .app { position:relative; z-index:1; }
+
+  /* ---- sharp mode (matches the other three pages) ---- */
+  body.sharp {
+    --panel:#0a0f19; --panel-2:#080d15;
+    --hair:rgba(255,255,255,.055); --edge:rgba(96,165,250,.26);
+    --text:#ffffff; --muted:#6f8098; --dim:#47566c;
+    --hero:#0d1730;              /* restated: body.sharp out-specifies :root */
+  }
+  body.sharp .rail-head, body.sharp .thread-head { padding:10px 15px; min-height:52px; }
+  body.sharp .conv { padding:10px 13px; }
+  body.sharp .msgs { padding:14px 15px 6px; }
+  body.sharp .composer { padding:10px 14px 12px; }
+  body.sharp::before { opacity:.45; }
+
+  @media (min-resolution:2dppx) {
+    .searchbar, .conv, .thread-head, .composer { border-width:.5px; }
+    .rail-head, .thread-head { border-bottom-width:1px; }
+  }
+  @media (prefers-reduced-motion:reduce) { .typing i { animation:none; } }
+
+  /* Below the two-column breakpoint the rail becomes the whole page and the
+     thread slides over it, rather than both being crushed. */
+  @media (max-width:879px) {
+    .r-thread { position:fixed; inset:0; top:0; z-index:40; background:var(--bg);
+                transform:translateX(100%); transition:transform .28s cubic-bezier(.22,.61,.36,1); }
+    .r-thread.open { transform:translateX(0); }
+    .back { display:inline-grid !important; }
+  }
+  .back { display:none; width:30px; height:30px; border-radius:9px; place-items:center;
+          background:rgba(255,255,255,.04); border:1px solid var(--hair); color:var(--muted);
+          cursor:pointer; flex:0 0 auto; }
+  .back svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2;
+              stroke-linecap:round; stroke-linejoin:round; }
+</style>
+<link rel="stylesheet" href="mx1.css" />
+
+
+<div class="app">
+
+  <div class="topbar">
+    <div class="brand"><b>M<i>X</i>1</b><span>mx1trade.com</span></div>
+    <div class="seg"><button aria-pressed="true">CEX</button><button aria-pressed="false">DEX</button></div>
+    <button class="chip" id="aiAuto" aria-pressed="true">AI AUTO <span class="toggle on"></span></button>
+    <div class="chip online">&#9679; FUSION ONLINE</div>
+    <button class="chip kill">&#9211; KILL SWITCH</button>
+    <div class="uid">UID okx_856274432502104602</div>
+    <div class="avatar">MT</div>
+    <span style="color:var(--muted);font-size:13px">MX1 Trade</span>
+  </div>
+
+  <nav class="nav">
+    <a href="index.html"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2.5" y="2.5" width="5.5" height="5.5" rx="1"/><rect x="10" y="2.5" width="5.5" height="5.5" rx="1"/><rect x="2.5" y="10" width="5.5" height="5.5" rx="1"/><rect x="10" y="10" width="5.5" height="5.5" rx="1"/></svg>Overview</a>
+    <a href="trading.html"><svg viewBox="0 0 18 18" aria-hidden="true"><polyline points="2 12.5 6.3 8.2 9.8 11 15.5 4.5"/><polyline points="11.6 4.5 15.5 4.5 15.5 8.4"/></svg>Trading</a>
+    <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="6.6" cy="6" r="2.7"/><path d="M2 15.2c0-2.6 2.1-4.2 4.6-4.2s4.6 1.6 4.6 4.2"/><path d="M12.1 3.7a2.7 2.7 0 0 1 0 5.2"/><path d="M13.2 11.2c1.9.5 2.9 1.9 2.9 4"/></svg>Community</a>
+    <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="3" y="6.2" width="12" height="8" rx="2.6"/><circle cx="6.9" cy="10.2" r=".95" fill="currentColor" stroke="none"/><circle cx="11.1" cy="10.2" r=".95" fill="currentColor" stroke="none"/><path d="M9 6.2V3.8"/><circle cx="9" cy="2.9" r="1.1"/></svg>AI Assistant</a>
+    <a href="chat.html" class="on"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M15.2 10.4A2.6 2.6 0 0 1 12.6 13H6.2l-3.4 2.7V4.9A2.6 2.6 0 0 1 5.4 2.3h7.2a2.6 2.6 0 0 1 2.6 2.6z"/></svg>Chat</a>
+    <a href="portfolio.html"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2" y="5.4" width="14" height="9.8" rx="2.2"/><path d="M6.4 5.4V4a1.6 1.6 0 0 1 1.6-1.6h2A1.6 1.6 0 0 1 11.6 4v1.4"/><path d="M2 9.6h14"/></svg>Portfolio</a>
+    <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="2.5"/><path d="M9 1.7v1.7M9 14.6v1.7M2.7 9H1M17 9h-1.7M4.6 4.6 3.4 3.4M14.6 14.6l-1.2-1.2M4.6 13.4l-1.2 1.2M14.6 3.4l-1.2 1.2"/></svg>Settings</a>
+  </nav>
+
+  <div class="work">
+
+    <!-- ---- conversation rail ---- -->
+    <div class="region r-list">
+      <div class="rail-head">
+        <h1>Messages</h1>
+        <button class="icon-btn" id="newChat" title="New conversation" aria-label="New conversation">
+          <svg viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></svg>
+        </button>
+      </div>
+
+      <div class="searchbar">
+        <label class="search">
+          <svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="M10.4 10.4 14 14"/></svg>
+          <input id="q" type="search" placeholder="Search conversations" aria-label="Search conversations" />
+          <kbd>/</kbd>
+        </label>
+      </div>
+
+      <div class="list" id="list" role="listbox" aria-label="Conversations"></div>
+      <div class="empty" id="listEmpty" hidden>
+        <div class="empty-in">
+          <span class="empty-mark">
+            <svg viewBox="0 0 22 22"><path d="M19 12.7a3.2 3.2 0 0 1-3.2 3.2H7.6L3.4 19.2V6.1A3.2 3.2 0 0 1 6.6 2.9h9.2A3.2 3.2 0 0 1 19 6.1z"/></svg>
+          </span>
+          <h2 id="emptyTitle">Start a conversation</h2>
+          <p id="emptyBody">Message another MX1 trader to compare reads, share a position, or ask about a setup.</p>
+          <button class="btn" id="emptyNew">
+            <svg viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></svg>
+            New conversation
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---- thread ---- -->
+    <div class="region r-thread" id="thread">
+      <div class="thread-head">
+        <button class="back" id="back" aria-label="Back to conversations">
+          <svg viewBox="0 0 16 16"><polyline points="10 3 5 8 10 13"/></svg>
+        </button>
+        <div class="ava-wrap" id="thAvaWrap" hidden>
+          <div class="ava" id="thAva"></div>
+          <span class="presence" id="thPresence"></span>
+        </div>
+        <div class="title">
+          <b id="thName">Chat</b>
+          <div class="sub" id="thSub">No conversation open</div>
+        </div>
+        <span class="spacer"></span>
+        <span class="chip" id="thVenue" hidden></span>
+      </div>
+
+      <div class="msgs" id="msgs" role="log" aria-live="polite" aria-label="Messages" hidden></div>
+
+      <div class="empty" id="threadEmpty">
+        <div class="empty-in">
+          <span class="empty-mark">
+            <svg viewBox="0 0 22 22"><path d="M19 12.7a3.2 3.2 0 0 1-3.2 3.2H7.6L3.4 19.2V6.1A3.2 3.2 0 0 1 6.6 2.9h9.2A3.2 3.2 0 0 1 19 6.1z"/></svg>
+          </span>
+          <h2>Nothing open yet</h2>
+          <p>Pick a conversation from the list, or start a new one. Messages are between
+             traders — MX1 never asks for keys, seed phrases or funds here.</p>
+        </div>
+      </div>
+
+      <div class="typing" id="typing" hidden><i></i><i></i><i></i><span id="typingWho"></span></div>
+
+      <div class="composer">
+        <div class="cbox">
+          <textarea id="input" rows="1" placeholder="Open a conversation to write"
+                    aria-label="Message" disabled></textarea>
+          <button class="send" id="send" disabled aria-label="Send message">
+            <svg viewBox="0 0 18 18"><path d="M2.4 9 15.6 3.2 12.8 15.4 9.2 11z"/><path d="M9.2 11 15.6 3.2"/></svg>
+          </button>
+        </div>
+        <div class="chint">
+          <span><kbd>Enter</kbd> send</span>
+          <span><kbd>Shift</kbd> + <kbd>Enter</kbd> new line</span>
+          <span><kbd>/</kbd> search</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ------------------------------------------------------------------ config */
+const CONFIG = {
+  density: "sharp",   // "sharp" | "soft" — Shift+D toggles live
+  wsUrl: "",          // wss://api.mx1trade.com/chat — blank runs the demo set
+  me: "MT",
+};
+
+const $ = id => document.getElementById(id);
+const money = (v, signed) => (signed && v > 0 ? "+" : v < 0 ? "\u2212" : "") + "$" +
+  Math.abs(v).toLocaleString(undefined, { minimumFractionDigits:2, maximumFractionDigits:2 });
+
+document.body.classList.toggle("sharp", CONFIG.density === "sharp");
+addEventListener("keydown", e => {
+  if (e.shiftKey && (e.key === "D" || e.key === "d") && !isTyping(e.target)) {
+    CONFIG.density = CONFIG.density === "sharp" ? "soft" : "sharp";
+    document.body.classList.toggle("sharp", CONFIG.density === "sharp");
+  }
+});
+const isTyping = el => el && (el.tagName === "TEXTAREA" || el.tagName === "INPUT");
+
+/* ---- data ---------------------------------------------------------------- */
+const MIN = 60e3, HOUR = 3600e3, DAY = 86400e3;
+const now = Date.now();
+
+let CONVOS = [], active = null, filter = "";
+
+function demoConvos() {
+  return [
+    { id:"c1", name:"Justice — Bitunix UAE", tag:"KOL", tint:"#f7931a", online:true,
+      venue:"Signal group", msgs:[
+        { from:"them", t:now - 2*DAY - 3*HOUR, text:"Channel's asking whether Fusion runs the same on Bitunix as it does on OKX." },
+        { from:"me",   t:now - 2*DAY - 2.6*HOUR, text:"Same engine, different rail. Execution venue is a config line, the signal path doesn't change." },
+        { from:"them", t:now - 4*HOUR, text:"Good. Sending them the OKX walkthrough then." },
+        { from:"them", t:now - 3.4*HOUR, text:"One more — do they need their own API keys or is it OAuth?" },
+        { from:"me",   t:now - 3*HOUR, text:"OAuth, read-and-trade scope only. No withdrawal permission, and we never hold custody." },
+      ]},
+
+    { id:"c2", name:"Max Werth", tag:"JMW", tint:"#8a9ff7", online:true,
+      venue:"Direct", msgs:[
+        { from:"them", t:now - 26*HOUR, text:"Did the 15m breakout fill or did it get faded again?" },
+        { from:"me",   t:now - 25.6*HOUR, text:"Filled. Trimmed half into the first push." },
+        { from:"me",   t:now - 25.5*HOUR, pos:{ sym:"BTC-USDT-SWAP", side:"long", size:1,
+              entry:63220, exit:64020, pnl:1.92, held:"2d 4h" } },
+        { from:"them", t:now - 25*HOUR, text:"That's the cleanest one this month." },
+        { from:"them", t:now - 40*MIN, text:"Deck's updated — pushed the agent count change you asked for." },
+      ]},
+
+    { id:"c3", name:"Desk — MX1 Operations", tag:"Team", tint:"#34d399", online:false,
+      venue:"Internal", msgs:[
+        { from:"them", t:now - 3*DAY, text:"Reminder: OKX maintenance window Sunday 02:00–04:00 UTC. Fusion pauses automatically." },
+        { from:"me",   t:now - 3*DAY + 20*MIN, text:"Noted. Anything queued should flush before then." },
+        { from:"them", t:now - 9*HOUR, text:"Confirmed, queue drains at 01:30." },
+      ]},
+
+    { id:"c4", name:"Gaurav Dubey", tag:"Advisor", tint:"#a78bfa", online:false,
+      venue:"Direct", msgs:[
+        { from:"them", t:now - 6*DAY, text:"Sent notes on the offshore sequencing. UAE first still looks right." },
+        { from:"me",   t:now - 6*DAY + 90*MIN, text:"Agreed. Reading them tonight." },
+      ]},
+  ];
+}
+
+/* ---- helpers -------------------------------------------------------------- */
+const initials = n => n.replace(/[—–-].*$/, "").trim().split(/\s+/)
+  .slice(0,2).map(w => w[0]).join("").toUpperCase();
+
+function whenLabel(t) {
+  const d = now - t;
+  if (d < MIN) return "now";
+  if (d < HOUR) return Math.floor(d/MIN) + "m";
+  if (d < DAY)  return Math.floor(d/HOUR) + "h";
+  if (d < 7*DAY) return Math.floor(d/DAY) + "d";
+  return new Date(t).toLocaleDateString(undefined, { month:"short", day:"numeric" });
+}
+const clock = t => new Date(t).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
+
+function dayLabel(t) {
+  const a = new Date(t); a.setHours(0,0,0,0);
+  const b = new Date(); b.setHours(0,0,0,0);
+  const diff = Math.round((b - a) / DAY);
+  if (diff === 0) return "Today";
+  if (diff === 1) return "Yesterday";
+  if (diff < 7) return a.toLocaleDateString(undefined, { weekday:"long" });
+  return a.toLocaleDateString(undefined, { month:"long", day:"numeric" });
+}
+
+const lastOf = c => c.msgs[c.msgs.length - 1];
+const preview = m => m ? (m.pos ? "Shared a position \u00b7 " + m.pos.sym : m.text) : "";
+const esc = s => String(s).replace(/[&<>"]/g, ch =>
+  ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[ch]));
+
+/* ---- conversation list ---------------------------------------------------- */
+function renderList() {
+  const q = filter.trim().toLowerCase();
+  const rows = CONVOS.filter(c => !q ||
+    c.name.toLowerCase().includes(q) ||
+    c.msgs.some(m => (m.text || "").toLowerCase().includes(q)));
+
+  /* Most recent first — a list ordered by anything else makes you hunt for the
+     one thing that changed. */
+  rows.sort((a, b) => lastOf(b).t - lastOf(a).t);
+
+  const noneAtAll = CONVOS.length === 0;
+  $("list").hidden = rows.length === 0;
+  $("listEmpty").hidden = rows.length !== 0;
+
+  /* Two different emptinesses, two different answers. "No results" is a dead
+     end you fix by clearing the search; "no conversations" is an invitation. */
+  if (rows.length === 0) {
+    $("emptyTitle").textContent = noneAtAll ? "Start a conversation" : "No matches";
+    $("emptyBody").textContent = noneAtAll
+      ? "Message another MX1 trader to compare reads, share a position, or ask about a setup."
+      : "Nothing here matches \u201c" + filter.trim() + "\u201d. Try a different name or phrase.";
+    $("emptyNew").hidden = !noneAtAll;
+  }
+
+  $("list").innerHTML = rows.map(c => {
+    const m = lastOf(c);
+    return `<button class="conv" role="option" data-id="${c.id}"
+      aria-selected="${active === c.id}">
+      <span class="ava-wrap">
+        <span class="ava" style="background:${c.tint}">${initials(c.name)}</span>
+        <span class="presence ${c.online ? "on" : ""}"></span>
+      </span>
+      <span>
+        <span class="who"><b>${esc(c.name)}</b><span class="tagline">${esc(c.tag)}</span></span>
+        <span class="last">${m.from === "me" ? "You: " : ""}${esc(preview(m))}</span>
+      </span>
+      <span class="meta">
+        <span class="when">${whenLabel(m.t)}</span>
+        ${c.unread ? `<span class="badge">${c.unread}</span>` : ""}
+      </span>
+    </button>`;
+  }).join("");
+}
+
+$("list").addEventListener("click", e => {
+  const b = e.target.closest("[data-id]");
+  if (b) openConvo(b.dataset.id);
+});
+
+/* ---- thread --------------------------------------------------------------- */
+function openConvo(id) {
+  const c = CONVOS.find(x => x.id === id);
+  if (!c) return;
+  active = id;
+  c.unread = 0;
+
+  $("thName").textContent = c.name;
+  $("thSub").textContent = c.online ? "Online" : "Last seen " + whenLabel(lastOf(c).t) + " ago";
+  $("thAvaWrap").hidden = false;
+  $("thAva").textContent = initials(c.name);
+  $("thAva").style.background = c.tint;
+  $("thPresence").className = "presence" + (c.online ? " on" : "");
+  $("thVenue").hidden = false;
+  $("thVenue").textContent = c.venue;
+
+  $("threadEmpty").hidden = true;
+  $("msgs").hidden = false;
+  $("input").disabled = false;
+  $("input").placeholder = "Message " + c.name.replace(/[—–-].*$/, "").trim();
+  $("thread").classList.add("open");
+
+  renderThread();
+  renderList();
+  $("input").focus();
+}
+
+function renderThread() {
+  const c = CONVOS.find(x => x.id === active);
+  if (!c) return;
+
+  /* A run is the same person inside five minutes. Marking each message with
+     whether it continues a run — and whether one continues from it — lets the
+     header, the bubble tail and the timestamp all follow from one decision. */
+  const runs = c.msgs.map((m, i) => {
+    const prev = c.msgs[i - 1], next = c.msgs[i + 1];
+    const sameDay = p => p && dayLabel(p.t) === dayLabel(m.t);
+    return {
+      cont: !!prev && prev.from === m.from && (m.t - prev.t) < 5*MIN && sameDay(prev),
+      more: !!next && next.from === m.from && (next.t - m.t) < 5*MIN && sameDay(next),
+    };
+  });
+
+  let html = "", lastDay = null;
+
+  c.msgs.forEach((m, i) => {
+    const d = dayLabel(m.t);
+    if (d !== lastDay) { html += `<div class="daysep"><span>${d}</span></div>`; lastDay = d; }
+
+    const mine = m.from === "me";
+    const { cont, more } = runs[i];
+
+    html += `<div class="msg ${mine ? "me" : ""} ${cont ? "run" : ""}">
+      <span class="who">${mine ? "You" : esc(c.name.replace(/[—–-].*$/, "").trim())}</span>
+      ${m.text ? `<div class="bubble">${esc(m.text)}</div>` : ""}
+      ${m.pos ? posQuote(m.pos) : ""}
+      ${more ? "" : `<span class="stamp">${clock(m.t)}${
+        mine ? ' <span class="tick">&#10003;&#10003;</span>' : ""}</span>`}
+    </div>`;
+  });
+
+  $("msgs").innerHTML = html;
+  $("msgs").scrollTop = $("msgs").scrollHeight;
+}
+
+/* A position pasted into a thread is a quotation, not a live tile — it keeps
+   the numbers as they were when it was sent, so scrollback can't quietly
+   rewrite what someone said. */
+function posQuote(p) {
+  return `<div class="pos-quote">
+    <div class="pq-top">
+      <span class="sym">${esc(p.sym)}</span>
+      <span class="tag ${p.side}">${p.side.toUpperCase()}</span>
+      <span style="margin-left:auto" class="${p.pnl >= 0 ? "up" : "down"} num">
+        ${money(p.pnl, true)}</span>
+    </div>
+    <div class="pq-grid">
+      <div><div class="k">Entry</div><div class="v">${p.entry.toLocaleString()}</div></div>
+      <div><div class="k">Exit</div><div class="v">${p.exit.toLocaleString()}</div></div>
+      <div><div class="k">Held</div><div class="v">${esc(p.held)}</div></div>
+    </div>
+    <div class="pq-note">Closed position, as sent \u00b7 not live</div>
+  </div>`;
+}
+
+/* ---- composer -------------------------------------------------------------- */
+const input = $("input");
+
+function autoGrow() {
+  input.style.height = "auto";
+  input.style.height = Math.min(input.scrollHeight, 132) + "px";
+  $("send").disabled = !input.value.trim() || !active;
+}
+input.addEventListener("input", autoGrow);
+
+input.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+});
+$("send").addEventListener("click", send);
+
+function send() {
+  const text = input.value.trim();
+  const c = CONVOS.find(x => x.id === active);
+  if (!text || !c) return;
+
+  c.msgs.push({ from:"me", t:Date.now(), text });
+  input.value = "";
+  autoGrow();
+  renderThread(); renderList();
+
+  /* Demo only: the relay supplies the other side in production. */
+  if (!CONFIG.wsUrl && c.online) {
+    const who = c.name.replace(/[—–-].*$/, "").trim();
+    $("typingWho").textContent = who + " is typing";
+    $("typing").hidden = false;
+    setTimeout(() => {
+      $("typing").hidden = true;
+      if (active !== c.id) c.unread = (c.unread || 0) + 1;
+      c.msgs.push({ from:"them", t:Date.now(),
+        text:"Got it — looking now." });
+      renderThread(); renderList();
+    }, 1600 + Math.random() * 1200);
+  }
+}
+
+/* ---- search --------------------------------------------------------------- */
+$("q").addEventListener("input", e => { filter = e.target.value; renderList(); });
+
+addEventListener("keydown", e => {
+  if (e.key === "/" && !isTyping(e.target)) { e.preventDefault(); $("q").focus(); }
+  if (e.key === "Escape") {
+    if (document.activeElement === $("q")) { $("q").value = ""; filter = ""; renderList(); $("q").blur(); }
+    else if (innerWidth < 880) $("thread").classList.remove("open");
+  }
+});
+
+$("back").addEventListener("click", () => $("thread").classList.remove("open"));
+
+/* ---- new conversation ------------------------------------------------------ */
+function newConvo() {
+  const name = prompt("Who do you want to message?");
+  if (!name || !name.trim()) return;
+  const id = "c" + Date.now();
+  CONVOS.push({ id, name:name.trim(), tag:"New", tint:"#60a5fa", online:false,
+                venue:"Direct", msgs:[{ from:"them", t:Date.now(),
+                text:"Conversation started. Say hello." }] });
+  filter = ""; $("q").value = "";
+  renderList(); openConvo(id);
+}
+$("newChat").addEventListener("click", newConvo);
+$("emptyNew").addEventListener("click", newConvo);
+
+/* ---- topbar switch --------------------------------------------------------- */
+$("aiAuto").addEventListener("click", () => {
+  const b = $("aiAuto");
+  const on = b.getAttribute("aria-pressed") !== "true";
+  b.setAttribute("aria-pressed", on);
+  b.querySelector(".toggle").classList.toggle("on", on);
+});
+document.querySelectorAll(".nav a.soon").forEach(a =>
+  a.addEventListener("click", e => e.preventDefault()));
+
+/* ---- boot ------------------------------------------------------------------ */
+CONVOS = demoConvos();
+CONVOS[0].unread = 2;
+renderList();
+/* On a wide screen an empty right pane is the largest dead area on the page,
+   so open the most recent thread. On mobile the list is the page, so don't. */
+if (innerWidth >= 880 && CONVOS.length) {
+  openConvo(CONVOS.slice().sort((a,b) => lastOf(b).t - lastOf(a).t)[0].id);
+}
+</script>
