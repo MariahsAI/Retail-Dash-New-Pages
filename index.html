@@ -63,14 +63,28 @@
   /* ---- status strip: every number that matters, one row, no chart ---- */
   /* Hero surface: navy fill rather than the ordinary card plane, so the strip
      reads blue on its own instead of relying on the bloom to tint it. */
-  .stripwrap { background:var(--hero); border:1px solid var(--accent-edge); border-radius:14px;
+  /* Hero surface as a gradient, not a slab. Navy is strongest along the top
+     edge and has faded to the page colour by the time it reaches the
+     substrip — light falling across the strip rather than a painted block.
+     Two consequences that were the point of doing it this way:
+       · the substrip gets its demotion back without a separate fill, because
+         it simply sits in the faded end
+       · the alert cells land on near-black, so their amber and coral washes
+         read clean instead of going olive against navy */
+  /* Hero by scarcity, not by area. Navy lifts the KPI row only; the wrapper
+     and the substrip stay on the page plane. When the "forward" surface is
+     also the largest block on screen the hierarchy inverts — the chart and
+     signal cards start reading as background, which is the wrong way round. */
+  .stripwrap { background:var(--panel);
+               border:1px solid var(--accent-edge); border-radius:14px;
                overflow:hidden; }
-  .strip { display:grid; grid-template-columns:1.5fr repeat(5, 1fr) .9fr; }
+  .strip { display:grid; grid-template-columns:1.5fr repeat(5, 1fr) .9fr;
+           background:var(--hero); }
 
   /* Account context, not key metrics — same panel, half the voice. These are
      numbers you confirm occasionally, not ones you watch. */
   .substrip { display:grid; grid-template-columns:repeat(4, 1fr);
-              border-top:1px solid var(--edge); background:rgba(255,255,255,.012); }
+              border-top:1px solid var(--edge); background:rgba(0,0,0,.22); }
   .sub-cell { display:flex; align-items:baseline; gap:9px; flex-wrap:wrap;
               padding:10px 18px; border-left:1px solid var(--hair); min-width:0; }
   .sub-cell:first-child { border-left:0; }
@@ -604,6 +618,11 @@
      --text, which is #ffffff under body.sharp — that painted a hard white rule
      down the left of every flagged cell, reading as a rendering fault rather
      than a warning. */
+  /* Alert cells opt out of the navy and sit on near-black, which is the
+     only floor the amber and coral washes read cleanly against. Opaque
+     now that the strip is a flat fill rather than a gradient. */
+  .cell.attn-warn, .cell.attn-neg { background:#070d18; }
+
   .card.attn-warn, .cell.attn-warn { border-color: rgba(251, 191, 36, .50); }
   .card.attn-neg,  .cell.attn-neg  { border-color: rgba(251, 113, 133, .55); }
 
