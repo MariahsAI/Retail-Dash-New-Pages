@@ -1,167 +1,264 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>MX1 Trade — Portfolio</title>
+<title>MX1 Trade — Overview (dense)</title>
 
 <style>
   :root {
-    --bg: #050b16;
-    --bar: #070e1c;
-    --panel: #0b1424;
-    --panel-2: #0a1220;
-    --hair: rgba(255, 255, 255, 0.07);
-    --text: #e9eff8;
-    --muted: #8093ab;
-    --dim: #4c5a70;
-
-    /* ---- MX1 brand. Chrome only. Never follows PnL. ---- */
-    --brand: #3b82f6;
-    --brand-2: #60a5fa;
+    --bg: #050b16; --bar: #070e1c; --panel: #0b1424; --panel-2: #0a1220;
+    --hair: rgba(255,255,255,.07);
+    --text: #e9eff8; --muted: #8093ab; --dim: #4c5a70;
+    --brand: #3b82f6; --brand-2: #60a5fa;
     --brand-strong: #2563eb;
-    --edge: rgba(59, 130, 246, 0.22);
-    --head: #122140;                   /* card + table header band — dark blue */
-    --chart: #60a5fa;
-    --warn: #fbbf24;
-    --accent: var(--brand);
-    --accent-soft: rgba(59, 130, 246, 0.16);
-    --accent-edge: rgba(59, 130, 246, 0.34);
-
-    /* ---- Semantic. Sign only. ---- */
-    --pos: #34d399;
-    --neg: #fb7185;
-
+    --edge: rgba(59,130,246,.22); --head: #122140; --chart: #60a5fa; --warn: #fbbf24;
+    --accent: var(--brand); --accent-soft: rgba(59,130,246,.16); --accent-edge: rgba(59,130,246,.34);
+    --pos: #34d399; --neg: #fb7185;
     --hero: #0d1730;   /* hero surfaces — navy, so they read blue */
   }
-
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
-
-  body {
-    margin: 0; background: var(--bg); color: var(--text); font-size: 14px;
-    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-    -webkit-font-smoothing: antialiased;
-  }
-
-  .label { font-size: 10.5px; letter-spacing: .18em; text-transform: uppercase; color: var(--muted); }
-  .num { font-variant-numeric: tabular-nums; }
-  .up { color: var(--pos); }
-  .down { color: var(--neg); }
+  body { margin:0; background:var(--bg); color:var(--text); font-size:14px;
+         font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+         -webkit-font-smoothing:antialiased; }
+  .label { font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); }
+  .num { font-variant-numeric: tabular-nums; transition: color .3s ease; }
+  .up { color:var(--pos); } .down { color:var(--neg); }
+  .flash-up { color:var(--pos) !important; } .flash-down { color:var(--neg) !important; }
 
   /* ------------------------------------------------------------- chrome */
-  .topbar { display: flex; align-items: center; gap: 14px; padding: 9px 18px;
-            background: var(--bar); border-bottom: 1px solid var(--hair); flex-wrap: wrap; }
-  .brand { display: flex; flex-direction: column; line-height: 1; margin-right: 4px; }
-  .brand b { font-size: 19px; letter-spacing: .06em; }
-  .brand b i { font-style: normal; color: var(--brand); }
-  .brand span { font-size: 9px; color: var(--dim); margin-top: 2px; }
-
-  .seg { display: inline-flex; border: 1px solid var(--hair); border-radius: 8px; overflow: hidden; }
-  .seg button { background: none; border: 0; color: var(--muted); font: inherit; font-size: 12px;
-                font-weight: 600; padding: 5px 13px; cursor: pointer; }
-  .seg button[aria-pressed="true"] { background: var(--brand); color: #fff; }
-
-  .chip { font:inherit; display: inline-flex; align-items: center; gap: 7px; border: 1px solid var(--hair);
-          border-radius: 999px; padding: 5px 13px; font-size: 11.5px; color: var(--muted);
-          background: rgba(255,255,255,.02); white-space: nowrap; }
+  .topbar { display:flex; align-items:center; gap:14px; padding:9px 18px;
+            background:var(--bar); border-bottom:1px solid var(--hair); flex-wrap:wrap; }
+  .brand { display:flex; flex-direction:column; line-height:1; margin-right:4px; }
+  .brand b { font-size:19px; letter-spacing:.06em; }
+  .brand b i { font-style:normal; color:var(--brand); }
+  .brand span { font-size:9px; color:var(--dim); margin-top:2px; }
+  .seg { display:inline-flex; border:1px solid var(--hair); border-radius:8px; overflow:hidden; }
+  .seg button { background:none; border:0; color:var(--muted); font:inherit; font-size:12px;
+                font-weight:600; padding:5px 13px; cursor:pointer; }
+  .seg button[aria-pressed="true"] { background:var(--brand); color:#fff; }
+  .chip { font:inherit; display:inline-flex; align-items:center; gap:7px; border:1px solid var(--hair);
+          border-radius:999px; padding:5px 13px; font-size:11.5px; color:var(--muted);
+          background:rgba(255,255,255,.02); white-space:nowrap; }
   button.chip { cursor:pointer; }
-  .chip.online { border-color: rgba(52,211,153,.34); color: var(--pos); }
-  .chip.kill { border-color: rgba(251,113,133,.3); color: var(--neg); }
-  .chip.ex { border-color: var(--accent-edge); color: var(--accent); }
-  .toggle { width: 26px; height: 14px; border-radius: 999px; background: #1c2b42; position: relative; }
-  .toggle::after { content: ""; position: absolute; top: 2px; right: 2px; width: 10px; height: 10px;
-                   border-radius: 50%; background: #e9eff8; }
-
-  .ticker-pill { display: inline-flex; align-items: center; gap: 10px; border: 1px solid var(--accent-edge);
-                 border-radius: 999px; padding: 6px 16px; background: var(--accent-soft);
-                 margin-left: auto; margin-right: auto; }
-  .uid { border: 1px solid var(--hair); border-radius: 999px; padding: 5px 13px; font-size: 11px;
-         color: var(--muted); font-family: ui-monospace, monospace; }
-  .avatar { width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center;
-            background: linear-gradient(140deg, var(--brand), var(--brand-2));
-            font-size: 10px; font-weight: 700; color: #04121c; }
-
-  .nav { display: flex; gap: 26px; padding: 0 20px; background: var(--bar);
-         border-bottom: 1px solid var(--hair); overflow-x: auto; }
-  .nav a { color: var(--muted); text-decoration: none; font-size: 13.5px; padding: 12px 2px;
-           border-bottom: 2px solid transparent; white-space: nowrap; }
-  .nav a:hover { color: var(--text); }
-  .nav a.on { color: var(--brand); border-bottom-color: var(--brand); }
+  .chip.online { border-color:rgba(52,211,153,.34); color:var(--pos); }
+  .chip.kill { border-color:rgba(251,113,133,.3); color:var(--neg); }
+  .chip.ex { border-color:var(--accent-edge); color:var(--accent); }
+  .toggle { width:26px; height:14px; border-radius:999px; background:#1c2b42; position:relative; }
+  .toggle::after { content:""; position:absolute; top:2px; right:2px; width:10px; height:10px;
+                   border-radius:50%; background:#e9eff8; }
+  .uid { border:1px solid var(--hair); border-radius:999px; padding:5px 13px; font-size:11px;
+         color:var(--muted); font-family:ui-monospace,monospace; margin-left:auto; }
+  .avatar { width:26px; height:26px; border-radius:50%; display:grid; place-items:center;
+            background:linear-gradient(140deg,var(--brand),var(--brand-2));
+            font-size:10px; font-weight:700; color:#04121c; }
+  .nav { display:flex; gap:26px; padding:0 20px; background:var(--bar);
+         border-bottom:1px solid var(--hair); overflow-x:auto; }
+  .nav a { color:var(--muted); text-decoration:none; font-size:13.5px; padding:12px 2px;
+           border-bottom:2px solid transparent; white-space:nowrap; }
+  .nav a:hover { color:var(--text); }
+  .nav a.on { color:var(--brand); border-bottom-color:var(--brand); }
 
   /* --------------------------------------------------------------- page */
-  .page { width: 100%; max-width: 1680px; margin: 0 auto; padding: 18px 22px 50px; }
-  .page-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
-  .page-head h1 { font-family: Georgia, serif; font-size: 27px; margin: 0 0 5px; font-weight: 400; }
-  .page-head p { margin: 0; color: var(--dim); font-size: 13px; }
+  .page { width:100%; max-width:1680px; margin:0 auto; padding:18px 22px 40px; }
 
-  /* Hero surface: navy fill rather than the ordinary card plane, so the panel
+  /* ---- status strip: every number that matters, one row, no chart ---- */
+  /* Hero surface: navy fill rather than the ordinary card plane, so the strip
      reads blue on its own instead of relying on the bloom to tint it. */
-  .panel { background: var(--hero); border: 1px solid var(--accent-edge); border-radius: 14px;
-           padding: 18px 20px; margin-top: 16px; }
+  /* Hero surface as a gradient, not a slab. Navy is strongest along the top
+     edge and has faded to the page colour by the time it reaches the
+     substrip — light falling across the strip rather than a painted block.
+     Two consequences that were the point of doing it this way:
+       · the substrip gets its demotion back without a separate fill, because
+         it simply sits in the faded end
+       · the alert cells land on near-black, so their amber and coral washes
+         read clean instead of going olive against navy */
+  /* Hero by scarcity, not by area. Navy lifts the KPI row only; the wrapper
+     and the substrip stay on the page plane. When the "forward" surface is
+     also the largest block on screen the hierarchy inverts — the chart and
+     signal cards start reading as background, which is the wrong way round. */
+  .stripwrap { background:var(--panel);
+               border:1px solid var(--accent-edge); border-radius:14px;
+               overflow:hidden; }
+  .strip { display:grid; grid-template-columns:1.5fr repeat(5, 1fr) .9fr;
+           background:var(--hero); }
 
-  /* ----------------------------------------------------- headline stats */
-  .kpis { display: grid; grid-template-columns: repeat(6, 1fr); gap: 18px; }
-  .kpi .v { font-size: 22px; margin-top: 4px; font-family: Georgia, serif; font-variant-numeric: tabular-nums; }
-  .kpi .n { font-size: 11.5px; color: var(--dim); margin-top: 4px; }
+  /* Account context, not key metrics — same panel, half the voice. These are
+     numbers you confirm occasionally, not ones you watch. */
+  .substrip { display:grid; grid-template-columns:repeat(4, 1fr);
+              border-top:1px solid var(--edge); background:rgba(0,0,0,.22); }
+  .sub-cell { display:flex; align-items:baseline; gap:9px; flex-wrap:wrap;
+              padding:10px 18px; border-left:1px solid var(--hair); min-width:0; }
+  .sub-cell:first-child { border-left:0; }
+  .sub-cell .label { font-size:9.5px; }
+  .sub-cell .v { font-size:14px; font-variant-numeric:tabular-nums; }
+  .sub-cell .n { font-size:11px; color:var(--dim); margin-left:auto; white-space:nowrap;
+                 overflow:hidden; text-overflow:ellipsis; }
+  .pill { font-size:10px; letter-spacing:.05em; padding:2px 8px; border-radius:999px;
+          border:1px solid var(--hair); color:var(--muted); }
+  .pill.up   { border-color:rgba(52,211,153,.34); color:var(--pos); background:rgba(52,211,153,.10); }
+  .pill.down { border-color:rgba(251,113,133,.34); color:var(--neg); background:rgba(251,113,133,.10); }
+  .cell { padding:14px 18px; border-left:1px solid var(--hair); min-width:0; }
+  .cell:first-child { border-left:0; }
+  .cell .v { font-size:20px; margin-top:5px; font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .cell .v.hero { font-family:Georgia,serif; font-size:32px; line-height:1.05; }
+  .cell .n { font-size:11px; color:var(--dim); margin-top:3px; white-space:nowrap;
+             overflow:hidden; text-overflow:ellipsis; }
+  .meter { height:3px; border-radius:2px; background:rgba(255,255,255,.07); margin-top:8px; overflow:hidden; }
+  .meter i { display:block; height:100%; border-radius:2px; transition:width .5s ease, background .4s ease; }
+  .split { display:flex; height:3px; border-radius:2px; overflow:hidden; margin-top:8px;
+           background:rgba(255,255,255,.07); }
+  .split .l { background:var(--pos); } .split .s { background:var(--neg); }
 
-  /* ------------------------------------------------------- equity curve */
-  .curve-head { display: flex; justify-content: space-between; align-items: center; gap: 16px;
-                flex-wrap: wrap; margin-bottom: 4px; }
-  .tabs { display: inline-flex; gap: 3px; padding: 3px; border: 1px solid var(--hair);
-          border-radius: 10px; background: rgba(255,255,255,.02); }
-  .tab { background: none; border: 0; cursor: pointer; font: inherit; font-size: 11.5px; font-weight: 600;
-         letter-spacing: .07em; color: var(--muted); padding: 6px 12px; border-radius: 7px;
-         transition: color .18s, background .18s; }
-  .tab:hover { color: var(--text); }
-  .tab[aria-pressed="true"] { background: var(--accent-soft); color: var(--accent); }
-  .tab:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-  #tabs .tab[data-r="live"] { display:inline-flex; align-items:center; gap:6px;
-                              border-right:1px solid var(--hair); border-radius:7px 0 0 7px;
-                              margin-right:3px; padding-right:13px; }
-  #tabs .tab[data-r="live"] .dot { width:6px; height:6px; border-radius:50%; background:var(--pos);
-                                   animation:pulse 1.6s ease-in-out infinite; }
-  #tabs .tab[data-r="live"][aria-pressed="false"] .dot { background:var(--dim); animation:none; }
-  @keyframes pulse { 0%,100% { opacity: 1 } 50% { opacity: .3 } }
-  @media (prefers-reduced-motion: reduce) { .tab-link .dot { animation: none; } }
-
-  .chart { margin-top: 14px; height: 330px; }
-  .chart svg { width: 100%; height: 330px; display: block; cursor: crosshair; }
-  .curve-legend { display: flex; gap: 20px; margin-top: 12px; font-size: 11.5px; color: var(--dim); flex-wrap: wrap; }
-  .swatch { display: inline-block; width: 9px; height: 3px; border-radius: 2px; margin-right: 7px;
-            vertical-align: middle; }
-
-  /* -------------------------------------------------------------- tables */
-  .section-title { display: flex; align-items: baseline; gap: 10px; margin: 26px 0 10px; }
-  .section-title h2 { font-family: Georgia, serif; font-weight: 400; font-size: 19px; margin: 0; }
-  .section-title span { color: var(--dim); font-size: 12px; }
-
-  .scroller { overflow-x: auto; border: 1px solid var(--edge); border-radius: 14px; background: var(--panel); }
-  table { width: 100%; border-collapse: collapse; }
-  thead th { text-align: right; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
-             color: var(--muted); font-weight: 700; padding: 17px 14px;
-             background: var(--head); border-bottom: 2px solid var(--edge); white-space: nowrap; }
-  thead th:first-child, tbody td:first-child, .lt { text-align: left; }
-  tbody td { text-align: right; padding: 12px 14px; border-top: 1px solid var(--hair);
-             font-variant-numeric: tabular-nums; white-space: nowrap; }
-  tbody tr:hover { background: rgba(255,255,255,.015); }
-  tfoot td { padding: 13px 14px; border-top: 1px solid var(--hair); text-align: right;
-             font-variant-numeric: tabular-nums; background: var(--head); font-weight: 600; }
-
-  .tag { font-size: 10px; letter-spacing: .08em; padding: 3px 8px; border-radius: 5px; }
-  .tag.long { background: rgba(52,211,153,.15); color: var(--pos); }
-  .tag.short { background: rgba(251,113,133,.15); color: var(--neg); }
-  .note { color: var(--dim); font-size: 12px; max-width: 260px; white-space: normal; }
-
-  .toolbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 12px; }
-  .filter { background: rgba(255,255,255,.02); border: 1px solid var(--hair); color: var(--muted);
-            font: inherit; font-size: 12px; padding: 6px 12px; border-radius: 8px; cursor: pointer; }
-  .filter[aria-pressed="true"] { border-color: var(--accent-edge); color: var(--accent);
-                                 background: var(--accent-soft); }
-  .spacer { margin-left: auto; color: var(--dim); font-size: 12px; }
-
-  @media (max-width: 1080px) {
-    .kpis { grid-template-columns: repeat(3, 1fr); }
-    .ticker-pill { order: 9; margin: 0; }
+  /* --------------------------------------------------------------- grid */
+  .grid { display:grid; gap:16px; margin-top:16px; grid-template-columns:1fr; }
+  @media (min-width:1200px) {
+    .grid { grid-template-columns: minmax(0,1.9fr) minmax(0,1fr); align-items: start; }
   }
-  @media (max-width: 620px) { .kpis { grid-template-columns: repeat(2, 1fr); } }
+  /* Cards size to their content; the column doesn't stretch them to fill. */
+  .col { display:grid; gap:16px; min-width:0; align-content:start; }
+
+  .card { background:var(--panel); border:1px solid var(--edge); border-radius:14px; overflow:hidden;
+          display:flex; flex-direction:column; align-self:start;
+          transition:box-shadow .55s ease, border-color .55s ease; }
+
+  /* ---- glow -------------------------------------------------------------
+     Inset box-shadow rather than a pseudo-element: no stacking context to
+     fight, and it transitions cleanly when state changes. */
+  .stripwrap { box-shadow: inset 70px -50px 130px -70px rgba(59,130,246,.40),
+                           0 0 34px -14px rgba(59,130,246,.30);
+               transition: box-shadow .55s ease; }
+
+  /* Attention states. These are earned, not decorative — see setAttn(). */
+  .card.attn-warn, .cell.attn-warn {
+    box-shadow: inset 60px -45px 120px -70px rgba(251,191,36,.45),
+                0 0 26px -12px rgba(251,191,36,.28);
+  }
+  .card.attn-neg, .cell.attn-neg {
+    box-shadow: inset 60px -45px 120px -70px rgba(251,113,133,.50),
+                0 0 30px -12px rgba(251,113,133,.35);
+    border-color: rgba(251,113,133,.45);
+  }
+  .cell { transition: box-shadow .55s ease; }
+
+  /* Decorative mode: every card carries the brand bloom. */
+  body.glow-all .card { box-shadow: inset 60px -45px 120px -75px rgba(59,130,246,.34); }
+  body.glow-all .card.attn-warn { box-shadow: inset 60px -45px 120px -70px rgba(251,191,36,.45),
+                                              0 0 26px -12px rgba(251,191,36,.28); }
+  body.glow-all .card.attn-neg  { box-shadow: inset 60px -45px 120px -70px rgba(251,113,133,.50),
+                                              0 0 30px -12px rgba(251,113,133,.35); }
+  body.glow-off .stripwrap, body.glow-off .card, body.glow-off .cell { box-shadow:none; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .card, .cell, .strip { transition:none; }
+  }
+  .card-head { display:flex; align-items:center; justify-content:space-between; gap:12px;
+               padding:17px 18px; background:var(--head); border-bottom:2px solid var(--edge); }
+  .card-head h2 { font-family:Georgia,serif; font-weight:400; font-size:16px; margin:0; }
+
+  /* A control has to look like one at rest. The old version styled itself as
+     plain text until hover, and the chevron sat ~200px from the word because a
+     native select sizes to its widest option. Now: a visible pill sized to the
+     current value, with the real select laid invisibly on top so the native
+     menu (and keyboard, and mobile picker) still does the work. */
+  .picker-wrap { position:relative; display:inline-flex; }
+  .picker-face { display:inline-flex; align-items:center; gap:9px;
+                 font-family:Georgia,serif; font-size:16px; color:var(--text);
+                 background:rgba(59,130,246,.10); border:1px solid var(--edge);
+                 border-radius:9px; padding:5px 11px 5px 13px; white-space:nowrap;
+                 transition:background .2s ease, border-color .2s ease; }
+  .picker-face svg { width:11px; height:11px; stroke:var(--brand-2); stroke-width:2.2;
+                     fill:none; stroke-linecap:round; stroke-linejoin:round; flex:0 0 auto; }
+  .picker-wrap:hover .picker-face { background:rgba(59,130,246,.18); border-color:var(--brand); }
+  .picker { position:absolute; inset:0; width:100%; height:100%;
+            opacity:0; cursor:pointer; appearance:none; border:0; }
+  .picker:focus-visible + .picker-face { outline:2px solid var(--brand); outline-offset:2px; }
+  .picker option { background:var(--panel); color:var(--text); font-family:inherit; font-size:13px; }
+  .card-head .sub { color:var(--dim); font-size:11.5px; }
+  .card-body { padding:16px 18px; }
+  .card-body.flush { padding:0; }
+
+  .tabs { display:inline-flex; gap:2px; padding:2px; border:1px solid var(--hair);
+          border-radius:9px; background:rgba(255,255,255,.02); }
+  .tab { background:none; border:0; cursor:pointer; font:inherit; font-size:11px; font-weight:600;
+         letter-spacing:.06em; color:var(--muted); padding:5px 11px; border-radius:6px;
+         display:inline-flex; align-items:center; gap:5px; text-decoration:none; }
+  .tab:hover { color:var(--text); }
+  .tab[aria-pressed="true"] { background:var(--accent-soft); color:var(--accent); }
+  .tab:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+  .tab-link { color:var(--dim); border-left:1px solid var(--hair); border-radius:0; padding-left:11px; }
+  .dot { width:6px; height:6px; border-radius:50%; background:var(--dim); }
+  .dot.on { background:var(--pos); animation:pulse 1.6s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  .chart { height:230px; display:flex; }
+  .chart svg { width:100%; height:100%; display:block; cursor:crosshair; }
+  .chart .ph { width:100%; display:grid; place-items:center; color:var(--dim);
+               font-size:10.5px; letter-spacing:.16em; text-transform:uppercase; }
+
+  /* -------------------------------------------------------------- signals */
+  .sig { border-top:1px solid var(--hair); border-left:3px solid var(--dim); padding:13px 16px;
+         transition:opacity .35s ease; }
+  .sig:first-child { border-top:0; }
+  .sig.buy{border-left-color:var(--pos)} .sig.sell{border-left-color:var(--neg)}
+  .sig.hold{border-left-color:var(--warn)} .sig.stale{opacity:.45}
+  .sig-head { display:flex; justify-content:space-between; align-items:baseline; gap:10px; }
+  .sig-head b { font-size:13px; font-weight:600; }
+  .sig-tf { font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--dim);
+            border:1px solid var(--hair); border-radius:5px; padding:2px 6px; }
+  .verdict { font-family:Georgia,serif; font-size:23px; margin-top:6px; }
+  .verdict.buy{color:var(--pos)} .verdict.sell{color:var(--neg)} .verdict.hold{color:var(--warn)}
+  .gauge { position:relative; height:3px; border-radius:2px; margin-top:10px;
+           background:linear-gradient(90deg,rgba(251,113,133,.5),rgba(255,255,255,.1) 50%,rgba(52,211,153,.5)); }
+  .gauge i { position:absolute; top:-3px; width:3px; height:9px; border-radius:2px; background:var(--text);
+             transform:translateX(-50%); transition:left .5s cubic-bezier(.22,.61,.36,1); }
+  .sig-foot { display:flex; justify-content:space-between; align-items:center; gap:8px;
+              margin-top:10px; font-size:11px; color:var(--dim); }
+  .align { font-size:9.5px; letter-spacing:.07em; text-transform:uppercase; padding:2px 6px;
+           border-radius:5px; border:1px solid var(--hair); color:var(--dim); }
+  .align.match{border-color:rgba(52,211,153,.3);color:var(--pos)}
+  .align.conflict{border-color:rgba(251,113,133,.35);color:var(--neg)}
+
+  /* --------------------------------------------------------------- feed */
+  .feed-row { display:grid; grid-template-columns:70px 1fr auto; gap:12px; align-items:center;
+              padding:11px 18px; border-top:1px solid var(--hair); font-size:12.5px; }
+  .feed-row:first-child { border-top:0; }
+  .feed-row .t { color:var(--dim); font-size:11px; font-variant-numeric:tabular-nums; }
+  .feed-row .d small { color:var(--dim); display:block; font-size:11px; margin-top:2px; }
+  .feed-row .r { font-variant-numeric:tabular-nums; text-align:right; }
+
+  /* ------------------------------------------------------------- tables */
+  .scroll { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; }
+  /* The card header already carries the band — a second filled bar directly
+     beneath it just thickens the chrome. */
+  thead th { text-align:right; font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+             color:var(--muted); font-weight:700; padding:14px 16px; white-space:nowrap;
+             background:transparent; border-bottom:1px solid var(--hair); }
+  thead th:first-child, tbody td:first-child, .lt { text-align:left; }
+  tbody td { text-align:right; padding:11px 16px; border-top:1px solid var(--hair);
+             font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .tag { font-size:9.5px; letter-spacing:.07em; padding:3px 7px; border-radius:5px; }
+  .tag.long{background:rgba(52,211,153,.15);color:var(--pos)}
+  .tag.short{background:rgba(251,113,133,.15);color:var(--neg)}
+  .tag.cex{background:rgba(79,142,247,.16);color:var(--brand-2)}
+
+  .asset { display:flex; align-items:center; gap:11px; }
+  .coin { width:26px; height:26px; border-radius:50%; display:grid; place-items:center; flex:0 0 auto;
+          font-size:11px; font-weight:700; color:#071018; }
+  .asset b { font-weight:600; display:block; font-size:13px; line-height:1.25; }
+  .asset small { color:var(--dim); font-size:11px; }
+
+  .alloc { text-align:left !important; min-width:130px; }
+  .bar { height:3px; border-radius:2px; background:rgba(255,255,255,.08); overflow:hidden; }
+  .bar i { display:block; height:100%; background:var(--chart); transition:width .4s ease; }
+  .alloc small { color:var(--dim); font-size:11px; display:block; margin-top:5px; }
+  .empty { padding:26px; text-align:center; color:var(--dim); font-size:13px; }
+
+  @media (max-width:1100px) { .strip { grid-template-columns:repeat(3,1fr); }
+                              .substrip { grid-template-columns:repeat(2,1fr); }
+                              .cell { border-left:0; border-top:1px solid var(--hair); } }
+  @media (max-width:620px) { .strip { grid-template-columns:repeat(2,1fr); }
+                             .substrip { grid-template-columns:1fr; }
+                             .sub-cell { border-left:0; border-top:1px solid var(--hair); } }
 
   /* ---- chrome glow ------------------------------------------------------
      Few controls, each carrying real state (selected / on / online), so the
@@ -209,138 +306,26 @@
   body.glow-off .seg button[aria-pressed="true"],
   body.glow-off .toggle.on, body.glow-off .chip.online, body.glow-off .nav a.on { box-shadow:none; }
 
-  /* ---- filters: grouped segments, one control per dimension ---- */
-  .filterbar { display:flex; align-items:center; gap:20px; flex-wrap:wrap; margin-bottom:12px; }
+  /* ---- filters ----------------------------------------------------------
+     Grouped segments rather than a row of individual outlined pills: four
+     controls to parse instead of fourteen. */
+  .filterbar { display:flex; align-items:center; gap:18px; flex-wrap:wrap;
+               padding:10px 18px; border-bottom:1px solid var(--hair);
+               background:rgba(255,255,255,.012); }
   .fgroup { display:inline-flex; align-items:center; gap:8px; }
   .fgroup > .label { font-size:9.5px; }
   .segset { display:inline-flex; border:1px solid var(--edge); border-radius:8px;
             overflow:hidden; background:rgba(255,255,255,.02); }
   .segset button { border:0; background:none; color:var(--muted); font:inherit; font-size:11.5px;
-                   padding:6px 12px; cursor:pointer; border-left:1px solid var(--hair);
+                   padding:5px 11px; cursor:pointer; border-left:1px solid var(--hair);
                    transition:background .2s ease, color .2s ease; }
   .segset button:first-child { border-left:0; }
   .segset button:hover { color:var(--text); }
   .segset button[aria-pressed="true"] { background:var(--brand); color:#fff; }
   .segset button:focus-visible { outline:2px solid var(--brand); outline-offset:-2px; }
-  .fcount { margin-left:auto; font-size:12px; color:var(--dim); font-variant-numeric:tabular-nums; }
-
-  /* ---- account composition ---- */
-  .balrow { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:0; }
-  .balcard { background:var(--panel); border:1px solid var(--edge); border-radius:14px; padding:16px 18px; }
-  .balcard .v { font-family:Georgia,serif; font-size:24px; margin-top:5px; font-variant-numeric:tabular-nums; }
-  .balcard .n { font-size:12px; color:var(--dim); margin-top:4px; }
-  .balcard .pill { display:inline-block; margin-top:12px; padding:4px 11px; border-radius:999px;
-                   font-size:11px; border:1px solid var(--hair); color:var(--muted);
-                   background:rgba(255,255,255,.02); }
-  .balcard.total { background:var(--hero); border-color:var(--accent-edge);
-                   box-shadow: inset 60px -45px 120px -75px rgba(59,130,246,.34); }
-
-  .asset { display:flex; align-items:center; gap:11px; }
-  .coin { width:27px; height:27px; border-radius:50%; display:grid; place-items:center; flex:0 0 auto;
-          font-size:11px; font-weight:700; color:#071018; }
-  .asset b { font-weight:600; display:block; font-size:13.5px; line-height:1.25; }
-  .asset small { color:var(--dim); font-size:11.5px; }
-  .alloc { text-align:left !important; min-width:140px; }
-  .bar { height:3px; border-radius:2px; background:rgba(255,255,255,.08); overflow:hidden; }
-  .bar i { display:block; height:100%; background:var(--chart); transition:width .4s ease; }
-  .alloc small { color:var(--dim); font-size:11px; display:block; margin-top:5px; }
-  .tag.cex { background:rgba(59,130,246,.16); color:var(--brand-2); }
-  .tag.dex { background:rgba(167,139,250,.16); color:#a78bfa; }
-
-  @media (max-width:820px) { .balrow { grid-template-columns:1fr; } }
+  .fcount { margin-left:auto; font-size:11.5px; color:var(--dim); font-variant-numeric:tabular-nums; }
   .nav a.soon { opacity:.55; cursor:not-allowed; }
   .nav a.soon:hover { background:none; color:var(--muted); }
-
-  /* ---- category rollup: the one cut the asset table can't give ---- */
-  .rollup { background:var(--panel); border:1px solid var(--edge); border-radius:14px;
-            padding:16px 18px; margin-top:14px; }
-  .rollup-head { display:flex; justify-content:space-between; align-items:baseline; gap:12px; }
-  .stack { display:flex; height:8px; border-radius:4px; overflow:hidden; margin-top:12px;
-           background:rgba(255,255,255,.06); }
-  .stack i { display:block; height:100%; transition:width .45s ease; }
-  .stack-legend { display:flex; gap:22px; flex-wrap:wrap; margin-top:11px;
-                  font-size:12px; color:var(--muted); }
-  .stack-legend span { display:inline-flex; align-items:center; gap:7px; }
-  .stack-legend b { color:var(--text); font-variant-numeric:tabular-nums; font-weight:600; }
-  .swatch-dot { width:8px; height:8px; border-radius:2px; flex:0 0 auto; }
-
-  /* ---- trade drawer ---------------------------------------------------- */
-  tbody tr[data-i] { cursor:pointer; }
-  tbody tr[data-i]:focus-visible { outline:2px solid var(--brand); outline-offset:-2px; }
-
-  .scrim { position:fixed; inset:0; background:rgba(3,7,15,.62); backdrop-filter:blur(2px);
-           opacity:0; pointer-events:none; transition:opacity .28s ease; z-index:40; }
-  .scrim.open { opacity:1; pointer-events:auto; }
-
-  .drawer { position:fixed; top:0; right:0; height:100%; width:min(520px, 100%);
-            background:var(--panel); border-left:1px solid var(--accent-edge);
-            border-radius:18px 0 0 18px; overflow:hidden;
-            transform:translateX(100%); transition:transform .32s cubic-bezier(.22,.61,.36,1);
-            z-index:41; display:flex; flex-direction:column;
-            box-shadow:-24px 0 60px -30px rgba(0,0,0,.9); }
-  .drawer.open { transform:translateX(0); }
-
-  /* Result band: the drawer announces win or loss before you read a number. */
-  .dr-head { padding:20px 24px 22px; border-bottom:1px solid var(--edge); position:relative;
-             transition:box-shadow .4s ease; }
-  .dr-head.win  { box-shadow: inset 0 90px 120px -90px rgba(52,211,153,.55); }
-  .dr-head.loss { box-shadow: inset 0 90px 120px -90px rgba(251,113,133,.55); }
-  .dr-top { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
-  .dr-head h3 { margin:0; font-family:Georgia,serif; font-weight:400; font-size:19px; }
-  .dr-sub { color:var(--dim); font-size:11.5px; margin-top:5px; display:flex; align-items:center;
-            gap:8px; flex-wrap:wrap; }
-  .dr-close { background:rgba(255,255,255,.04); border:1px solid var(--hair); color:var(--muted);
-              font:inherit; width:30px; height:30px; border-radius:50%; cursor:pointer;
-              line-height:1; flex:0 0 auto; }
-  .dr-close:hover { color:var(--text); border-color:var(--edge); }
-  .dr-hero { font-family:Georgia,serif; font-size:38px; line-height:1.05; margin-top:16px;
-             font-variant-numeric:tabular-nums; }
-  .dr-hero small { display:block; font-family:"Inter",sans-serif; font-size:12.5px;
-                   color:var(--muted); margin-top:6px; }
-
-  .dr-body { flex:1 1 auto; padding:22px 24px 30px; overflow-y:auto; }
-
-  /* Timeline instead of a boxed grid — a trade is a journey, not a spec sheet. */
-  .tl { position:relative; padding-left:26px; }
-  .tl::before { content:""; position:absolute; left:5px; top:9px; bottom:9px; width:2px;
-                border-radius:1px; background:linear-gradient(var(--tl-a), var(--tl-b)); }
-  .tl-node { position:relative; }
-  .tl-node::before { content:""; position:absolute; left:-26px; top:5px; width:12px; height:12px;
-                     border-radius:50%; background:var(--panel); border:2px solid var(--tl-dot); }
-  .tl-node .when { font-size:11px; color:var(--dim); }
-  .tl-node .what { font-size:15px; font-variant-numeric:tabular-nums; margin-top:3px; }
-  .tl-node .what b { font-weight:600; }
-
-  /* The gap between nodes carries the size of the move: bigger % swing, taller
-     connector. Keeps the spatial cue the old price bar had, without the
-     floating labels that collided with everything. */
-  .tl-span { position:relative; height:var(--tl-h, 34px); transition:height .3s ease; }
-  .tl-span .amt { position:absolute; left:6px; top:50%; transform:translateY(-50%);
-                  font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;
-                  white-space:nowrap; }
-  .tl-span .amt i { color:var(--dim); font-style:normal; margin-left:7px; }
-
-  /* Facts as hairline rows, not a field of cells. */
-  .dr-sec { margin-top:26px; }
-  .dr-sec > .label { display:block; margin-bottom:4px; }
-  .frow { display:flex; justify-content:space-between; align-items:baseline; gap:14px;
-          padding:11px 0; border-bottom:1px solid var(--hair); font-size:13px; }
-  .frow:last-child { border-bottom:0; }
-  .frow span { color:var(--dim); }
-  .frow b { font-weight:600; font-variant-numeric:tabular-nums; }
-
-  .dr-note { margin-top:6px; font-size:13px; color:var(--muted); line-height:1.55;
-             border-left:2px solid var(--edge); padding-left:14px; font-style:italic; }
-
-  .dr-nav { display:flex; gap:8px; padding:14px 24px; border-top:1px solid var(--edge);
-            background:rgba(255,255,255,.012); flex:0 0 auto; }
-  .dr-nav button { flex:1; background:rgba(255,255,255,.02); border:1px solid var(--hair);
-                   color:var(--muted); font:inherit; font-size:12px; padding:9px; border-radius:999px;
-                   cursor:pointer; transition:color .2s, border-color .2s; }
-  .dr-nav button:hover:not(:disabled) { color:var(--text); border-color:var(--edge); }
-  .dr-nav button:disabled { opacity:.3; cursor:default; }
-
-  @media (prefers-reduced-motion: reduce) { .drawer { transition:none; } }
 
   /* ---- ambient light ----------------------------------------------------
      Panels are opaque, so this only shows in the gutters and the gaps between
@@ -359,50 +344,73 @@
      source order and drops the drawer into normal flow at the end of the page. */
   .topbar, .nav, .page { position:relative; z-index:1; }
 
-  /* ---- sharp mode (see index.html for the reasoning) ---- */
+  /* ---- sharp mode -------------------------------------------------------
+   * What reads as "glass" on exchange UIs is mostly the opposite of glass:
+   * small radii, hairline seams instead of gaps, higher value contrast, denser
+   * type, and almost no bloom. This is that pass, behind a class so you can
+   * flip between the two and judge them side by side.
+   */
   body.sharp {
-    --panel: #0a0f19; --panel-2: #080d15;
-    --hair: rgba(255,255,255,.055); --edge: rgba(96,165,250,.26); --head: #122140;
-    --text: #ffffff; --muted: #6f8098; --dim: #47566c;
+    --panel: #0a0f19;
+    --panel-2: #080d15;
+    --hair: rgba(255,255,255,.055);
+    --edge: rgba(96,165,250,.26);
+    --head: #122140;              /* header band — dark blue */
+    --text: #ffffff;          /* values go full white — biggest single gain */
+    --muted: #6f8098;
+    --dim: #47566c;
     /* Restated because body.sharp out-specifies :root — a token defined only
        there silently does nothing on a page that boots into sharp. */
     --hero: #0d1730;
   }
-  /* Corners stay soft — density and contrast do the sharpening. */
-  body.sharp .panel, body.sharp .scroller, body.sharp .balcard,
-  body.sharp .rollup { border-radius: 13px; }
+
+  /* Corners stay soft. Sharpness here comes from density and contrast, not
+     from squaring everything off. */
+  body.sharp .stripwrap, body.sharp .card { border-radius: 13px; }
   body.sharp .drawer { border-radius: 16px 0 0 16px; }
   body.sharp .segset, body.sharp .tabs, body.sharp .seg { border-radius: 10px; }
   body.sharp .tab, body.sharp .segset button, body.sharp .seg button { border-radius: 7px; }
+  body.sharp .picker-face { border-radius: 9px; }
 
-  /* This block used to also set box-shadow, which at (0,2,0) specificity beat
-     the full edge-definition stack at the end of the file — so sharp mode
-     silently lost its separation ring and the panels read as floating rather
-     than framed. The stack lives in one place now. */
+  /* Border colour only. This block used to also set box-shadow, which at
+     (0,2,1) specificity beat the full edge-definition stack at the end of the
+     file — so sharp mode silently lost its separation ring and the strip read
+     as floating rather than framed. The stack lives in one place now. */
+  body.sharp .card { border-color: rgba(96, 165, 250, .30); }
+  body.sharp .stripwrap { border-color: rgba(96, 165, 250, .42); }
 
+  /* Density: more rows per screen is most of the effect. */
   body.sharp .page { padding: 14px 18px 34px; }
-  body.sharp .panel { padding: 14px 16px; margin-top: 10px; }
-  body.sharp .balcard { padding: 13px 15px; }
-  body.sharp .balrow { gap: 10px; }
-  body.sharp thead th { padding: 14px 13px; font-size: 10px; letter-spacing: .13em; font-weight: 700; }
-  body.sharp tbody td { padding: 9px 13px; font-size: 12.5px; }
-  body.sharp .section-title { margin: 18px 0 8px; }
+  body.sharp .grid, body.sharp .lower { gap: 10px; }
+  body.sharp .cell { padding: 11px 15px; }
+  body.sharp .sub-cell { padding: 8px 15px; }
+  body.sharp .card-head { padding: 15px 15px; }
+  body.sharp .card-body { padding: 13px 15px; }
+  body.sharp thead th { padding: 13px 15px; font-size: 10px; letter-spacing: .13em; font-weight: 700; }
+  body.sharp tbody td { padding: 9px 15px; font-size: 12.5px; }
+  body.sharp .feed-row { padding: 9px 15px; font-size: 12px; }
+  body.sharp .sig { padding: 11px 15px; }
+  body.sharp .filterbar { padding: 8px 15px; }
 
-  /* Sans for structure, serif kept for the figures you actually read. */
-  body.sharp .page-head h1, body.sharp .section-title h2, body.sharp .dr-head h3 {
+  /* Type: the serif is warm, and warmth is what you're trading away here. */
+  /* Sans for structure — headings, labels, chrome. The serif is reserved for
+     the two figures you actually look at, so the page reads as an instrument
+     without sounding like every other exchange. */
+  body.sharp .card-head h2, body.sharp .picker-face, body.sharp .page-head h1 {
     font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
     font-weight: 600; letter-spacing: -.01em;
   }
-  body.sharp .section-title h2 { font-size: 14px; letter-spacing: .05em; text-transform: uppercase;
-                                 font-weight: 700; }
-  body.sharp .kpi .v { font-family: "Inter", sans-serif; font-weight: 600; font-size: 20px;
-                       letter-spacing: -.02em; }
+  body.sharp .card-head h2 { font-size: 14px; letter-spacing: .05em; text-transform: uppercase;
+                             font-weight: 700; }
+  body.sharp .cell .v { font-size: 17px; font-weight: 600; }
 
-  /* --- kept in Georgia: the equity figure and the drawer's P&L --- */
-  body.sharp #curEq { font-family: Georgia, "Times New Roman", serif; font-weight: 400;
-                      letter-spacing: 0; }
-  body.sharp .dr-hero { font-family: Georgia, serif; font-weight: 400; letter-spacing: 0; }
+  /* --- kept in Georgia: total equity, and the signal verdicts --- */
+  body.sharp .cell .v.hero { font-family: Georgia, "Times New Roman", serif;
+                             font-weight: 400; font-size: 30px; letter-spacing: 0; }
+  body.sharp .verdict { font-family: Georgia, serif; font-weight: 400; font-size: 23px; }
   body.sharp .label { color: var(--muted); font-size: 9.5px; letter-spacing: .14em; }
+
+  /* Bloom drops back so the alert states stay the brightest thing left. */
   body.sharp::before { opacity: .45; }
 
   /* ---- high-DPI polish ---------------------------------------------------
@@ -423,7 +431,8 @@
   body.glow-off::after { display:none; }
 
   /* 2. True hairlines. A 1px border becomes 2 device px at 2dppx and reads
-     heavy; 0.5px lands on one. Outer borders stay 1px — at .5px against a
+     heavy; 0.5px lands on one. */
+  /* Only inner dividers thin out. Outer borders stay 1px — at .5px against a
      low-alpha edge colour the panels stop reading as panels. */
   @media (min-resolution: 2dppx) {
     .frow, .sig, .feed-row, tbody td, thead th, .cell, .sub-cell,
@@ -475,73 +484,105 @@
     .drawer { background: var(--panel); }
   }
 
-  .live-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--pos);
-              margin-right:5px; vertical-align:middle; animation:pulse 1.6s ease-in-out infinite; }
-  .live-dot.off { background:var(--dim); animation:none; }
-  @media (prefers-reduced-motion: reduce) { .live-dot { animation:none; } }
-  .flash-up { color: var(--pos) !important; }
-  .flash-down { color: var(--neg) !important; }
-  .num { transition: color .3s ease; }
+  /* ---- positions modal --------------------------------------------------- */
+  .more-row { display:flex; justify-content:center; padding:11px 15px;
+              border-top:1px solid var(--hair); }
+  .more-btn { background:rgba(59,130,246,.10); border:1px solid var(--edge); color:var(--brand-2);
+              font:inherit; font-size:12px; padding:7px 16px; border-radius:999px; cursor:pointer;
+              transition:background .2s ease, border-color .2s ease; }
+  .more-btn:hover { background:rgba(59,130,246,.2); border-color:var(--brand); }
+  .more-btn:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
 
-  /* ---- composition cards ------------------------------------------------ */
-  .balcard { position:relative; overflow:hidden; }
-  .balcard::after {                      /* corner wash, tinted per card */
-    content:""; position:absolute; inset:0; pointer-events:none;
-    background:radial-gradient(120% 90% at 100% 0%, var(--tint, transparent), transparent 58%);
-  }
-  .balcard > * { position:relative; z-index:1; }
-  .bal-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
-  .bal-icon { width:26px; height:26px; border-radius:8px; display:grid; place-items:center;
-              background:rgba(255,255,255,.04); border:1px solid var(--hair); flex:0 0 auto; }
-  .bal-icon svg { width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:1.7;
-                  stroke-linecap:round; stroke-linejoin:round; }
+  .modal { position:fixed; top:50%; left:50%; transform:translate(-50%,-48%) scale(.98);
+           width:min(1040px, calc(100% - 40px)); max-height:min(82vh, 900px);
+           background:rgba(11,20,36,.9); backdrop-filter:blur(22px) saturate(1.4);
+           -webkit-backdrop-filter:blur(22px) saturate(1.4);
+           border:1px solid var(--accent-edge); border-radius:16px; overflow:hidden;
+           display:flex; flex-direction:column; z-index:45;
+           opacity:0; pointer-events:none;
+           transition:opacity .25s ease, transform .25s cubic-bezier(.22,.61,.36,1); }
+  .modal.open { opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1); }
+  .modal-head { display:flex; align-items:center; justify-content:space-between; gap:14px;
+                padding:17px 20px; background:var(--head); border-bottom:2px solid var(--edge); }
+  .modal-head h2 { margin:0; font-family:Georgia,serif; font-weight:400; font-size:17px; }
+  .modal-body { overflow:auto; }
+  @supports not (backdrop-filter: blur(2px)) { .modal { background:var(--panel); } }
+  @media (prefers-reduced-motion: reduce) { .modal { transition:none; } }
 
-  .share { height:3px; border-radius:2px; background:rgba(255,255,255,.07);
-           overflow:hidden; margin-top:13px; }
-  .share i { display:block; height:100%; border-radius:2px; transition:width .5s ease; }
-  .share-note { display:flex; justify-content:space-between; margin-top:7px;
-                font-size:11px; color:var(--dim); }
+  /* ---- positions modal --------------------------------------------------- */
+  .more-row { display:flex; justify-content:center; padding:11px 15px;
+              border-top:1px solid var(--hair); }
+  .more-btn { background:rgba(59,130,246,.10); border:1px solid var(--edge); color:var(--brand-2);
+              font:inherit; font-size:12px; padding:7px 16px; border-radius:999px; cursor:pointer;
+              transition:background .2s ease, border-color .2s ease; }
+  .more-btn:hover { background:rgba(59,130,246,.2); border-color:var(--brand); }
+  .more-btn:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
 
-  .spark { width:100%; height:34px; display:block; margin-top:12px; }
+  .scrim { position:fixed; inset:0; background:rgba(3,7,15,.62); backdrop-filter:blur(2px);
+           opacity:0; pointer-events:none; transition:opacity .28s ease; z-index:44; }
+  .scrim.open { opacity:1; pointer-events:auto; }
 
-  /* ---- pagination -------------------------------------------------------- */
-  .pager { display:flex; align-items:center; justify-content:space-between; gap:14px;
-           flex-wrap:wrap; padding:14px 16px; margin-top:12px;
-           background:var(--panel); border:1px solid var(--edge); border-radius:13px; }
-  .pager-info { font-size:12px; color:var(--dim); font-variant-numeric:tabular-nums; }
-  .pager-ctrls { display:flex; align-items:center; gap:6px; }
-  .pg { background:rgba(255,255,255,.02); border:1px solid var(--hair); color:var(--muted);
-        font:inherit; font-size:12px; min-width:34px; padding:7px 11px; border-radius:8px;
-        cursor:pointer; font-variant-numeric:tabular-nums;
-        transition:color .2s ease, border-color .2s ease, background .2s ease; }
-  .pg:hover:not(:disabled) { color:var(--text); border-color:var(--edge); }
-  .pg:disabled { opacity:.32; cursor:default; }
-  .pg[aria-current="true"] { background:var(--brand); border-color:var(--brand); color:#fff; }
-  .pg:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
-  .pg-gap { color:var(--dim); padding:0 2px; font-size:12px; }
-  .pg-size { background:rgba(255,255,255,.02); border:1px solid var(--hair); color:var(--muted);
-             font:inherit; font-size:12px; padding:6px 9px; border-radius:8px; cursor:pointer; }
+  .modal { position:fixed; top:50%; left:50%; transform:translate(-50%,-48%) scale(.98);
+           width:min(1040px, calc(100% - 40px)); max-height:min(82vh, 900px);
+           background:rgba(11,20,36,.9); backdrop-filter:blur(22px) saturate(1.4);
+           -webkit-backdrop-filter:blur(22px) saturate(1.4);
+           border:1px solid var(--accent-edge); border-radius:16px; overflow:hidden;
+           display:flex; flex-direction:column; z-index:45;
+           opacity:0; pointer-events:none;
+           transition:opacity .25s ease, transform .25s cubic-bezier(.22,.61,.36,1); }
+  .modal.open { opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1); }
+  .modal-head { display:flex; align-items:center; justify-content:space-between; gap:14px;
+                padding:17px 20px; background:var(--head); border-bottom:2px solid var(--edge); }
+  .modal-head h2 { margin:0; font-family:Georgia,serif; font-weight:400; font-size:17px; }
+  .modal-body { overflow:auto; }
+  .modal-close { background:rgba(255,255,255,.04); border:1px solid var(--hair); color:var(--muted);
+                 font:inherit; width:30px; height:30px; border-radius:50%; cursor:pointer; line-height:1; }
+  .modal-close:hover { color:var(--text); border-color:var(--edge); }
+  @supports not (backdrop-filter: blur(2px)) { .modal { background:var(--panel); } }
+  @media (prefers-reduced-motion: reduce) { .modal { transition:none; } }
 
-  /* ---- statements -------------------------------------------------------- */
-  .stmt-head { display:flex; align-items:center; justify-content:space-between; gap:14px;
-               flex-wrap:wrap; margin-bottom:10px; }
-  .btn { display:inline-flex; align-items:center; gap:8px; background:rgba(59,130,246,.10);
-         border:1px solid var(--edge); color:var(--brand-2); font:inherit; font-size:12px;
-         padding:8px 15px; border-radius:9px; cursor:pointer; white-space:nowrap;
-         transition:background .2s ease, border-color .2s ease, color .2s ease; }
-  .btn:hover { background:rgba(59,130,246,.2); border-color:var(--brand); }
-  .btn:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
-  .btn svg { width:13px; height:13px; flex:0 0 auto; fill:none; stroke:currentColor;
-             stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
-  .btn.ghost { background:rgba(255,255,255,.02); color:var(--muted); }
-  .btn.ghost:hover { color:var(--text); border-color:var(--edge); background:rgba(255,255,255,.05); }
+  /* ---- position detail drawer ------------------------------------------- */
+  tbody tr[data-pos] { cursor:pointer; }
+  tbody tr[data-pos]:hover { background:rgba(255,255,255,.022); }
+  tbody tr[data-pos]:focus-visible { outline:2px solid var(--brand); outline-offset:-2px; }
 
-  .dl-cell { display:flex; gap:6px; justify-content:flex-end; }
-  .dl { background:none; border:1px solid var(--hair); color:var(--muted); font:inherit;
-        font-size:11px; padding:5px 11px; border-radius:7px; cursor:pointer;
-        transition:color .2s ease, border-color .2s ease; }
-  .dl:hover { color:var(--brand-2); border-color:var(--edge); }
-  .dl:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
+  .pdrawer { position:fixed; top:0; right:0; height:100%; width:min(500px,100%);
+             background:rgba(11,20,36,.9); backdrop-filter:blur(22px) saturate(1.4);
+             -webkit-backdrop-filter:blur(22px) saturate(1.4);
+             border-left:1px solid var(--accent-edge); border-radius:16px 0 0 16px;
+             transform:translateX(100%); transition:transform .32s cubic-bezier(.22,.61,.36,1);
+             z-index:47; display:flex; flex-direction:column; overflow:hidden;
+             box-shadow:-24px 0 60px -30px rgba(0,0,0,.9); }
+  .pdrawer.open { transform:translateX(0); }
+  .pd-head { padding:20px 22px 22px; border-bottom:2px solid var(--edge); background:var(--head); }
+  .pd-top { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
+  .pd-head h3 { margin:0; font-family:Georgia,serif; font-weight:400; font-size:19px; }
+  .pd-sub { color:var(--dim); font-size:11.5px; margin-top:5px; display:flex; gap:8px;
+            align-items:center; flex-wrap:wrap; }
+  .pd-hero { font-family:Georgia,serif; font-size:34px; line-height:1.05; margin-top:14px;
+             font-variant-numeric:tabular-nums; }
+  .pd-hero small { display:block; font-family:"Inter",sans-serif; font-size:12.5px;
+                   color:var(--muted); margin-top:5px; }
+  .pd-body { flex:1 1 auto; padding:20px 22px 28px; overflow-y:auto; }
+
+  /* Where price sits between entry and liquidation — the only spatial question
+     that matters while a leveraged position is open. */
+  .lifeline { position:relative; height:4px; border-radius:2px; margin:30px 0 8px;
+              background:linear-gradient(90deg, rgba(251,113,133,.55), rgba(255,255,255,.10)); }
+  .lifeline .pin { position:absolute; top:-5px; width:2px; height:14px; border-radius:1px;
+                   transform:translateX(-50%); }
+  .lifeline .cap { position:absolute; font-size:10px; white-space:nowrap;
+                   transform:translateX(-50%); font-variant-numeric:tabular-nums; }
+  .lifeline .cap.up { top:-24px; } .lifeline .cap.dn { top:12px; }
+
+  /* ---- drawer body rows (used by the position detail drawer) ---- */
+  .dr-sec { margin-top:24px; }
+  .dr-sec > .label { display:block; margin-bottom:4px; }
+  .frow { display:flex; justify-content:space-between; align-items:baseline; gap:14px;
+          padding:11px 0; border-bottom:1px solid var(--hair); font-size:13px; }
+  .frow:last-child { border-bottom:0; }
+  .frow span { color:var(--dim); }
+  .frow b { font-weight:600; font-variant-numeric:tabular-nums; }
 
   /* ---- edge definition ---------------------------------------------------
    * What makes a surface read as a crisp physical object is two edges, not
@@ -577,36 +618,62 @@
      --text, which is #ffffff under body.sharp — that painted a hard white rule
      down the left of every flagged cell, reading as a rendering fault rather
      than a warning. */
+  /* Alert cells opt out of the navy and sit on near-black, which is the
+     only floor the amber and coral washes read cleanly against. Opaque
+     now that the strip is a flat fill rather than a gradient. */
+  .cell.attn-warn, .cell.attn-neg { background:#070d18; }
+
   .card.attn-warn, .cell.attn-warn { border-color: rgba(251, 191, 36, .50); }
   .card.attn-neg,  .cell.attn-neg  { border-color: rgba(251, 113, 133, .55); }
+
+  /* The neighbouring seam picks the tint up, so a flagged cell is bracketed
+     rather than lopsided. */
+  .cell.attn-warn + .cell { border-left-color: rgba(251, 191, 36, .38); }
+  .cell.attn-neg  + .cell { border-left-color: rgba(251, 113, 133, .40); }
+  @media (max-width: 1100px) {
+    .cell.attn-warn + .cell { border-top-color: rgba(251, 191, 36, .38); }
+    .cell.attn-neg  + .cell { border-top-color: rgba(251, 113, 133, .40); }
+  }
 
   /* Hairlines inside a panel stay hairlines — sharpening the outside only. */
   tbody tr:hover { background: rgba(255, 255, 255, .028); }
 
-  /* Total-equity card keeps its bloom on top of the edge treatment. */
-  .balcard.total { box-shadow:
-      inset 0 1px 0 rgba(255,255,255,.08),
-      inset 60px -45px 120px -75px rgba(59,130,246,.34),
-      0 0 0 1px rgba(2,6,14,.85),
-      0 20px 44px -30px rgba(0,0,0,.95); }
+  /* Glow must win over the edge treatment — it is the alert channel. */
+  .stripwrap { box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.09),
+      inset 70px -50px 130px -70px rgba(59,130,246,.40),
+      0 0 0 1px rgba(2,6,14,.9),
+      0 24px 52px -32px rgba(0,0,0,1),
+      0 0 34px -14px rgba(59,130,246,.30); }
+  .card.attn-warn, .cell.attn-warn {
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.07),
+                inset 60px -45px 120px -70px rgba(251,191,36,.45),
+                0 0 0 1px rgba(2,6,14,.85),
+                0 0 26px -12px rgba(251,191,36,.32); }
+  .card.attn-neg, .cell.attn-neg {
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.07),
+                inset 60px -45px 120px -70px rgba(251,113,133,.50),
+                0 0 0 1px rgba(2,6,14,.85),
+                0 0 30px -12px rgba(251,113,133,.4); }
+  body.glow-off .stripwrap, body.glow-off .card, body.glow-off .cell {
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 0 0 1px rgba(2,6,14,.85); }
 </style>
 <link rel="stylesheet" href="mx1.css" />
 
-<!-- ============================================================== chrome -->
+
 <div class="topbar">
   <div class="brand"><b>M<i>X</i>1</b><span>mx1trade.com</span></div>
   <div class="seg"><button aria-pressed="true">CEX</button><button aria-pressed="false">DEX</button></div>
   <button class="chip" id="aiAuto" aria-pressed="true">AI AUTO <span class="toggle on"></span></button>
   <div class="chip online">&#9679; FUSION ONLINE</div>
   <button class="chip kill">&#9211; KILL SWITCH</button>
-  <div class="ticker-pill"><span class="label">CEX &middot; USDT</span><b class="num">$341.27</b></div>
   <div class="uid">UID okx_856274432502104602</div>
   <div class="avatar">MT</div>
   <span style="color:var(--muted);font-size:13px">MX1 Trade</span>
 </div>
 
 <nav class="nav">
-  <a href="index.html"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2.5" y="2.5" width="5.5" height="5.5" rx="1"/><rect x="10" y="2.5" width="5.5" height="5.5" rx="1"/><rect x="2.5" y="10" width="5.5" height="5.5" rx="1"/><rect x="10" y="10" width="5.5" height="5.5" rx="1"/></svg>Overview</a>
+  <a href="index.html" class="on"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2.5" y="2.5" width="5.5" height="5.5" rx="1"/><rect x="10" y="2.5" width="5.5" height="5.5" rx="1"/><rect x="2.5" y="10" width="5.5" height="5.5" rx="1"/><rect x="10" y="10" width="5.5" height="5.5" rx="1"/></svg>Overview</a>
   <span class="navmenu" data-open="false">
     <button class="nav-trigger" aria-haspopup="true" aria-expanded="false">
       <svg class="ico" viewBox="0 0 18 18" aria-hidden="true"><polyline points="2 12.5 6.3 8.2 9.8 11 15.5 4.5"/><polyline points="11.6 4.5 15.5 4.5 15.5 8.4"/></svg>Trading
@@ -622,10 +689,11 @@
         <span>Auto Autonomous<small>Hands-off — Fusion runs the book</small></span>
       </a>
     </span>
+  </span>
   <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="6.6" cy="6" r="2.7"/><path d="M2 15.2c0-2.6 2.1-4.2 4.6-4.2s4.6 1.6 4.6 4.2"/><path d="M12.1 3.7a2.7 2.7 0 0 1 0 5.2"/><path d="M13.2 11.2c1.9.5 2.9 1.9 2.9 4"/></svg>Community</a>
   <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="3" y="6.2" width="12" height="8" rx="2.6"/><circle cx="6.9" cy="10.2" r=".95" fill="currentColor" stroke="none"/><circle cx="11.1" cy="10.2" r=".95" fill="currentColor" stroke="none"/><path d="M9 6.2V3.8"/><circle cx="9" cy="2.9" r="1.1"/></svg>AI Assistant</a>
   <a href="chat.html"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M15.2 10.4A2.6 2.6 0 0 1 12.6 13H6.2l-3.4 2.7V4.9A2.6 2.6 0 0 1 5.4 2.3h7.2a2.6 2.6 0 0 1 2.6 2.6z"/></svg>Chat</a>
-  <a href="portfolio.html" class="on"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2" y="5.4" width="14" height="9.8" rx="2.2"/><path d="M6.4 5.4V4a1.6 1.6 0 0 1 1.6-1.6h2A1.6 1.6 0 0 1 11.6 4v1.4"/><path d="M2 9.6h14"/></svg>Portfolio</a>
+  <a href="portfolio.html"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2" y="5.4" width="14" height="9.8" rx="2.2"/><path d="M6.4 5.4V4a1.6 1.6 0 0 1 1.6-1.6h2A1.6 1.6 0 0 1 11.6 4v1.4"/><path d="M2 9.6h14"/></svg>Portfolio</a>
   <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="2.5"/><path d="M9 1.7v1.7M9 14.6v1.7M2.7 9H1M17 9h-1.7M4.6 4.6 3.4 3.4M14.6 14.6l-1.2-1.2M4.6 13.4l-1.2 1.2M14.6 3.4l-1.2 1.2"/></svg>Settings</a>
 </nav>
 
@@ -677,8 +745,11 @@
      width resolving against a max-content parent is circular, which is
      what blew the panel out to 433px the first time. Stretch gets the
      full-width rows with no cycle. */
-  .navmenu[data-open="true"] .navmenu-panel { display:flex; flex-direction:column;
-                                              align-items:stretch; gap:2px; }
+  /* The panel is moved to <body> on boot (see navMenus), so it is no longer a
+     descendant of .navmenu — the open state has to key off its own class
+     rather than the parent's attribute. */
+  .navmenu-panel.open { display:flex; flex-direction:column;
+                        align-items:stretch; gap:2px; }
   @supports not (backdrop-filter: blur(2px)) { .navmenu-panel { background:var(--panel); } }
 
   .navmenu-item {
@@ -709,7 +780,10 @@
   const menus = [...document.querySelectorAll(".navmenu")];
   if (!menus.length) return;
 
-  const close = m => m.setAttribute("data-open", "false");
+  const close = m => {
+    m.setAttribute("data-open", "false");
+    m._panel?.classList.remove("open");
+  };
   const closeAll = except => menus.forEach(m => { if (m !== except) close(m); });
 
   menus.forEach(m => {
@@ -717,6 +791,14 @@
     const items = () => [...m.querySelectorAll(".navmenu-item:not(.soon)")];
 
     const panel = m.querySelector(".navmenu-panel");
+
+    /* Reparent to <body>. .topbar/.nav carry backdrop-filter on some pages, and
+       a backdrop-filter makes an element the containing block for fixed-position
+       descendants — so the panel stopped being viewport-fixed and got clipped by
+       .nav's overflow:auto. Clicks then landed on the page behind it. Pages
+       without backdrop-filter on the nav were unaffected, which is why this only
+       bit Overview and Portfolio. */
+    document.body.appendChild(panel);
 
     /* Place the fixed panel under its trigger, and keep it on screen if the
        trigger sits near the right edge. */
@@ -742,6 +824,7 @@
       const open = m.getAttribute("data-open") !== "true";
       closeAll(m);
       m.setAttribute("data-open", open);
+      panel.classList.toggle("open", open);
       trigger.setAttribute("aria-expanded", open);
       /* preventScroll: focusing inside the scrollable nav would otherwise
          scroll the whole row out from under the cursor. */
@@ -749,9 +832,12 @@
     });
 
     addEventListener("resize", () => { if (m.getAttribute("data-open") === "true") place(); });
-    m.querySelector(".navmenu-panel").addEventListener("click", e => e.stopPropagation());
+    panel.addEventListener("click", e => e.stopPropagation());
 
-    m.addEventListener("keydown", e => {
+    m._panel = panel;
+    /* Keydown has to be bound to the panel too: it is no longer inside .navmenu,
+       so events from the items cannot bubble to it. */
+    [m, panel].forEach(node => node.addEventListener("keydown", e => {
       const list = items();
       const i = list.indexOf(document.activeElement);
       if (e.key === "Escape") { close(m); trigger.setAttribute("aria-expanded","false"); trigger.focus(); }
@@ -759,7 +845,7 @@
         list[Math.min(i + 1, list.length - 1)]?.focus({ preventScroll: true }); }
       if (e.key === "ArrowUp")   { e.preventDefault();
         (i <= 0 ? trigger : list[i - 1]).focus({ preventScroll: true }); }
-    });
+    }));
 
     /* A placeholder item shouldn't jump the page to the top. */
     m.querySelectorAll(".navmenu-item.soon").forEach(a =>
@@ -783,716 +869,1016 @@
 
 
 <div class="page">
-  <div class="page-head">
-    <div>
-      <h1>Portfolio</h1>
-      <p>Trade history, realized performance and account statements</p>
+
+  <!-- =================================================== status strip -->
+  <div class="stripwrap">
+  <div class="strip">
+    <div class="cell">
+      <div class="label">Total equity</div>
+      <div class="v hero num" id="equity">$0.00</div>
+      <div class="n"><span class="num" id="delta">$0.00</span> <span class="num" id="pct"></span> this session</div>
+      <div class="n" id="eqSplit" style="margin-top:2px"></div>
     </div>
-    <div class="chip ex">&#9679; OKX EXCHANGE</div>
+    <div class="cell">
+      <div class="label">Net PnL</div>
+      <div class="v num" id="net">$0.00</div>
+      <div class="n"><span id="realized">—</span> realized · <span id="unrealized">—</span> open</div>
+    </div>
+    <div class="cell" id="cellMgn">
+      <div class="label">Margin health</div>
+      <div class="v num" id="mgn">—</div>
+      <div class="meter"><i id="mgnBar" style="width:0%"></i></div>
+      <div class="n" id="mgnNote">—</div>
+    </div>
+    <div class="cell" id="cellLiq">
+      <div class="label">Nearest liq.</div>
+      <div class="v num" id="liq">—</div>
+      <div class="n" id="liqNote">—</div>
+    </div>
+    <div class="cell">
+      <div class="label">Exposure</div>
+      <div class="v num" id="gross">$0.00</div>
+      <div class="split"><i class="l" id="splitL"></i><i class="s" id="splitS"></i></div>
+      <div class="n"><span id="lev">0.0×</span> · <span id="splitNote">—</span></div>
+    </div>
+    <div class="cell" id="cellDll">
+      <div class="label">Daily loss limit</div>
+      <div class="v num" id="dll">—</div>
+      <div class="meter"><i id="dllBar" style="width:0%"></i></div>
+      <div class="n" id="dllNote">—</div>
+    </div>
+    <div class="cell">
+      <div class="label">Next funding</div>
+      <div class="v num" id="fundIn">—</div>
+      <div class="n" id="fundNote">—</div>
+    </div>
   </div>
 
-  <!-- ====================================================== headline -->
-  <section class="panel">
-    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:14px">
-      <span class="label">Performance</span>
-      <span class="label" id="kpiRange" style="color:var(--brand-2)"></span>
+  <!-- ---- account context ---- -->
+  <div class="substrip">
+    <div class="sub-cell">
+      <span class="label">CEX balance</span>
+      <span class="v num" id="cexBal">$0.00</span>
+      <span class="n"><span class="pill">OKX</span></span>
     </div>
-    <div class="kpis">
-      <div class="kpi"><div class="label">Net P&amp;L</div><div class="v num" id="kNet">&mdash;</div><div class="n" id="kNetPct">All time</div></div>
-      <div class="kpi"><div class="label">Win rate</div><div class="v num" id="kWin">&mdash;</div><div class="n" id="kWinN">&mdash;</div></div>
-      <div class="kpi"><div class="label">Profit factor</div><div class="v num" id="kPf">&mdash;</div><div class="n">Gross win &divide; gross loss</div></div>
-      <div class="kpi"><div class="label">Avg win / loss</div><div class="v num" id="kAvg">&mdash;</div><div class="n" id="kAvgN">Per closed trade</div></div>
-      <div class="kpi"><div class="label">Max drawdown</div><div class="v num" id="kDd">&mdash;</div><div class="n" id="kDdN">Peak to trough</div></div>
-      <div class="kpi"><div class="label">Expectancy</div><div class="v num" id="kExp">&mdash;</div><div class="n">Per trade</div></div>
+    <div class="sub-cell">
+      <span class="label">DEX balance</span>
+      <span class="v num" id="dexBal">$0.00</span>
+      <span class="n" id="dexNote">Not connected</span>
     </div>
-  </section>
+    <div class="sub-cell">
+      <span class="label">Open positions</span>
+      <span class="v" id="posCount">0</span>
+      <span class="n"><span class="pill num" id="posPnl">$0.00</span></span>
+    </div>
+    <div class="sub-cell">
+      <span class="label">Active orders</span>
+      <span class="v" id="ordCount">0</span>
+      <span class="n" id="ordNote">None pending</span>
+    </div>
+  </div>
+  </div>
 
-  <!-- ================================================== equity curve -->
-  <section class="panel">
-    <div class="curve-head">
-      <div>
-        <div class="label">Equity curve</div>
-        <div style="font-family:Georgia,serif;font-size:42px;line-height:1.05;margin-top:6px" class="num" id="curEq">&mdash;</div>
-        <div class="num" id="curDelta" style="font-size:14px;margin-top:6px">&mdash;</div>
-      </div>
-      <div class="tabs" id="tabs">
-        <button class="tab" data-r="live" aria-pressed="false"><span class="dot"></span>Live</button>
-        <button class="tab" data-r="7"   aria-pressed="false">7D</button>
-        <button class="tab" data-r="30"  aria-pressed="true">1M</button>
-        <button class="tab" data-r="90"  aria-pressed="false">3M</button>
-        <button class="tab" data-r="ytd" aria-pressed="false">YTD</button>
-        <button class="tab" data-r="all" aria-pressed="false">ALL</button>
-      </div>
-    </div>
+  <!-- ========================================================== grid -->
+  <div class="grid">
 
-    <div class="chart">
-      <svg id="curve" role="img" aria-label="Account equity over the selected period">
-        <defs>
-          <linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%"   stop-color="#60a5fa" stop-opacity=".24" />
-            <stop offset="72%"  stop-color="#60a5fa" stop-opacity=".05" />
-            <stop offset="100%" stop-color="#60a5fa" stop-opacity="0" />
-          </linearGradient>
-        </defs>
-        <g id="grid"></g>
-        <path id="ddArea" fill="rgba(251,113,133,.10)"></path>
-        <path id="area" fill="url(#fill)"></path>
-        <line id="base" stroke="rgba(255,255,255,.22)" stroke-width="1" stroke-dasharray="5 5"
-              vector-effect="non-scaling-stroke"></line>
-        <path id="line" fill="none" stroke="#60a5fa" stroke-width="1.6"
-              vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"></path>
-        <g id="marks"></g>
-        <g id="xaxis"></g>
-        <g id="cross" style="display:none"></g>
-      </svg>
-    </div>
-    <div class="curve-legend">
-      <span><i class="swatch" style="background:#60a5fa"></i>Equity</span>
-      <span><i class="swatch" style="background:rgba(251,113,133,.45)"></i>Underwater from peak</span>
-      <span><i class="swatch" style="background:rgba(255,255,255,.3)"></i>Period open</span>
-    </div>
-  </section>
-
-  <!-- ============================================ account composition -->
-  <div class="section-title"><h2>Account Composition</h2>
-    <span><span class="live-dot" id="compDot"></span> Live &middot; what the balance is made of right now</span></div>
-
-  <div class="balrow">
-    <div class="balcard" style="--tint:rgba(59,130,246,.10)">
-      <div class="bal-top">
-        <div>
-          <div class="label">CEX balance</div>
-          <div class="v num" id="cexBal">&mdash;</div>
-          <div class="n">Trading account &middot; OKX</div>
+    <!-- ---- left column ---- -->
+    <div class="col">
+      <section class="card">
+        <div class="card-head">
+          <div style="display:flex;align-items:center;gap:12px;min-width:0">
+            <span class="picker-wrap">
+              <select id="pairPick" class="picker" aria-label="Chart series"></select>
+              <span class="picker-face" aria-hidden="true">
+                <span id="pickerLabel">Equity</span>
+                <svg viewBox="0 0 12 12"><polyline points="2.5 4.5 6 8 9.5 4.5"/></svg>
+              </span>
+            </span>
+            <span class="sub num" id="chartMeta"></span>
+          </div>
+          <div class="tabs" id="tabs">
+            <button class="tab" data-tf="LIVE" aria-pressed="true"><span class="dot" id="liveDot"></span>LIVE</button>
+            <button class="tab" data-tf="1H" aria-pressed="false">1H</button>
+            <button class="tab" data-tf="24H" aria-pressed="false">24H</button>
+            <a class="tab tab-link" href="portfolio.html">History &rarr;</a>
+          </div>
         </div>
-        <span class="bal-icon" style="color:var(--brand-2)">
-          <svg viewBox="0 0 18 18"><rect x="2" y="4" width="14" height="10.5" rx="2"/>
-            <path d="M2 7.6h14"/><path d="M5 11.2h3"/></svg>
-        </span>
-      </div>
-      <div class="share"><i id="cexShare" style="background:var(--brand-2)"></i></div>
-      <div class="share-note"><span>Share of total</span><span class="num" id="cexPct">&mdash;</span></div>
-    </div>
-
-    <div class="balcard" style="--tint:rgba(167,139,250,.10)">
-      <div class="bal-top">
-        <div>
-          <div class="label">DEX balance</div>
-          <div class="v num" id="dexBal">&mdash;</div>
-          <div class="n" id="dexNote">Not connected</div>
+        <div class="card-body">
+          <div class="chart">
+            <svg id="tape" role="img" aria-label="Equity over the current session">
+              <defs><linearGradient id="fill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" id="f1" stop-opacity=".26" />
+                <stop offset="72%" id="f2" stop-opacity=".05" />
+                <stop offset="100%" id="f3" stop-opacity="0" />
+              </linearGradient></defs>
+              <g id="grid"></g>
+              <path id="area" fill="url(#fill)"></path>
+              <line id="base" stroke="rgba(255,255,255,.28)" stroke-width="1" stroke-dasharray="5 5"
+                    vector-effect="non-scaling-stroke"></line>
+              <path id="line" fill="none" stroke-width="1.4" vector-effect="non-scaling-stroke"
+                    stroke-linejoin="round" stroke-linecap="round"></path>
+              <g id="marks"></g>
+              <g id="xaxis"></g>
+              <g id="last"></g>
+              <g id="cross" style="display:none"></g>
+              <rect id="hit" fill="transparent" x="0" y="0" width="100%" height="100%"></rect>
+            </svg>
+            <div class="ph" id="ph" hidden>Historical series</div>
+          </div>
         </div>
-        <span class="bal-icon" style="color:#a78bfa">
-          <svg viewBox="0 0 18 18"><path d="M2.5 5.5A2 2 0 0 1 4.5 3.5h9a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-9a2 2 0 0 1-2-2z"/>
-            <path d="M12 9h2"/></svg>
-        </span>
-      </div>
-      <div class="share"><i id="dexShare" style="background:#a78bfa"></i></div>
-      <div class="share-note"><span id="dexPill">0 wallets</span><span class="num" id="dexPct">&mdash;</span></div>
-    </div>
+      </section>
 
-    <div class="balcard total" style="--tint:rgba(52,211,153,.10)">
-      <div class="bal-top">
-        <div>
-          <div class="label">Total equity</div>
-          <div class="v num" id="totBal">&mdash;</div>
-          <div class="n" id="totNote">CEX + DEX</div>
+      <section class="card">
+        <div class="card-head"><h2>Open Positions</h2><span class="sub" id="posSub">—</span></div>
+        <div class="filterbar" id="posFilters">
+          <div class="fgroup"><span class="label">Mode</span>
+            <div class="segset" data-f="mode">
+              <button data-v="all" aria-pressed="true">All</button>
+              <button data-v="auto" aria-pressed="false">Auto</button>
+              <button data-v="manual" aria-pressed="false">Manual</button>
+            </div>
+          </div>
+          <div class="fgroup"><span class="label">Venue</span>
+            <div class="segset" data-f="venue">
+              <button data-v="all" aria-pressed="true">All</button>
+              <button data-v="cex" aria-pressed="false">CEX</button>
+              <button data-v="dex" aria-pressed="false">DEX</button>
+            </div>
+          </div>
+          <div class="fgroup"><span class="label">Type</span>
+            <div class="segset" data-f="type">
+              <button data-v="all" aria-pressed="true">All</button>
+              <button data-v="spot" aria-pressed="false">Spot</button>
+              <button data-v="perp" aria-pressed="false">Perp</button>
+            </div>
+          </div>
+          <span class="fcount" id="posCountLabel"></span>
         </div>
-        <span class="bal-icon" style="color:var(--pos)">
-          <svg viewBox="0 0 18 18"><polyline points="2.5 12.5 6.5 8.2 10 11 15.5 4.8"/>
-            <polyline points="11.6 4.8 15.5 4.8 15.5 8.6"/></svg>
-        </span>
-      </div>
-      <svg class="spark" id="totSpark" preserveAspectRatio="none" aria-hidden="true"></svg>
-      <div class="share-note"><span id="totPill">&mdash;</span>
-        <span class="num" id="totDelta">&mdash;</span></div>
-    </div>
-  </div>
+        <div class="card-body flush scroll">
+          <table>
+            <thead><tr><th>Instrument</th><th>Side</th><th>Size</th><th>Avg entry</th>
+              <th>Mark</th><th>Unrealized PnL</th><th>Return</th></tr></thead>
+            <tbody id="posBody"></tbody>
+          </table>
+        </div>
+        <div class="more-row" id="posMoreRow" hidden>
+          <button class="more-btn" id="posMore">View all positions</button>
+        </div>
+      </section>
 
-  <div class="rollup">
-    <div class="rollup-head">
-      <span class="label">By category</span>
-      <span class="num" id="rollupTotal" style="font-size:13px"></span>
+      <section class="card">
+        <div class="card-head"><h2>Asset Balances</h2><span class="sub">Spot + DEX holdings</span></div>
+        <div class="card-body flush scroll">
+          <table>
+            <thead><tr><th>Asset</th><th>Network</th><th>Balance</th><th>USD value</th>
+              <th class="lt">Allocation</th><th>24h change</th><th>Avg cost</th><th>PnL</th></tr></thead>
+            <tbody id="balBody"></tbody>
+          </table>
+        </div>
+        <div class="more-row" id="balMoreRow" hidden>
+          <button class="more-btn" id="balMore">View all assets</button>
+        </div>
+      </section>
     </div>
-    <div class="stack" id="stack"></div>
-    <div class="stack-legend" id="stackLegend"></div>
-  </div>
 
-  <div class="scroller" style="margin-top:14px">
-    <table>
-      <thead><tr><th>Asset</th><th>Network</th><th>Balance</th><th>USD value</th>
-        <th class="lt">Allocation</th><th>24h change</th><th>Avg cost</th><th>Unrealized PnL</th></tr></thead>
-      <tbody id="balBody"></tbody>
-    </table>
-  </div>
+    <!-- ---- right column ---- -->
+    <div class="col">
+      <section class="card">
+        <div class="card-head"><h2>TradingView Signals</h2><span class="sub">Alert webhooks</span></div>
+        <div class="card-body flush" id="signals"></div>
+      </section>
 
-  <!-- ================================================ monthly summary -->
-  <div class="section-title"><h2>Monthly Summary</h2><span>&middot; Realized only</span></div>
-  <div class="scroller">
-    <table>
-      <thead>
-        <tr>
-          <th>Month</th><th>Trades</th><th>Wins</th><th>Losses</th>
-          <th>Win rate</th><th>Realized P&amp;L</th><th>Cash in/out</th><th>Closing balance</th>
-        </tr>
-      </thead>
-      <tbody id="monthBody"></tbody>
-    </table>
-  </div>
+      <section class="card">
+        <div class="card-head"><h2>Fusion Activity</h2><span class="sub">Newest first</span></div>
+        <div class="card-body flush" id="feed"></div>
+      </section>
+    </div>
 
-  <!-- ==================================================== trade log -->
-  <div class="section-title"><h2>Trade Log</h2><span>&middot; Closed positions</span></div>
-  <div class="filterbar" id="toolbar">
-    <div class="fgroup"><span class="label">Result</span>
-      <div class="segset" data-f="result">
-        <button data-v="all" aria-pressed="true">All</button>
-        <button data-v="win" aria-pressed="false">Wins</button>
-        <button data-v="loss" aria-pressed="false">Losses</button>
-      </div>
-    </div>
-    <div class="fgroup"><span class="label">Direction</span>
-      <div class="segset" data-f="dir">
-        <button data-v="all" aria-pressed="true">All</button>
-        <button data-v="long" aria-pressed="false">Long</button>
-        <button data-v="short" aria-pressed="false">Short</button>
-      </div>
-    </div>
-    <div class="fgroup"><span class="label">Mode</span>
-      <div class="segset" data-f="mode">
-        <button data-v="all" aria-pressed="true">All</button>
-        <button data-v="auto" aria-pressed="false">Auto</button>
-        <button data-v="manual" aria-pressed="false">Manual</button>
-      </div>
-    </div>
-    <div class="fgroup"><span class="label">Venue</span>
-      <div class="segset" data-f="venue">
-        <button data-v="all" aria-pressed="true">All</button>
-        <button data-v="cex" aria-pressed="false">CEX</button>
-        <button data-v="dex" aria-pressed="false">DEX</button>
-      </div>
-    </div>
-    <div class="fgroup"><span class="label">Type</span>
-      <div class="segset" data-f="type">
-        <button data-v="all" aria-pressed="true">All</button>
-        <button data-v="spot" aria-pressed="false">Spot</button>
-        <button data-v="perp" aria-pressed="false">Perp</button>
-      </div>
-    </div>
-    <span class="fcount" id="logCount"></span>
-  </div>
-  <div class="scroller">
-    <table>
-      <thead>
-        <tr>
-          <th>#</th><th>Instrument</th><th>Dir</th><th>Opened</th><th>Closed</th><th>Held</th>
-          <th>Size</th><th>Entry</th><th>Exit</th><th>P&amp;L</th><th>Return</th>
-          <th>Cash in/out</th><th>Balance</th><th class="lt">Notes</th>
-        </tr>
-      </thead>
-      <tbody id="logBody"></tbody>
-      <tfoot id="logFoot"></tfoot>
-    </table>
-  </div>
-
-  <div class="pager" id="pager" hidden>
-    <span class="pager-info" id="pagerInfo"></span>
-    <div class="pager-ctrls">
-      <select class="pg-size" id="pageSize" aria-label="Rows per page">
-        <option value="10">10 / page</option>
-        <option value="25">25 / page</option>
-        <option value="50">50 / page</option>
-        <option value="100">100 / page</option>
-      </select>
-      <button class="pg" id="pgFirst" aria-label="First page">&laquo;</button>
-      <button class="pg" id="pgPrev" aria-label="Previous page">&lsaquo;</button>
-      <span id="pgNums" style="display:flex;gap:6px;align-items:center"></span>
-      <button class="pg" id="pgNext" aria-label="Next page">&rsaquo;</button>
-      <button class="pg" id="pgLast" aria-label="Last page">&raquo;</button>
-    </div>
-  </div>
-
-  <!-- ==================================================== statements -->
-  <div class="section-title"><h2>Statements</h2><span>&middot; Download for records or tax</span></div>
-
-  <div class="stmt-head">
-    <span style="font-size:12px;color:var(--dim)" id="stmtNote"></span>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <button class="btn ghost" id="dlFiltered">
-        <svg viewBox="0 0 16 16"><path d="M8 2v8"/><polyline points="4.8 7 8 10.2 11.2 7"/>
-          <path d="M2.5 12.5h11"/></svg>
-        Export current view
-      </button>
-      <button class="btn" id="dlAll">
-        <svg viewBox="0 0 16 16"><path d="M8 2v8"/><polyline points="4.8 7 8 10.2 11.2 7"/>
-          <path d="M2.5 12.5h11"/></svg>
-        Full history (CSV)
-      </button>
-    </div>
-  </div>
-
-  <div class="scroller">
-    <table>
-      <thead><tr><th>Period</th><th>Trades</th><th>Realized P&amp;L</th>
-        <th>Cash in/out</th><th>Closing balance</th><th>Statement</th></tr></thead>
-      <tbody id="stmtBody"></tbody>
-    </table>
   </div>
 </div>
 
 
 <div class="scrim" id="scrim"></div>
-<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drTitle" aria-hidden="true">
-  <div class="dr-head" id="drHead">
-    <div class="dr-top">
+
+
+<aside class="pdrawer" id="posDrawer" role="dialog" aria-modal="true" aria-labelledby="pdTitle" aria-hidden="true">
+  <div class="pd-head">
+    <div class="pd-top">
       <div>
-        <h3 id="drTitle">&mdash;</h3>
-        <div class="dr-sub" id="drSub"></div>
+        <h3 id="pdTitle">&mdash;</h3>
+        <div class="pd-sub" id="pdSub"></div>
       </div>
-      <button class="dr-close" id="drClose" aria-label="Close">&times;</button>
+      <button class="modal-close" id="pdClose" aria-label="Close">&times;</button>
     </div>
-    <div class="dr-hero" id="drHero"></div>
+    <div class="pd-hero" id="pdHero"></div>
   </div>
-  <div class="dr-body" id="drBody"></div>
-  <div class="dr-nav">
-    <button id="drPrev">&larr; Newer</button>
-    <button id="drNext">Older &rarr;</button>
-  </div>
+  <div class="pd-body" id="pdBody"></div>
 </aside>
+
+
+<div class="modal" id="balModal" role="dialog" aria-modal="true" aria-labelledby="balModalTitle">
+  <div class="modal-head">
+    <h2 id="balModalTitle">Asset Balances</h2>
+    <div style="display:flex;align-items:center;gap:14px">
+      <span class="sub num" id="balModalSub"></span>
+      <button class="modal-close" id="balModalClose" aria-label="Close">&times;</button>
+    </div>
+  </div>
+  <div class="modal-body">
+    <table>
+      <thead><tr><th>Asset</th><th>Network</th><th>Balance</th><th>USD value</th>
+        <th class="lt">Allocation</th><th>24h change</th><th>Avg cost</th><th>PnL</th></tr></thead>
+      <tbody id="balBodyAll"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal" id="posModal" role="dialog" aria-modal="true" aria-labelledby="posModalTitle">
+  <div class="modal-head">
+    <h2 id="posModalTitle">Open Positions</h2>
+    <div style="display:flex;align-items:center;gap:14px">
+      <span class="sub num" id="posModalSub"></span>
+      <button class="modal-close" id="posModalClose" aria-label="Close">&times;</button>
+    </div>
+  </div>
+  <div class="modal-body">
+    <table>
+      <thead><tr><th>Instrument</th><th>Side</th><th>Size</th><th>Avg entry</th>
+        <th>Mark</th><th>Liq. price</th><th>Unrealized PnL</th><th>Return</th></tr></thead>
+      <tbody id="posBodyAll"></tbody>
+    </table>
+  </div>
+</div>
 
 <script>
 /* ------------------------------------------------------------------ config */
 const CONFIG = {
-  density: "sharp",  // "sharp" | "soft" — Shift+D toggles live
-  tradesUrl: "",     // e.g. "/api/trades" — blank uses the sample set below
-  equityUrl: "",     // e.g. "/api/equity" — daily closes [{ d, eq }]
-  balancesUrl: "",   // e.g. "/api/balances"
-  wsUrl: "",         // same relay as the Overview — keeps composition live
-  pageSize: 10,      // trade log rows per page
+  wsUrl: "",                     // "wss://api.mx1trade.com/stream" — blank runs demo
+  baselines: { "1H": 341.90, "24H": 342.24 },
+  tapeSeconds: 300,
+  signalStaleAfter: 15 * 60,
+  dailyLossLimit: 12.00,
+  positionsPreview: 2,           // rows shown inline; the rest live in the modal
+  balancesPreview: 3,            // same idea for asset balances
+  glow: "state",                 // "state" = glow only when something needs you | "all" | "off"
+  density: "sharp",              // "sharp" = tight, high-contrast, small radii | "soft"
+};
+
+const S = {
+  equityExUpl:0, cash:0, positions:new Map(), unrealized:0, realized:0, equity:0,
+  anchor:null, tf:"LIVE", tape:[], status:"connecting",
+  signals:new Map(), activity:[], mgnRatio:null, funding:new Map(), balances:new Map(),
+  orders:0, dexUsd:0, dexWallets:0,
+  posFilter:{ mode:"all", venue:"all", type:"all" },
+  dexHoldings:new Map(),          // ccy -> { qty, instId } valued at live marks
+  chartKey:"EQUITY", priceTape:new Map(),   // instId -> [{t,v}] mark-price history
+  marks:new Map(),                          // instId -> latest mark price
 };
 
 const $ = id => document.getElementById(id);
-const money = (v, signed) =>
-  (signed && v > 0 ? "+" : v < 0 ? "\u2212" : "") + "$" +
-  Math.abs(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const pct = v => (v >= 0 ? "+" : "\u2212") + Math.abs(v).toFixed(2) + "%";
-const cls = v => (v >= 0 ? "up" : "down");
+const num = v => (v === undefined || v === "" ? 0 : Number(v));
+const money = (v, signed) => (signed && v > 0 ? "+" : v < 0 ? "\u2212" : "") + "$" +
+  Math.abs(v).toLocaleString(undefined, { minimumFractionDigits:2, maximumFractionDigits:2 });
+const cls = v => v >= 0 ? "up" : "down";
 
-let TRADES = [], EQUITY = [], range = 30;
-
-function applyDensity() {
-  document.body.classList.toggle("sharp", CONFIG.density === "sharp");
+/* Linear USDT-margined. Inverse contracts need px inverted — branch here. */
+function uplOf(p) {
+  const size = Math.abs(p.pos) * (p.ctVal || 1);
+  const dir = p.posSide === "net" ? Math.sign(p.pos) : p.posSide === "short" ? -1 : 1;
+  return (p.markPx - p.avgPx) * size * dir;
 }
-applyDensity();
-addEventListener("keydown", e => {
-  if (e.shiftKey && (e.key === "D" || e.key === "d")) {
-    CONFIG.density = CONFIG.density === "sharp" ? "soft" : "sharp";
-    applyDensity(); drawCurve();
-  }
-});
-let F = { result:"all", dir:"all", mode:"all", venue:"all", type:"all" };
-let page = 1;
+const isShort = p => p.posSide === "short" || (p.posSide === "net" && p.pos < 0);
 
-const typeOf  = t => (t.instId || "").includes("SWAP") ? "perp" : "spot";
-const venueOf = t => t.venue || "cex";
-const modeOf  = t => t.mode  || "auto";
-
-function passes(t) {
-  return (F.result === "all" || (F.result === "win" ? t.pnl > 0 : t.pnl < 0))
-      && (F.dir    === "all" || t.dir === F.dir)
-      && (F.mode   === "all" || modeOf(t)  === F.mode)
-      && (F.venue  === "all" || venueOf(t) === F.venue)
-      && (F.type   === "all" || typeOf(t)  === F.type);
+function recompute() {
+  let upl = 0; S.positions.forEach(p => upl += uplOf(p));
+  S.unrealized = upl; S.equity = S.equityExUpl + upl;
+  if (S.anchor === null) S.anchor = totalEq();
+  const usdt = S.balances.get("USDT");
+  if (usdt) { usdt.bal = S.cash || S.equity; usdt.usd = S.cash || S.equity; }
+  render();
 }
 
-/* ------------------------------------------------------------------- load */
-async function load() {
-  if (CONFIG.tradesUrl) {
-    try { TRADES = await (await fetch(CONFIG.tradesUrl)).json(); }
-    catch { TRADES = sampleTrades(); }
-  } else TRADES = sampleTrades();
-
-  if (CONFIG.equityUrl) {
-    try { EQUITY = await (await fetch(CONFIG.equityUrl)).json(); }
-    catch { EQUITY = equityFromTrades(); }
-  } else EQUITY = equityFromTrades();
-
-  if (CONFIG.balancesUrl) {
-    try { BALANCES = await (await fetch(CONFIG.balancesUrl)).json(); }
-    catch { BALANCES = sampleBalances(); }
-  } else BALANCES = sampleBalances();
-
-  drawCurve(); renderKpis(); renderBalances(); renderMonths(); renderLog(); renderStatements();
-  connectLive();
-}
-
-/* ---- live composition ------------------------------------------------------
- * The KPI strip and the equity curve are deliberately static: they describe a
- * finished period, and a win rate that twitches is a win rate you can't trust.
- * Account Composition is the opposite — it says "right now" — so it ticks.
- */
+/* -------------------------------------------------- glide + flash tickers */
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-
-function ticker(el, { signed = false, flash = true } = {}) {
-  let cur = 0, target = 0, raf = null, last = 0, prev = 0;
-  const paint = () => { el.textContent = money(cur, signed); };
+function ticker(el, { signed=false, tint=false, flash=true } = {}) {
+  let cur=0, target=0, raf=null, last=0, prev=0;
+  const paint = () => {
+    el.textContent = money(cur, signed);
+    if (tint) { el.classList.toggle("up", cur >= 0); el.classList.toggle("down", cur < 0); }
+  };
   const step = now => {
-    const dt = Math.min(now - last, 64); last = now;
-    cur += (target - cur) * (1 - Math.exp(-dt / 110));
-    if (Math.abs(target - cur) < .0005) cur = target;
-    paint();
-    raf = cur === target ? null : requestAnimationFrame(step);
+    const dt = Math.min(now-last, 64); last = now;
+    cur += (target-cur) * (1 - Math.exp(-dt/110));
+    if (Math.abs(target-cur) < .0005) cur = target;
+    paint(); raf = cur === target ? null : requestAnimationFrame(step);
   };
   return v => {
     if (v === target) return;
-    if (flash && v !== prev) {
-      const c = v > prev ? "flash-up" : "flash-down";
-      el.classList.add(c); setTimeout(() => el.classList.remove(c), 420);
-    }
-    prev = v; target = v;
+    if (flash && v !== prev) { const c = v > prev ? "flash-up" : "flash-down";
+      el.classList.add(c); setTimeout(()=>el.classList.remove(c), 420); prev = v; }
+    else prev = v;
+    target = v;
     if (reduce) { cur = v; return paint(); }
     if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); }
   };
 }
-
-let T = null;
-function initTickers() {
-  T = {
-    cex: ticker($("cexBal"), { flash:false }),
-    dex: ticker($("dexBal"), { flash:false }),
-    tot: ticker($("totBal"), { flash:false }),
-  };
-}
-
-/* Live marks for anything that isn't a stablecoin. */
-const MARKS = new Map();
-
-/* Session tape for the Live range. Same {d, eq} shape the historical series
-   uses, so drawCurve doesn't need to know which one it's plotting. */
-const LIVE = [];
-const LIVE_SECONDS = 900;
-
-function pushLive() {
-  const eq = BALANCES.reduce((a, r) => a + r.usd, 0);
-  if (!eq) return;
-  LIVE.push({ d: Date.now(), eq });
-  if (LIVE.length > LIVE_SECONDS) LIVE.shift();
-  if (range === "live") { drawCurve(); drawTotalSpark(); }
-}
-setInterval(pushLive, 1000);
-
-function connectLive() {
-  if (!CONFIG.wsUrl) return demoLive();
-  let attempt = 0;
-  const open = () => {
-    const ws = new WebSocket(CONFIG.wsUrl);
-    ws.onopen = () => { attempt = 0; $("compDot").classList.remove("off"); };
-    ws.onmessage = ev => {
-      let m; try { m = JSON.parse(ev.data); } catch { return; }
-      if (m.type === "mark") { MARKS.set(String(m.instId).split("-")[0], Number(m.markPx)); repriceBalances(); }
-      if (m.type === "account" && Array.isArray(m.details)) {
-        BALANCES = m.details.map(d => ({
-          ccy: d.ccy, bal: Number(d.cashBal ?? d.bal) || 0,
-          usd: Number(d.eqUsd ?? d.usdValue) || 0, network: d.network || "CEX",
-        }));
-        renderBalances();
-      }
-    };
-    ws.onclose = () => {
-      $("compDot").classList.add("off");
-      setTimeout(open, Math.min(1000 * 2 ** attempt++, 15000) + Math.random() * 400);
-    };
-    ws.onerror = () => ws.close();
-  };
-  open();
-}
-
-/* Reprice holdings off the live marks; stables stay at 1. */
-function repriceBalances() {
-  let touched = false;
-  BALANCES.forEach(r => {
-    const px = MARKS.get(r.ccy);
-    if (px && r.bal) { r.usd = r.bal * px; touched = true; }
-  });
-  if (touched) renderBalances();
-}
-
-function demoLive() {
-  const seed = { BNB: 695.5, ETH: 3120, BTC: 64200, SOL: 148 };
-  for (const k in seed) MARKS.set(k, seed[k]);
-
-  /* Pre-fill a few minutes so the Live range has a curve the moment it's
-     selected, rather than a blank panel that fills in over 15 minutes. */
-  const base = BALANCES.reduce((a, r) => a + r.usd, 0);
-  if (base) {
-    let v = base * 0.997, now0 = Date.now();
-    for (let i = 300; i > 0; i--) {
-      v *= 1 + (Math.random() - 0.492) * 0.00035;
-      LIVE.push({ d: now0 - i * 1000, eq: Number(v.toFixed(4)) });
-    }
-  }
-  /* Give the demo a non-stable holding so there is something to watch. */
-  const STABLE = new Set(["USDT","USDC","DAI","TUSD","FDUSD","BUSD"]);
-  if (!BALANCES.some(r => r.bal > 0 && !STABLE.has(r.ccy))) return;
-  setInterval(() => {
-    for (const k in seed) {
-      seed[k] *= 1 + (Math.random() - 0.5) * 0.0012;
-      MARKS.set(k, seed[k]);
-    }
-    repriceBalances();
-  }, 900);
-}
-
-/* -------------------------------------------------- account composition --
- * The Overview shows what you hold; this view adds the historical columns —
- * cost basis and unrealized PnL — which is why it lives here rather than
- * being a copy of the live table.
- */
-const COIN = {
-  BTC:{ bg:"#f7931a", name:"Bitcoin" },   ETH:{ bg:"#8a9ff7", name:"Ethereum" },
-  USDT:{ bg:"#26a17b", name:"Tether", sym:"$" }, BNB:{ bg:"#f3ba2f", name:"BNB" },
-  SOL:{ bg:"#9945ff", name:"Solana" },    USDC:{ bg:"#2775ca", name:"USD Coin", sym:"$" },
-  DOGE:{ bg:"#c3a634", name:"Dogecoin", sym:"\u00d0" },
+const T = {
+  equity: ticker($("equity")),
+  delta:  ticker($("delta"), { signed:true, tint:true }),
+  net:    ticker($("net"),   { signed:true, tint:true }),
+  cex:    ticker($("cexBal"), { flash:false }),
+  dex:    ticker($("dexBal"), { flash:false }),
+  posPnl: ticker($("posPnl"), { signed:true, tint:true }),
 };
 
-let BALANCES = [];
 
-/* ---- category rollup ------------------------------------------------------
- * Grouping is the whole point here — the asset table already gives per-asset
- * allocation, but it can't tell you how much of the book is stables. One
- * stacked bar carries that in ~40px.
+/* ---------------------------------------------------------------- glow ----
+ * A glow on every card is wallpaper; a glow on one card is a signal. These
+ * classes are set from thresholds, so the bloom means "look here" rather than
+ * "this is a card". CONFIG.glow flips it to decorative or off.
  */
-const STABLES = new Set(["USDT","USDC","DAI","TUSD","FDUSD","BUSD","USDE","PYUSD"]);
-const MAJORS  = new Set(["BTC","ETH","SOL"]);
+function setAttn(el, level) {
+  if (!el) return;
+  el.classList.toggle("attn-warn", level === "warn");
+  el.classList.toggle("attn-neg",  level === "neg");
+}
 
-const CATEGORIES = [
-  { key:"stable", label:"Stables",         color:"#34d399", test:c => STABLES.has(c) },
-  { key:"major",  label:"BTC / ETH / SOL", color:"#60a5fa", test:c => MAJORS.has(c) },
-  { key:"other",  label:"Other tokens",    color:"#a78bfa", test:() => true },
-];
+function applyGlowMode() {
+  document.body.classList.toggle("glow-all", CONFIG.glow === "all");
+  document.body.classList.toggle("glow-off", CONFIG.glow === "off");
+  document.body.classList.toggle("sharp", CONFIG.density === "sharp");
+}
+applyGlowMode();
 
-function renderRollup(rows, total) {
-  const buckets = CATEGORIES.map(c => ({ ...c, usd: 0 }));
-  rows.forEach(r => {
-    const b = buckets.find(x => x.test(r.ccy));
-    b.usd += r.usd;
+/* Shift+D flips density live so the two can be compared without a reload. */
+addEventListener("keydown", e => {
+  if (e.shiftKey && (e.key === "D" || e.key === "d")) {
+    CONFIG.density = CONFIG.density === "sharp" ? "soft" : "sharp";
+    applyGlowMode();
+  }
+});
+
+
+/* DEX value: if the relay sends a figure we trust it; otherwise price the
+   on-chain holdings off the same mark stream so the number actually moves. */
+function dexValue() {
+  if (!S.dexHoldings.size) return S.dexUsd;
+  let usd = 0;
+  S.dexHoldings.forEach(h => {
+    const px = h.instId ? (S.marks.get(h.instId) ?? 0) : 1;   // stables price at 1
+    usd += h.qty * px;
   });
+  return usd;
+}
 
-  $("rollupTotal").textContent = money(total);
 
-  /* Zero-value categories are dropped rather than rendered as slivers — a
-     hairline segment reads as "a little" when the answer is "none". */
-  const live = buckets.filter(b => b.usd > 0);
-  $("stack").innerHTML = live.map(b =>
-    `<i style="width:${total ? (b.usd/total*100).toFixed(3) : 0}%;background:${b.color}"></i>`
-  ).join("");
+/* Two different numbers that were being conflated:
+ *   S.equity   — CEX (OKX) account equity. Margin and leverage live here.
+ *   totalEq()  — everything: exchange equity plus on-chain wallet value.
+ * The headline says "Total equity", so it has to be the latter. */
+function totalEq() { return S.equity + dexValue(); }
 
-  $("stackLegend").innerHTML = buckets.map(b => {
-    const p = total ? (b.usd/total)*100 : 0;
-    return `<span><i class="swatch-dot" style="background:${b.color}"></i>
-      ${b.label} <b>${p.toFixed(2)}%</b>
-      <span style="color:var(--dim)">${money(b.usd)}</span></span>`;
-  }).join("");
+/* ------------------------------------------------------------------ render */
+function render() {
+  const total = totalEq();
+  const base = S.tf === "LIVE" ? (S.anchor ?? total) : (CONFIG.baselines[S.tf] ?? total);
+  const delta = total - base;
+  const p = base ? (delta/base)*100 : 0;
+
+  T.equity(total); T.delta(delta); T.net(S.realized + S.unrealized);
+  $("equity").className = "v hero num " + cls(delta);
+  $("pct").textContent = (delta >= 0 ? "+" : "\u2212") + Math.abs(p).toFixed(2) + "%";
+  $("pct").className = "num " + cls(delta);
+  $("realized").textContent = money(S.realized, true);
+  $("realized").className = cls(S.realized);
+  $("unrealized").textContent = money(S.unrealized, true);
+  $("unrealized").className = cls(S.unrealized);
+
+  $("liveDot").className = "dot" + (S.status === "live" ? " on" : "");
+  $("posSub").textContent = S.positions.size + " open · " + money(S.unrealized, true);
+
+  /* ---- account context row ---- */
+  const spot = [...S.positions.values()].filter(p => !p.instId.includes("SWAP")).length;
+  /* CEX balance is the account's total equity, so it breathes with unrealized
+     PnL between account pushes rather than sitting still. */
+  T.cex(S.equity);
+  const dv = dexValue();
+  $("eqSplit").textContent = "CEX " + money(S.equity) + (dv ? "  ·  DEX " + money(dv) : "");
+  T.dex(dexValue());
+  $("dexNote").textContent = S.dexWallets
+    ? S.dexWallets + " wallet" + (S.dexWallets===1?"":"s") : "Not connected";
+  $("posCount").textContent = S.positions.size;
+  /* tint:true colours the pill from the number it prints, not from the session. */
+  T.posPnl(S.unrealized);
+  $("ordCount").textContent = S.orders;
+  $("ordNote").textContent = S.orders ? "Limit orders pending" : "None pending";
+
+  refreshPicker(); updateChartMeta();
+  renderStrip(); renderPositions(); renderBalances(); renderSignals(); renderFeed();
+  if (S.tf === "LIVE") drawTape();
+}
+
+/* ---- strip: risk gets equal billing with PnL, not a squeezed side rail ---- */
+function renderStrip() {
+  let long = 0, short = 0, nearest = null;
+  S.positions.forEach(p => {
+    const notional = Math.abs(p.pos) * (p.ctVal||1) * p.markPx;
+    isShort(p) ? short += notional : long += notional;
+    if (p.liqPx) {
+      const d = Math.abs(p.markPx - p.liqPx) / p.markPx;
+      if (!nearest || d < nearest.d) nearest = { d, p };
+    }
+  });
+  /* Margin is posted on the exchange, so leverage measures against CEX
+     equity — folding a DEX wallet in here would understate it. */
+  const gross = long + short, lev = S.equity ? gross/S.equity : 0;
+
+  $("gross").textContent = money(gross);
+  $("lev").textContent = lev.toFixed(1) + "\u00d7";
+  $("splitL").style.width = (gross ? long/gross*100 : 0) + "%";
+  $("splitS").style.width = (gross ? short/gross*100 : 0) + "%";
+  $("splitNote").textContent = money(long) + " L / " + money(short) + " S";
+
+  if (S.mgnRatio === null || !gross) {
+    $("mgn").textContent = "\u2014"; $("mgnBar").style.width = "0%";
+    $("mgnNote").textContent = gross ? "Awaiting data" : "No leveraged exposure";
+    setAttn($("cellMgn"), null);
+  } else {
+    const r = S.mgnRatio;
+    const c = r < 1.5 ? "var(--neg)" : r < 3 ? "var(--warn)" : "var(--pos)";
+    $("mgn").textContent = r.toFixed(2) + "\u00d7"; $("mgn").style.color = c;
+    $("mgnBar").style.width = Math.max(4, Math.min(100, Math.min(r,5)/5*100)) + "%";
+    $("mgnBar").style.background = c;
+    $("mgnNote").textContent = r < 1.5 ? "Critical" : r < 3 ? "Thin" : "Comfortable";
+    setAttn($("cellMgn"), r < 1.5 ? "neg" : r < 3 ? "warn" : null);
+  }
+
+  if (nearest) {
+    const pc = nearest.d * 100;
+    $("liq").textContent = pc.toFixed(2) + "%";
+    $("liq").style.color = pc < 5 ? "var(--neg)" : pc < 15 ? "var(--warn)" : "var(--text)";
+    $("liqNote").textContent = nearest.p.instId + " @ " +
+      nearest.p.liqPx.toLocaleString(undefined,{maximumFractionDigits:2});
+    setAttn($("cellLiq"), pc < 5 ? "neg" : pc < 15 ? "warn" : null);
+  } else { $("liq").textContent = "\u2014"; $("liqNote").textContent = "No open positions";
+           setAttn($("cellLiq"), null); }
+
+  const cap = CONFIG.dailyLossLimit, net = S.realized + S.unrealized;
+  if (!cap) { $("dll").textContent = "\u2014"; $("dllNote").textContent = "Not configured"; }
+  else {
+    const used = Math.max(0, -net), frac = Math.min(1, used/cap);
+    const c = frac > .8 ? "var(--neg)" : frac > .5 ? "var(--warn)" : "var(--pos)";
+    $("dll").textContent = (frac*100).toFixed(0) + "%";
+    $("dll").style.color = c;
+    $("dllBar").style.width = Math.max(2, frac*100) + "%";
+    $("dllBar").style.background = c;
+    $("dllNote").textContent = net >= 0 ? money(cap) + " of room" : money(used) + " of " + money(cap);
+    setAttn($("cellDll"), frac > .8 ? "neg" : frac > .5 ? "warn" : null);
+  }
+  renderFunding();
+}
+
+function renderFunding() {
+  let soon = null;
+  S.funding.forEach((f, instId) => { if (!soon || f.nextTs < soon.f.nextTs) soon = { instId, f }; });
+  if (!soon || !S.positions.size) {
+    $("fundIn").textContent = "\u2014"; $("fundNote").textContent = "No perp exposure"; return;
+  }
+  const { instId, f } = soon;
+  const s = Math.max(0, Math.floor((f.nextTs - Date.now())/1000));
+  const pad = n => String(n).padStart(2,"0");
+  /* Longs pay shorts when the rate is positive — cost flips with your side. */
+  let cost = 0;
+  S.positions.forEach(p => {
+    if (p.instId !== instId) return;
+    cost += Math.abs(p.pos)*(p.ctVal||1)*p.markPx * f.rate * (isShort(p) ? 1 : -1);
+  });
+  $("fundIn").textContent = pad(Math.floor(s/3600)) + ":" + pad(Math.floor(s%3600/60)) + ":" + pad(s%60);
+  $("fundNote").innerHTML = (f.rate>=0?"+":"\u2212") + (Math.abs(f.rate)*100).toFixed(4) + "% · est. " +
+    `<span class="${cls(cost)}">${money(cost, true)}</span>`;
+}
+setInterval(renderFunding, 1000);
+
+
+/* Status (open / closed / cancelled) deliberately lives on the Portfolio page.
+   Everything on this table is open by definition — a "Closed" tab here would
+   turn the live dashboard into a history browser. */
+const typeOf  = p => (p.instId || "").includes("SWAP") ? "perp" : "spot";
+const venueOf = p => p.venue || "cex";
+const modeOf  = p => p.mode  || "auto";
+
+function passesFilter(p) {
+  const f = S.posFilter;
+  return (f.mode  === "all" || modeOf(p)  === f.mode)
+      && (f.venue === "all" || venueOf(p) === f.venue)
+      && (f.type  === "all" || typeOf(p)  === f.type);
+}
+
+document.getElementById("posFilters").addEventListener("click", e => {
+  const b = e.target.closest("button[data-v]");
+  if (!b) return;
+  const set = b.parentElement;
+  S.posFilter[set.dataset.f] = b.dataset.v;
+  [...set.children].forEach(x => x.setAttribute("aria-pressed", x === b));
+  renderPositions();
+});
+
+/* ------------------------------------------------------------- positions */
+/* Coin marks are cosmetic, but they turn a wall of tickers into something the
+   eye lands on. Unknown symbols fall back to brand blue rather than breaking. */
+const COIN = {
+  BTC:{ bg:"#f7931a", name:"Bitcoin" },  ETH:{ bg:"#8a9ff7", name:"Ethereum" },
+  USDT:{ bg:"#26a17b", name:"Tether", sym:"$" }, BNB:{ bg:"#f3ba2f", name:"BNB" },
+  SOL:{ bg:"#9945ff", name:"Solana" }, USDC:{ bg:"#2775ca", name:"USD Coin", sym:"$" },
+};
+const baseOf = instId => String(instId).split("-")[0].toUpperCase();
+function coinMark(instId) {
+  const b = baseOf(instId), c = COIN[b] || { bg:"#60a5fa" };
+  return `<div class="coin" style="background:${c.bg}">${c.sym || b[0]}</div>`;
+}
+
+function positionRow(p) {
+  const upl = uplOf(p);
+  const notional = Math.abs(p.pos)*(p.ctVal||1)*p.avgPx;
+  const ret = notional ? upl/notional*100 : 0;
+  const side = isShort(p) ? "short" : "long";
+  const kind = p.instId.includes("SWAP") ? "Perpetual swap" : "Spot";
+  return { upl, ret, side, kind, notional };
+}
+
+function renderPositions() {
+  const rows = [...S.positions.values()].filter(passesFilter);
+
+  /* Preview shows the positions with the most at stake, not the first two the
+     exchange happened to return — a $0.02 mover shouldn't crowd out a $40 one. */
+  const ranked = rows.slice().sort((a, b) => Math.abs(uplOf(b)) - Math.abs(uplOf(a)));
+  const limit = CONFIG.positionsPreview || 2;
+  const preview = ranked.slice(0, limit);
+
+  const label = $("posCountLabel");
+  if (label) label.textContent = rows.length === S.positions.size
+    ? S.positions.size + (S.positions.size === 1 ? " position" : " positions")
+    : rows.length + " of " + S.positions.size;
+
+  const empty = '<tr><td colspan="7" class="empty">' +
+    (S.positions.size ? "No positions match this filter" : "No open positions") + "</td></tr>";
+
+  $("posBody").innerHTML = preview.length ? preview.map(p => {
+    const r = positionRow(p);
+    return `<tr data-pos="${p.instId}:${p.posSide}" tabindex="0" role="button"
+      aria-label="${p.instId} ${r.side}, ${money(r.upl, true)}">
+      <td class="lt"><div class="asset">${coinMark(p.instId)}
+        <div><b>${p.instId}</b><small>${r.kind}</small></div></div></td>
+      <td><span class="tag ${r.side}">${r.side.toUpperCase()}</span></td>
+      <td>${Math.abs(p.pos)}</td>
+      <td>${p.avgPx.toLocaleString(undefined,{maximumFractionDigits:2})}</td>
+      <td>${p.markPx.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td class="${cls(r.upl)}">${money(r.upl, true)}</td>
+      <td class="${cls(r.ret)}">${r.ret>=0?"+":"\u2212"}${Math.abs(r.ret).toFixed(2)}%</td>
+    </tr>`;
+  }).join("") : empty;
+
+  /* The button appears only when it has something to reveal. */
+  const hidden = rows.length - preview.length;
+  const more = $("posMoreRow");
+  if (more) {
+    more.hidden = hidden <= 0;
+    $("posMore").textContent = "View all " + rows.length + " positions" +
+      (hidden > 0 ? "  (+" + hidden + " more)" : "");
+  }
+
+  renderPositionsAll(ranked, empty);
+}
+
+/* Full list, in the modal. Adds the liquidation column the preview omits. */
+function renderPositionsAll(ranked, empty) {
+  const body = $("posBodyAll");
+  if (!body) return;
+  body.innerHTML = ranked.length ? ranked.map(p => {
+    const r = positionRow(p);
+    return `<tr data-pos="${p.instId}:${p.posSide}" tabindex="0" role="button"
+      aria-label="${p.instId} ${r.side}, ${money(r.upl, true)}">
+      <td class="lt"><div class="asset">${coinMark(p.instId)}
+        <div><b>${p.instId}</b><small>${r.kind}</small></div></div></td>
+      <td><span class="tag ${r.side}">${r.side.toUpperCase()}</span></td>
+      <td>${Math.abs(p.pos)}</td>
+      <td>${p.avgPx.toLocaleString(undefined,{maximumFractionDigits:2})}</td>
+      <td>${p.markPx.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td>${p.liqPx ? p.liqPx.toLocaleString(undefined,{maximumFractionDigits:2}) : "\u2014"}</td>
+      <td class="${cls(r.upl)}">${money(r.upl, true)}</td>
+      <td class="${cls(r.ret)}">${r.ret>=0?"+":"\u2212"}${Math.abs(r.ret).toFixed(2)}%</td>
+    </tr>`;
+  }).join("") : empty.replace('colspan="7"', 'colspan="8"');
+
+  const total = ranked.reduce((s, p) => s + uplOf(p), 0);
+  const sub = $("posModalSub");
+  if (sub) {
+    sub.textContent = ranked.length + " open \u00b7 " + money(total, true);
+    sub.className = "sub num " + cls(total);
+  }
+}
+
+
+/* ---- position detail -------------------------------------------------------
+ * A live position asks a different question than a closed trade: not "how did
+ * this go" but "where am I, and how much room is left". So this leads with
+ * distance to liquidation rather than a realized number.
+ */
+let pdKey = null;
+
+function heldSince(ts) {
+  const m = Math.round((Date.now() - ts) / 60000);
+  if (m < 60) return m + "m";
+  if (m < 1440) return Math.floor(m/60) + "h " + (m % 60) + "m";
+  return Math.floor(m/1440) + "d " + Math.floor((m % 1440)/60) + "h";
+}
+function fundIn(ts) {
+  const sec = Math.max(0, Math.floor((ts - Date.now())/1000));
+  const pad = n => String(n).padStart(2, "0");
+  return pad(Math.floor(sec/3600)) + ":" + pad(Math.floor(sec%3600/60));
+}
+
+function openPosition(key) {
+  if (!S.positions.has(key)) return;
+  pdKey = key;
+  paintPosition();
+  $("scrim").classList.add("open");
+  $("posDrawer").classList.add("open");
+  $("posDrawer").setAttribute("aria-hidden", "false");
+  $("pdClose").focus();
+}
+function closePosition() {
+  pdKey = null;
+  $("posDrawer").classList.remove("open");
+  $("posDrawer").setAttribute("aria-hidden", "true");
+  if (!$("posModal").classList.contains("open")) $("scrim").classList.remove("open");
+}
+
+function paintPosition() {
+  const p = pdKey && S.positions.get(pdKey);
+  if (!p) return;
+  const r = positionRow(p);
+  const px = v => v.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  const good = r.upl >= 0;
+  const tone = good ? "var(--pos)" : "var(--neg)";
+  const notionalNow = Math.abs(p.pos) * (p.ctVal || 1) * p.markPx;
+
+  $("pdTitle").textContent = p.instId;
+  $("pdSub").innerHTML = `<span class="tag ${r.side}">${r.side.toUpperCase()}</span>
+    ${r.kind} &middot; ${(p.mode || "auto") === "auto" ? "Fusion auto" : "Manual"}
+    &middot; ${(p.venue || "cex").toUpperCase()}`;
+  $("pdHero").className = "pd-hero " + cls(r.upl);
+  $("pdHero").innerHTML = money(r.upl, true) +
+    `<small>${r.ret >= 0 ? "+" : "\u2212"}${Math.abs(r.ret).toFixed(2)}% on ${money(r.notional)} at entry</small>`;
+
+  /* Entry, mark and liquidation on one axis. */
+  let lifeline = "";
+  if (p.liqPx) {
+    const lo = Math.min(p.liqPx, p.entryLo ?? Math.min(p.avgPx, p.markPx));
+    const hi = Math.max(p.avgPx, p.markPx, p.liqPx);
+    const span = (hi - lo) || 1;
+    const at = v => Math.max(2, Math.min(98, ((v - lo) / span) * 100));
+    const dist = Math.abs(p.markPx - p.liqPx) / p.markPx * 100;
+
+    /* Captions are centre-anchored, so near either end they overhang the track.
+       Clamp each one by its own half-width. */
+    const capAt = (v, text) => {
+      const half = (text.length * 5.6) / 2;
+      const pctHalf = (half / 440) * 100;          // drawer track ≈ 440px
+      return Math.max(pctHalf, Math.min(100 - pctHalf, at(v)));
+    };
+    const cLiq = "Liq " + px(p.liqPx);
+    const cEnt = "Entry " + px(p.avgPx);
+    const cMrk = "Mark " + px(p.markPx);
+
+    /* Entry and mark converge when a position is near flat; drop the entry
+       caption rather than stacking two labels on one point. */
+    const overlap = Math.abs(at(p.avgPx) - at(p.markPx)) < 12;
+
+    lifeline = `
+      <div class="dr-sec">
+        <span class="label">Distance to liquidation</span>
+        <div class="lifeline">
+          <span class="pin" style="left:${at(p.liqPx)}%;background:var(--neg)"></span>
+          <span class="pin" style="left:${at(p.avgPx)}%;background:rgba(255,255,255,.55)"></span>
+          <span class="pin" style="left:${at(p.markPx)}%;background:${tone};height:18px;top:-7px;width:3px"></span>
+          <span class="cap dn" style="left:${capAt(p.liqPx, cLiq)}%;color:var(--neg)">${cLiq}</span>
+          ${overlap ? "" : `<span class="cap up" style="left:${capAt(p.avgPx, cEnt)}%;color:var(--muted)">${cEnt}</span>`}
+          <span class="cap ${overlap ? "up" : "up"}" style="left:${capAt(p.markPx, cMrk)}%;color:${tone}">${cMrk}</span>
+        </div>
+        <div class="frow" style="border:0;padding-top:18px">
+          <span>Room before liquidation</span>
+          <b class="${dist < 5 ? "down" : dist < 15 ? "" : "up"}">${dist.toFixed(2)}%</b>
+        </div>
+      </div>`;
+  }
+
+  /* Targets, if the engine set them. Distance matters more than the raw level —
+     "1.8% away" is actionable, "151.2" needs mental arithmetic. */
+  const away = v => {
+    const d = ((v - p.markPx) / p.markPx) * 100;
+    return (d >= 0 ? "+" : "\u2212") + Math.abs(d).toFixed(2) + "%";
+  };
+  const targets = (p.tpPx || p.slPx) ? `
+    <div class="dr-sec">
+      <span class="label">Targets</span>
+      ${p.tpPx ? `<div class="frow"><span>Take profit</span>
+        <b class="up">${px(p.tpPx)} <span style="color:var(--dim);font-weight:400">${away(p.tpPx)}</span></b></div>` : ""}
+      ${p.slPx ? `<div class="frow"><span>Stop loss</span>
+        <b class="down">${px(p.slPx)} <span style="color:var(--dim);font-weight:400">${away(p.slPx)}</span></b></div>` : ""}
+      ${p.tpPx && p.slPx ? `<div class="frow"><span>Risk / reward</span><b>${
+        (Math.abs(p.tpPx - p.avgPx) / (Math.abs(p.avgPx - p.slPx) || 1)).toFixed(2)}\u00d7</b></div>` : ""}
+    </div>` : "";
+
+  const held = p.openedAt ? heldSince(p.openedAt) : null;
+  const fund = S.funding.get(p.instId);
+
+  $("pdBody").innerHTML = lifeline + targets + `
+    <div class="dr-sec">
+      <span class="label">Position</span>
+      <div class="frow"><span>Size</span><b>${Math.abs(p.pos)}</b></div>
+      <div class="frow"><span>Average entry</span><b>${px(p.avgPx)}</b></div>
+      <div class="frow"><span>Mark</span><b>${p.markPx.toLocaleString(undefined,
+        { minimumFractionDigits:2, maximumFractionDigits:2 })}</b></div>
+      <div class="frow"><span>Leverage</span><b>${p.lever ? p.lever + "\u00d7" : "\u2014"}${
+        p.mgnMode ? ` <span style="color:var(--dim);font-weight:400">${p.mgnMode}</span>` : ""}</b></div>
+      <div class="frow"><span>Notional now</span><b>${money(notionalNow)}</b></div>
+      <div class="frow"><span>Margin</span><b>${p.margin ? money(p.margin)
+        : (p.lever ? money(notionalNow / p.lever) : "\u2014")}</b></div>
+      <div class="frow"><span>Unrealized PnL</span><b class="${cls(r.upl)}">${money(r.upl, true)}</b></div>
+      <div class="frow"><span>Share of equity</span><b>${S.equity
+        ? (notionalNow / S.equity).toFixed(2) + "\u00d7" : "\u2014"}</b></div>
+    </div>
+
+    <div class="dr-sec">
+      <span class="label">Timing</span>
+      <div class="frow"><span>Opened</span><b>${p.openedAt
+        ? new Date(p.openedAt).toLocaleString(undefined,
+            { month:"short", day:"numeric", hour:"2-digit", minute:"2-digit" })
+        : "\u2014"}</b></div>
+      <div class="frow"><span>Held</span><b>${held || "\u2014"}</b></div>
+      ${fund ? `<div class="frow"><span>Next funding</span><b>${fundIn(fund.nextTs)}
+        <span style="color:var(--dim);font-weight:400">${(fund.rate>=0?"+":"\u2212") +
+        (Math.abs(fund.rate)*100).toFixed(4)}%</span></b></div>` : ""}
+    </div>`;
+}
+
+/* Repaint on every mark tick so the drawer is live, not a snapshot. */
+const _recompute = recompute;
+recompute = function () { _recompute(); if (pdKey) paintPosition(); };
+
+function bindPositionRows(el) {
+  el.addEventListener("click", e => {
+    const row = e.target.closest("tr[data-pos]");
+    if (row) openPosition(row.dataset.pos);
+  });
+  el.addEventListener("keydown", e => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const row = e.target.closest("tr[data-pos]");
+    if (!row) return;
+    e.preventDefault();
+    openPosition(row.dataset.pos);
+  });
+}
+bindPositionRows($("posBody"));
+bindPositionRows($("posBodyAll"));
+
+$("pdClose").addEventListener("click", closePosition);
+addEventListener("keydown", e => {
+  if (e.key === "Escape" && pdKey) { e.stopPropagation(); closePosition(); }
+});
+
+/* ---- modal ---- */
+function openPositions() {
+  $("scrim").classList.add("open");
+  $("posModal").classList.add("open");
+  $("posModalClose").focus();
+}
+function closePositions() {
+  $("scrim").classList.remove("open");
+  $("posModal").classList.remove("open");
+}
+$("posMore").addEventListener("click", openPositions);
+$("posModalClose").addEventListener("click", closePositions);
+$("scrim").addEventListener("click", () => {
+  if (pdKey) closePosition();
+  else if ($("balModal").classList.contains("open")) closeBalances();
+  else closePositions();
+});
+addEventListener("keydown", e => {
+  if (e.key === "Escape" && $("posModal").classList.contains("open")) closePositions();
+});
+
+/* -------------------------------------------------------- asset balances */
+function balanceRow(r, total) {
+  const c = COIN[r.ccy] || { bg:"#60a5fa" };
+  const alloc = total ? (r.usd/total)*100 : 0;
+  const net = r.network || "CEX";
+  const dash = '<td>\u2014</td>';
+  return `<td class="lt"><div class="asset">
+      <div class="coin" style="background:${c.bg}">${c.sym || r.ccy[0]}</div>
+      <div><b>${r.ccy}</b><small>${c.name || r.ccy}</small></div></div></td>
+    <td class="lt"><span class="tag cex">${net}</span></td>
+    <td>${r.bal.toLocaleString(undefined,{maximumFractionDigits:6})}</td>
+    <td>${money(r.usd)}</td>
+    <td class="alloc"><div class="bar"><i style="width:${alloc.toFixed(2)}%"></i></div>
+      <small>${alloc.toFixed(2)}%</small></td>
+    ${r.chg24h !== undefined ? `<td class="${cls(r.chg24h)}">${(r.chg24h>=0?"+":"\u2212")+Math.abs(r.chg24h).toFixed(2)}%</td>` : dash}
+    ${r.avgCost ? `<td>${r.avgCost.toLocaleString(undefined,{maximumFractionDigits:2})}</td>` : dash}
+    ${r.pnl !== undefined ? `<td class="${cls(r.pnl)}">${money(r.pnl, true)}</td>` : dash}`;
 }
 
 function renderBalances() {
-  const rows = BALANCES.slice().sort((a,b) => b.usd - a.usd);
-  const total = rows.reduce((s,r) => s + r.usd, 0);
-  const cex = rows.filter(r => (r.network||"CEX") === "CEX").reduce((s,r) => s + r.usd, 0);
-  const dex = total - cex;
-  const wallets = new Set(rows.filter(r => (r.network||"CEX") !== "CEX").map(r => r.wallet || "w")).size;
+  const rows = [...S.balances.values()].sort((x, y) => y.usd - x.usd);
+  const total = rows.reduce((s, r) => s + r.usd, 0);
+  const empty = '<tr><td colspan="8" class="empty">No balances</td></tr>';
 
-  if (!T) initTickers();
-  T.cex(cex); T.dex(dex); T.tot(total);
-  $("dexNote").textContent = wallets ? "On-chain holdings" : "Not connected";
-  $("dexPill").textContent = wallets + " wallet" + (wallets === 1 ? "" : "s");
-  $("totPill").textContent = rows.filter(r => r.usd > 0).length + " assets held";
+  /* Preview leads with the largest holdings. Zero rows are real information —
+     you hold nothing — but they don't belong in a three-row summary. */
+  const limit = CONFIG.balancesPreview || 3;
+  const held = rows.filter(r => r.usd > 0);
+  const preview = (held.length ? held : rows).slice(0, limit);
 
-  /* Share bars: each venue against the whole, so the two cards say something
-     about each other rather than sitting as isolated figures. */
-  const cexPct = total ? (cex / total) * 100 : 0;
-  const dexPct = total ? (dex / total) * 100 : 0;
-  $("cexShare").style.width = cexPct.toFixed(2) + "%";
-  $("dexShare").style.width = dexPct.toFixed(2) + "%";
-  $("cexPct").textContent = cexPct.toFixed(1) + "%";
-  $("dexPct").textContent = dexPct.toFixed(1) + "%";
+  $("balBody").innerHTML = preview.length
+    ? preview.map(r => `<tr>${balanceRow(r, total)}</tr>`).join("")
+    : empty;
 
-  drawTotalSpark();
-
-  renderRollup(rows, total);
-
-  const b = $("balBody");
-  if (!rows.length) {
-    b.innerHTML = '<tr><td colspan="8" style="text-align:center;color:var(--dim);padding:26px">No balances</td></tr>';
-    return;
+  const hidden = rows.length - preview.length;
+  const more = $("balMoreRow");
+  if (more) {
+    more.hidden = hidden <= 0;
+    $("balMore").textContent = "View all " + rows.length + " assets" +
+      (hidden > 0 ? "  (+" + hidden + " more)" : "");
   }
 
-  b.innerHTML = rows.map(r => {
-    const c = COIN[r.ccy] || { bg:"#60a5fa" };
-    const alloc = total ? (r.usd / total) * 100 : 0;
-    const net = r.network || "CEX";
-    const dash = '<td>\u2014</td>';
-    /* A zero holding gets a zero bar. A minimum-width bar makes an empty row
-       look identical to a full one. */
-    return `<tr>
-      <td class="lt"><div class="asset">
-        <div class="coin" style="background:${c.bg}">${c.sym || r.ccy[0]}</div>
-        <div><b>${r.ccy}</b><small>${c.name || r.ccy}</small></div></div></td>
-      <td class="lt"><span class="tag ${net.toLowerCase()}">${net}</span></td>
-      <td>${r.bal.toLocaleString(undefined,{maximumFractionDigits:6})}</td>
-      <td>${money(r.usd)}</td>
-      <td class="alloc"><div class="bar"><i style="width:${alloc.toFixed(2)}%"></i></div>
-        <small>${alloc.toFixed(2)}%</small></td>
-      ${r.chg24h !== undefined ? `<td class="${cls(r.chg24h)}">${pct(r.chg24h)}</td>` : dash}
-      ${r.avgCost ? `<td>${r.avgCost.toLocaleString(undefined,{maximumFractionDigits:2})}</td>` : dash}
-      ${r.pnl !== undefined ? `<td class="${cls(r.pnl)}">${money(r.pnl, true)}</td>` : dash}
-    </tr>`;
+  const all = $("balBodyAll");
+  if (all) {
+    all.innerHTML = rows.length ? rows.map(r => `<tr>${balanceRow(r, total)}</tr>`).join("") : empty;
+    const sub = $("balModalSub");
+    if (sub) sub.textContent = held.length + " held \u00b7 " + money(total);
+  }
+}
+
+/* ---- balances modal ---- */
+function openBalances() {
+  $("scrim").classList.add("open");
+  $("balModal").classList.add("open");
+  $("balModalClose").focus();
+}
+function closeBalances() {
+  $("balModal").classList.remove("open");
+  if (!$("posModal").classList.contains("open") && !pdKey) $("scrim").classList.remove("open");
+}
+$("balMore").addEventListener("click", openBalances);
+$("balModalClose").addEventListener("click", closeBalances);
+addEventListener("keydown", e => {
+  if (e.key === "Escape" && $("balModal").classList.contains("open")) closeBalances();
+});
+
+/* --------------------------------------------------------------- signals */
+const VERDICT = { "STRONG BUY":"buy","BUY":"buy","STRONG SELL":"sell","SELL":"sell","HOLD":"hold","NEUTRAL":"hold" };
+function ago(ts) {
+  const s = Math.max(0, Math.floor((Date.now()-ts)/1000));
+  return s<60 ? s+"s ago" : s<3600 ? Math.floor(s/60)+"m ago" : Math.floor(s/3600)+"h ago";
+}
+function renderSignals() {
+  const box = $("signals");
+  if (!S.signals.size) { box.innerHTML = '<div class="empty">Awaiting alerts</div>'; return; }
+  box.innerHTML = [...S.signals.values()].sort((a,b)=>b.ts-a.ts).map(s => {
+    const label = String(s.verdict||"HOLD").toUpperCase();
+    const c = VERDICT[label] || "hold";
+    const score = Math.max(-1, Math.min(1, Number(s.score ?? 0)));
+    const stale = (Date.now()-s.ts)/1000 > CONFIG.signalStaleAfter;
+
+    /* A STRONG SELL while you sit long is the most useful thing here. */
+    let held = null;
+    S.positions.forEach(p => { if (p.instId === s.instId) held = isShort(p) ? "short" : "long"; });
+    let align = "", ac = "";
+    if (held) {
+      const wants = c === "buy" ? "long" : c === "sell" ? "short" : null;
+      if (!wants) align = "holding " + held;
+      else if (wants === held) { align = "in line"; ac = "match"; }
+      else { align = "conflict"; ac = "conflict"; }
+    }
+    return `<div class="sig ${c}${stale?" stale":""}">
+      <div class="sig-head"><b>${s.instId}</b><span class="sig-tf">${s.timeframe||"—"}</span></div>
+      <div class="verdict ${c}">${label}</div>
+      <div class="gauge"><i style="left:${(((score+1)/2)*100).toFixed(1)}%"></i></div>
+      <div class="sig-foot">
+        <span>${s.source||"TradingView"}</span>
+        ${align?`<span class="align ${ac}">${align}</span>`:""}
+        <span>${stale?"stale · ":""}${ago(s.ts)}</span>
+      </div>
+    </div>`;
+  }).join("");
+
+  /* A signal disagreeing with an open position is the one thing on this panel
+     worth interrupting you for. */
+  const conflict = [...S.signals.values()].some(s => {
+    const label = String(s.verdict||"HOLD").toUpperCase();
+    const want = VERDICT[label] === "buy" ? "long" : VERDICT[label] === "sell" ? "short" : null;
+    if (!want) return false;
+    let held = null;
+    S.positions.forEach(p => { if (p.instId === s.instId) held = isShort(p) ? "short" : "long"; });
+    return held && held !== want && (Date.now()-s.ts)/1000 <= CONFIG.signalStaleAfter;
+  });
+  setAttn(box.closest(".card"), conflict ? "warn" : null);
+}
+setInterval(renderSignals, 5000);
+
+/* ------------------------------------------------------------------ feed */
+function pushActivity(e) { S.activity.unshift({ ts:Date.now(), ...e });
+  if (S.activity.length > 25) S.activity.pop(); renderFeed(); }
+function renderFeed() {
+  const box = $("feed");
+  if (!S.activity.length) { box.innerHTML = '<div class="empty">No engine activity yet</div>'; return; }
+  box.innerHTML = S.activity.map(a => {
+    const t = new Date(a.ts).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit", second:"2-digit" });
+    const r = a.pnl !== undefined ? `<span class="${cls(a.pnl)}">${money(a.pnl, true)}</span>` : (a.detail||"");
+    return `<div class="feed-row"><span class="t">${t}</span>
+      <span class="d"><b>${a.title}</b><small>${a.note||""}</small></span>
+      <span class="r">${r}</span></div>`;
   }).join("");
 }
 
-/* Sparkline on the total card — the same series the big curve draws, at a
-   glanceable size, so the card carries trend and not just a level. */
-function drawTotalSpark() {
-  const svg = $("totSpark");
-  if (!svg) return;
-  const d = windowed();
-  if (d.length < 2) return;
+/* ------------------------------------------------------------- live tape */
+setInterval(() => {
+  const now = Date.now();
+  S.tape.push({ t: now, v: totalEq() });
+  if (S.tape.length > CONFIG.tapeSeconds) S.tape.shift();
 
-  const box = svg.getBoundingClientRect();
-  const W = box.width || 260, H = 34;
-  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-
-  const vals = d.map(p => p.eq);
-  const lo = Math.min(...vals), hi = Math.max(...vals);
-  const span = (hi - lo) || 1;
-  const pad = 4;
-  const xOf = i => (i / (d.length - 1)) * W;
-  const yOf = v => H - pad - ((v - lo) / span) * (H - pad * 2);
-
-  let path = "";
-  d.forEach((p, i) => path += (i ? "L" : "M") + xOf(i).toFixed(1) + "," + yOf(p.eq).toFixed(2) + " ");
-
-  const rising = vals[vals.length - 1] >= vals[0];
-  const tone = rising ? "#34d399" : "#fb7185";
-
-  svg.innerHTML =
-    `<defs><linearGradient id="sparkFill" x1="0" y1="0" x2="0" y2="1">
-       <stop offset="0%" stop-color="${tone}" stop-opacity=".26"/>
-       <stop offset="100%" stop-color="${tone}" stop-opacity="0"/>
-     </linearGradient></defs>
-     <path d="${path}L${W},${H} L0,${H} Z" fill="url(#sparkFill)"/>
-     <path d="${path}" fill="none" stroke="${tone}" stroke-width="1.4"
-           vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"/>
-     <circle cx="${xOf(d.length-1).toFixed(1)}" cy="${yOf(vals[vals.length-1]).toFixed(2)}"
-             r="2.4" fill="${tone}"/>`;
-
-  const delta = vals[vals.length - 1] - vals[0];
-  const el2 = $("totDelta");
-  el2.textContent = money(delta, true) + "  " + pct(vals[0] ? (delta / vals[0]) * 100 : 0);
-  el2.className = "num " + cls(delta);
-}
-addEventListener("resize", drawTotalSpark);
-
-function sampleBalances() {
-  return [
-    { ccy:"USDT", bal:466.48,   usd:466.48, network:"CEX" },
-    { ccy:"BNB",  bal:0.027209, usd:18.92,  network:"CEX", chg24h: 1.42, avgCost:672.10, pnl:-0.36 },
-    { ccy:"ETH",  bal:0.0182,   usd:56.78,  network:"DEX", chg24h:-0.61, avgCost:3102.4, pnl: 0.28 },
-    { ccy:"USDC", bal:12.40,    usd:12.40,  network:"DEX" },
-    { ccy:"BTC",  bal:0, usd:0, network:"CEX" },
-    { ccy:"DOGE", bal:0, usd:0, network:"CEX" },
-  ];
-}
-
-/* --------------------------------------------------------------- metrics */
-function stats(rows) {
-  const wins = rows.filter(t => t.pnl > 0);
-  const losses = rows.filter(t => t.pnl < 0);
-  const gw = wins.reduce((s, t) => s + t.pnl, 0);
-  const gl = Math.abs(losses.reduce((s, t) => s + t.pnl, 0));
-
-  return {
-    n: rows.length, wins: wins.length, losses: losses.length,
-    winRate: rows.length ? (wins.length / rows.length) * 100 : 0,
-    gw, gl, net: gw - gl,
-    /* An infinite profit factor is a small-sample artifact, not skill — show a
-       dash rather than a number that invites the wrong conclusion. */
-    pf: gl > 0 ? gw / gl : null,
-    avgWin: wins.length ? gw / wins.length : 0,
-    avgLoss: losses.length ? gl / losses.length : 0,
-    expectancy: rows.length ? (gw - gl) / rows.length : 0,
-  };
-}
-
-function maxDrawdown(series) {
-  let peak = -Infinity, worst = 0, worstAbs = 0;
-  series.forEach(p => {
-    if (p.eq > peak) peak = p.eq;
-    const dd = peak ? (peak - p.eq) / peak : 0;
-    if (dd > worst) { worst = dd; worstAbs = peak - p.eq; }
+  /* Every instrument we can see a mark for gets its own tape, so switching
+     the picker doesn't start the chart from scratch. */
+  S.marks.forEach((px, instId) => {
+    if (!S.priceTape.has(instId)) S.priceTape.set(instId, []);
+    const t = S.priceTape.get(instId);
+    t.push({ t: now, v: px });
+    if (t.length > CONFIG.tapeSeconds) t.shift();
   });
-  return { pct: worst * 100, abs: worstAbs };
+
+  if (S.tf === "LIVE") drawTape();
+}, 1000);
+
+/* ------------------------------------------------------------ series ---- */
+const isEquity = () => S.chartKey === "EQUITY";
+const series = () => isEquity() ? S.tape : (S.priceTape.get(S.chartKey) || []);
+
+/* Equity is always dollars; a pair's axis has to survive both 64,000 and 0.42. */
+function fmtVal(v) {
+  if (isEquity()) return money(v);
+  const dp = Math.abs(v) >= 1000 ? 2 : Math.abs(v) >= 1 ? 2 : Math.abs(v) >= 0.01 ? 4 : 6;
+  return v.toLocaleString(undefined, { minimumFractionDigits: dp, maximumFractionDigits: dp });
 }
 
-/* The range selector on the equity curve now drives the whole panel. A stat
-   panel with a hardcoded window quietly disagrees with the chart above it. */
-const RANGE_LABEL = { live:"This session", 7:"Last 7 days", 30:"Last 30 days",
-                      90:"Last 90 days", ytd:"Year to date", all:"All time" };
-
-function windowStart() {
-  if (range === "all") return -Infinity;
-  if (range === "live") return new Date().setHours(0,0,0,0);   // today's fills
-  if (range === "ytd") return new Date(new Date().getFullYear(), 0, 1).getTime();
-  return Date.now() - range * 86400000;
+function seriesBaseline() {
+  const d = series();
+  if (!d.length) return null;
+  if (isEquity()) return S.tf === "LIVE" ? (S.anchor ?? d[0].v) : (CONFIG.baselines[S.tf] ?? d[0].v);
+  return d[0].v;                       // pair charts anchor to session open
 }
 
-function tradesInRange() {
-  const from = windowStart();
-  const rows = TRADES.filter(t => t.closed >= from);
-  return rows.length ? rows : (range === "all" ? TRADES : rows);
+/* ---- picker ---- */
+function refreshPicker() {
+  const sel = $("pairPick");
+  const names = [...new Set([
+    ...S.positions.values()].map(p => p.instId).concat([...S.signals.values()].map(s => s.instId))
+  )].filter(Boolean).sort();
+
+  const wanted = ["EQUITY", ...names].join("|");
+  if (sel.dataset.built === wanted) return;   // don't rebuild mid-interaction
+  sel.dataset.built = wanted;
+
+  sel.innerHTML =
+    '<option value="EQUITY">Equity</option>' +
+    (names.length ? '<optgroup label="Pairs">' +
+      names.map(n => `<option value="${n}">${n}</option>`).join("") + "</optgroup>" : "");
+
+  if (![...sel.options].some(o => o.value === S.chartKey)) S.chartKey = "EQUITY";
+  sel.value = S.chartKey;
+  syncPickerFace();
 }
 
-function renderKpis() {
-  const rows = tradesInRange();
-  const s = stats(rows);
-  const win = windowed();
-  const dd = maxDrawdown(win);
-  const start = win.length ? win[0].eq : 0;
-
-  $("kpiRange").textContent = RANGE_LABEL[range] || "";
-
-  $("kNet").textContent = money(s.net, true);
-  $("kNet").className = "v num " + cls(s.net);
-  $("kNetPct").textContent = start ? pct((s.net / start) * 100) + " on period open" : "No trades in range";
-
-  $("kWin").textContent = s.winRate.toFixed(1) + "%";
-  $("kWinN").textContent = s.n ? s.wins + "W / " + s.losses + "L of " + s.n : "No closed trades";
-
-  $("kPf").textContent = s.pf === null ? "\u2014" : s.pf.toFixed(2);
-  $("kPf").className = "v num " + (s.pf === null ? "" : s.pf >= 1 ? "up" : "down");
-
-  $("kAvg").textContent = money(s.avgWin) + " / " + money(s.avgLoss);
-  $("kAvgN").textContent = s.avgLoss ? "Ratio " + (s.avgWin / s.avgLoss).toFixed(2) : "Per closed trade";
-
-  $("kDd").textContent = "\u2212" + dd.pct.toFixed(2) + "%";
-  $("kDd").className = "v num down";
-  $("kDdN").textContent = money(dd.abs) + " peak to trough";
-
-  $("kExp").textContent = money(s.expectancy, true);
-  $("kExp").className = "v num " + cls(s.expectancy);
+function syncPickerFace() {
+  const l = $("pickerLabel");
+  if (l) l.textContent = S.chartKey === "EQUITY" ? "Equity" : S.chartKey;
 }
 
-/* ---------------------------------------------------------- equity curve */
-function windowed() {
-  if (range === "live") return LIVE.length > 1 ? LIVE : EQUITY.slice(-2);
-  if (!EQUITY.length) return [];
-  if (range === "all") return EQUITY;
-  if (range === "ytd") {
-    const jan = new Date(new Date().getFullYear(), 0, 1).getTime();
-    const y = EQUITY.filter(p => p.d >= jan);
-    return y.length > 1 ? y : EQUITY;
-  }
-  const cut = Date.now() - range * 86400000;
-  const win = EQUITY.filter(p => p.d >= cut);
-  return win.length > 1 ? win : EQUITY;
+$("pairPick").addEventListener("change", e => {
+  S.chartKey = e.target.value;
+  syncPickerFace();
+  const live = S.tf === "LIVE";
+  $("tape").hidden = !live; $("ph").hidden = live;
+  drawTape(); updateChartMeta();
+});
+
+/* Sub-label beside the picker: last price and change since session open. */
+function updateChartMeta() {
+  const d = series(), meta = $("chartMeta");
+  if (!d.length) { meta.textContent = ""; return; }
+  const base = seriesBaseline(), last = d[d.length-1].v;
+  const diff = last - base, pc = base ? (diff/base)*100 : 0;
+  meta.innerHTML = fmtVal(last) + ' <span class="' + cls(diff) + '">' +
+    (diff >= 0 ? "+" : "\u2212") + Math.abs(pc).toFixed(2) + "%</span>";
 }
 
 const SVGNS = "http://www.w3.org/2000/svg";
@@ -1503,121 +1889,152 @@ const el = (tag, attrs, text) => {
   return n;
 };
 const clear = n => { while (n.firstChild) n.removeChild(n.firstChild); };
-const dayLabel = ts => range === "live"
-  ? new Date(ts).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" })
-  : new Date(ts).toLocaleDateString(undefined, { month:"short", day:"numeric" });
+const hhmm = ts => new Date(ts).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
 
-/* Round a raw step up to something a human reads without decoding. */
+/* Round a raw step up to something a human reads without decoding: 1, 2, 2.5, 5. */
 function niceStep(raw) {
   const mag = Math.pow(10, Math.floor(Math.log10(raw)));
   const n = raw / mag;
   return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * mag;
 }
 
-let GEO = null;
+let GEO = null;   // last-drawn geometry, reused by the crosshair
 
-function drawCurve() {
-  const d = windowed();
-  const svg = $("curve"), box = svg.getBoundingClientRect();
-  if (d.length < 2) return;
-
-  const W = box.width || 1000, H = 330;
+function drawTape() {
+  const d = series();
+  const svg = $("tape"), box = svg.getBoundingClientRect();
+  if (d.length < 2) { ["grid","marks","xaxis","last"].forEach(id => clear($(id)));
+    $("line").setAttribute("d",""); $("area").setAttribute("d","");
+    return; }
+  const W = box.width || 1000, H = box.height || 230;
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
 
-  const padR = 66, padB = 22, padT = 12;
+  const padR = 62, padB = 20, padT = 10;   // room for value + time labels
   const plotW = W - padR;
 
-  const open = d[0].eq;
-  let lo = Math.min(...d.map(p => p.eq)), hi = Math.max(...d.map(p => p.eq));
-  const padY = Math.max((hi - lo) * 0.16, hi * 0.001);
-  lo -= padY; hi += padY;
-  if (open < lo) lo = open - padY * 0.5;
-  if (open > hi) hi = open + padY * 0.5;
+  const vals = d.map(p => p.v);
+  const anchor = seriesBaseline();
+  let lo = Math.min(...vals), hi = Math.max(...vals);
+  /* Scale the flat-tape floor to the series, not to equity — a $64,000 pair
+     and a $340 balance need different definitions of "barely moved". */
+  const floor = Math.max(Math.abs(vals[vals.length-1]) * 0.0012, isEquity() ? 0.02 : 0);
+  if (hi - lo < floor) { const m = (hi + lo) / 2; lo = m - floor/2; hi = m + floor/2; }
+  const padY = (hi - lo) * 0.18; lo -= padY; hi += padY;
+  const reach = (hi - lo) * 0.25;
+  if (anchor < lo && anchor > lo - reach) lo = anchor - padY*0.5;
+  if (anchor > hi && anchor < hi + reach) hi = anchor + padY*0.5;
 
   const span = (hi - lo) || 1;
   const xOf = i => (i / (d.length - 1)) * plotW;
   const yOf = v => Math.max(padT, Math.min(H - padB, H - padB - ((v - lo)/span) * (H - padB - padT)));
-  GEO = { d, xOf, yOf, W, H, plotW, padB, open };
+  GEO = { d, xOf, yOf, W, H, plotW, padR, padB, lo, hi };
 
-  /* ---- value axis ---- */
+  /* ---- horizontal grid + value axis ---- */
   const g = $("grid"); clear(g);
   const step = niceStep(span / 4);
+  const lastY0 = yOf(vals[vals.length - 1]);
   for (let v = Math.ceil(lo/step)*step; v <= hi; v += step) {
     const y = yOf(v);
     g.appendChild(el("line", { x1:0, x2:plotW, y1:y, y2:y,
       stroke:"rgba(255,255,255,.045)", "stroke-width":1, "vector-effect":"non-scaling-stroke" }));
+    /* Skip the label the live price pill would sit on top of. */
+    if (Math.abs(y - lastY0) < 13) continue;
     g.appendChild(el("text", { x:plotW + 8, y:y + 3.5, fill:"var(--dim)", "font-size":10.5,
-      "font-variant-numeric":"tabular-nums" }, money(v)));
+      "font-variant-numeric":"tabular-nums" }, fmtVal(v)));
   }
 
-  /* ---- curve + underwater band ---- */
-  let line = "", peak = -Infinity, peakPath = "";
-  d.forEach((p, i) => {
-    line += (i ? "L" : "M") + xOf(i).toFixed(1) + "," + yOf(p.eq).toFixed(2) + " ";
-    if (p.eq > peak) peak = p.eq;
-    peakPath += (i ? "L" : "M") + xOf(i).toFixed(1) + "," + yOf(peak).toFixed(2) + " ";
-  });
-  let back = "";
-  for (let i = d.length - 1; i >= 0; i--) back += "L" + xOf(i).toFixed(1) + "," + yOf(d[i].eq).toFixed(2) + " ";
+  /* ---- the curve ---- */
+  let path = "";
+  d.forEach((p, i) => path += (i ? "L" : "M") + xOf(i).toFixed(1) + "," + yOf(p.v).toFixed(2) + " ");
+  const stroke = getComputedStyle(document.body).getPropertyValue("--chart").trim();
+  $("line").setAttribute("d", path); $("line").setAttribute("stroke", stroke);
+  $("area").setAttribute("d", path + `L${plotW.toFixed(1)},${H-padB} L0,${H-padB} Z`);
+  ["f1","f2","f3"].forEach(id => $(id).setAttribute("stop-color", stroke));
 
-  $("line").setAttribute("d", line);
-  $("area").setAttribute("d", line + `L${plotW.toFixed(1)},${H - padB} L0,${H - padB} Z`);
-  $("ddArea").setAttribute("d", peakPath + back + "Z");
-
-  const by = yOf(open), b = $("base");
+  const by = yOf(anchor), b = $("base");
   b.setAttribute("x1", 0); b.setAttribute("x2", plotW);
   b.setAttribute("y1", by); b.setAttribute("y2", by);
+  b.setAttribute("stroke", (anchor < lo || anchor > hi) ? "rgba(255,255,255,.12)" : "rgba(255,255,255,.28)");
 
-  /* ---- peak, trough, cash flows ---- */
+  /* ---- session high / low + fills ---- */
   const m = $("marks"); clear(m);
-  const eqs = d.map(p => p.eq);
-  const hiI = eqs.indexOf(Math.max(...eqs)), loI = eqs.indexOf(Math.min(...eqs));
-  [[hiI, "Peak", -11], [loI, "Trough", 17]].forEach(([i, label, dy]) => {
-    m.appendChild(el("circle", { cx:xOf(i), cy:yOf(eqs[i]), r:3,
-      fill:"var(--bg)", stroke:"rgba(255,255,255,.5)", "stroke-width":1.3 }));
-    /* Clamp by the label's own half-width — a fixed 34px let "Trough $367.58"
-       run off the left edge as "rough $367.58". */
-    const txt = label + " " + money(eqs[i]);
-    const half = txt.length * 2.95 + 5;
-    m.appendChild(el("text", { x:Math.min(Math.max(xOf(i), half), plotW - half), y:yOf(eqs[i]) + dy,
-      fill:"var(--dim)", "font-size":10, "text-anchor":"middle",
-      "font-variant-numeric":"tabular-nums" }, txt));
+  const hiI = vals.indexOf(Math.max(...vals)), loI = vals.indexOf(Math.min(...vals));
+  [[hiI, "High", -9], [loI, "Low", 15]].forEach(([i, label, dy]) => {
+    if (i < 0) return;
+    m.appendChild(el("circle", { cx:xOf(i), cy:yOf(vals[i]), r:2.5,
+      fill:"var(--bg)", stroke:"rgba(255,255,255,.45)", "stroke-width":1.2 }));
+    /* Clamp by the label's own half-width, not a fixed guess. */
+    const txt = label + " " + fmtVal(vals[i]);
+    const half = txt.length * 2.9 + 4;
+    m.appendChild(el("text", {
+      x: Math.min(Math.max(xOf(i), half), plotW - half), y: yOf(vals[i]) + dy,
+      fill:"var(--dim)", "font-size":10, "text-anchor":"middle", "font-variant-numeric":"tabular-nums" },
+      txt));
   });
 
-  /* Deposits and withdrawals move the curve without any trading happening.
-     Marking them stops a funding day from reading as a winning day. */
-  d.forEach((p, i) => {
-    if (!p.cash) return;
-    const x = xOf(i);
-    m.appendChild(el("line", { x1:x, x2:x, y1:padT, y2:H - padB,
-      stroke:"rgba(167,139,250,.45)", "stroke-width":1, "stroke-dasharray":"2 3",
-      "vector-effect":"non-scaling-stroke" }));
-    m.appendChild(el("text", { x:x, y:padT + 9, fill:"#a78bfa", "font-size":9.5,
-      "text-anchor":"middle" }, (p.cash > 0 ? "+" : "\u2212") + money(Math.abs(p.cash))));
+  /* Fills land on the curve so you can see what the engine did to the line.
+     On a pair chart, only that pair's own fills are relevant. */
+  const t0 = d[0].t, t1 = d[d.length-1].t;
+  S.activity.filter(a => a.pnl !== undefined && a.ts >= t0 && a.ts <= t1 &&
+    (isEquity() || (a.note || "").includes(S.chartKey))).forEach(a => {
+    const i = Math.round(((a.ts - t0) / (t1 - t0 || 1)) * (d.length - 1));
+    m.appendChild(el("circle", { cx:xOf(i), cy:yOf(vals[i]), r:3.5,
+      fill: a.pnl >= 0 ? "var(--pos)" : "var(--neg)", stroke:"var(--panel)", "stroke-width":1.5 }));
   });
 
-  /* ---- date axis ---- */
-  const x = $("xaxis"); clear(x);
-  const ticks = Math.max(2, Math.min(7, Math.floor(plotW / 150)));
-  for (let k = 0; k <= ticks; k++) {
-    const i = Math.round((k/ticks) * (d.length - 1));
-    x.appendChild(el("text", { x:Math.min(Math.max(xOf(i), 22), plotW - 22), y:H - 6,
-      fill:"var(--dim)", "font-size":10, "text-anchor":"middle" }, dayLabel(d[i].d)));
+  /* ---- entry / liquidation reference lines on a held pair ---- */
+  if (!isEquity()) {
+    let held = null;
+    S.positions.forEach(p => { if (p.instId === S.chartKey) held = p; });
+    if (held) {
+      [[held.avgPx, "Entry", "rgba(255,255,255,.42)"],
+       [held.liqPx, "Liq", "rgba(251,113,133,.65)"]].forEach(([v, label, col]) => {
+        if (!v || v < lo || v > hi) return;
+        const yy = yOf(v);
+        m.appendChild(el("line", { x1:0, x2:plotW, y1:yy, y2:yy, stroke:col,
+          "stroke-width":1, "stroke-dasharray":"3 5", "vector-effect":"non-scaling-stroke" }));
+        m.appendChild(el("text", { x:6, y:yy - 5, "font-size":9.5, fill:col,
+          "letter-spacing":".08em" }, label.toUpperCase()));
+      });
+    }
   }
 
-  const last = d[d.length - 1].eq;
-  const delta = last - open;
-  $("curEq").textContent = money(last);
-  const liveTab = document.querySelector('#tabs .tab[data-r="live"]');
-  if (liveTab) liveTab.setAttribute("aria-pressed", range === "live");
-  $("curDelta").textContent = money(delta, true) + "   " + pct(open ? (delta/open)*100 : 0);
-  $("curDelta").className = "num " + cls(delta);
+  /* ---- time axis ---- */
+  const x = $("xaxis"); clear(x);
+  const ticks = Math.max(2, Math.min(6, Math.floor(plotW / 130)));
+  let lastLabel = null;
+  for (let k = 0; k <= ticks; k++) {
+    const i = Math.round((k/ticks) * (d.length - 1));
+    const txt = hhmm(d[i].t);
+    if (txt === lastLabel) continue;      // a 5-minute tape repeats minutes
+    lastLabel = txt;
+    const half = txt.length * 2.9 + 4;
+    x.appendChild(el("text", {
+      x: Math.min(Math.max(xOf(i), half), plotW - half), y: H - 5,
+      fill:"var(--dim)", "font-size":10, "text-anchor":"middle",
+      "font-variant-numeric":"tabular-nums" }, txt));
+  }
+
+  /* ---- last-value pill riding the right edge ---- */
+  const lastV = vals[vals.length-1], lastY = yOf(lastV);
+  const L = $("last"); clear(L);
+  const up = lastV >= anchor;
+  L.appendChild(el("line", { x1:0, x2:plotW, y1:lastY, y2:lastY, stroke:stroke,
+    "stroke-width":1, "stroke-dasharray":"2 4", opacity:.35, "vector-effect":"non-scaling-stroke" }));
+  L.appendChild(el("circle", { cx:xOf(d.length-1), cy:lastY, r:3.2, fill:stroke }));
+  L.appendChild(el("rect", { x:plotW + 3, y:lastY - 9, width:padR - 6, height:18, rx:4,
+    fill: up ? "rgba(52,211,153,.16)" : "rgba(251,113,133,.16)",
+    stroke: up ? "rgba(52,211,153,.45)" : "rgba(251,113,133,.45)" }));
+  L.appendChild(el("text", { x:plotW + padR/2, y:lastY + 3.5, "text-anchor":"middle",
+    "font-size":10.5, "font-variant-numeric":"tabular-nums",
+    fill: up ? "var(--pos)" : "var(--neg)" }, fmtVal(lastV)));
 }
 
 /* ------------------------------------------------------------- crosshair */
 (function crosshair() {
-  const svg = $("curve"), c = $("cross");
+  const svg = $("tape"), c = $("cross");
   const hide = () => { c.style.display = "none"; };
+
   svg.addEventListener("mouseleave", hide);
   svg.addEventListener("mousemove", e => {
     if (!GEO || GEO.d.length < 2) return hide();
@@ -1625,553 +2042,214 @@ function drawCurve() {
     const px = (e.clientX - r.left) * (GEO.W / r.width);
     if (px > GEO.plotW) return hide();
 
-    const i = Math.max(0, Math.min(GEO.d.length - 1, Math.round((px / GEO.plotW) * (GEO.d.length - 1))));
-    const pt = GEO.d[i], xx = GEO.xOf(i), yy = GEO.yOf(pt.eq);
-
-    /* Drawdown at the hovered point — the number the shading represents. */
-    let peak = -Infinity;
-    for (let k = 0; k <= i; k++) peak = Math.max(peak, GEO.d[k].eq);
-    const dd = peak ? ((peak - pt.eq) / peak) * 100 : 0;
-    const diff = pt.eq - GEO.open;
+    const i = Math.max(0, Math.min(GEO.d.length - 1,
+      Math.round((px / GEO.plotW) * (GEO.d.length - 1))));
+    const pt = GEO.d[i], x = GEO.xOf(i), y = GEO.yOf(pt.v);
+    const base = seriesBaseline() ?? GEO.d[0].v;
+    const diff = pt.v - base;
 
     clear(c);
-    c.appendChild(el("line", { x1:xx, x2:xx, y1:0, y2:GEO.H - GEO.padB,
+    c.appendChild(el("line", { x1:x, x2:x, y1:0, y2:GEO.H - GEO.padB,
       stroke:"rgba(255,255,255,.18)", "stroke-width":1, "vector-effect":"non-scaling-stroke" }));
-    c.appendChild(el("circle", { cx:xx, cy:yy, r:3.8, fill:"var(--panel)",
-      stroke:"#60a5fa", "stroke-width":1.8 }));
+    c.appendChild(el("circle", { cx:x, cy:y, r:3.5, fill:"var(--panel)",
+      stroke:"var(--chart)", "stroke-width":1.8 }));
 
-    const w = 150, h = 54, flip = xx + w + 12 > GEO.plotW;
-    const bx = flip ? xx - w - 10 : xx + 10;
-    const byy = Math.max(4, Math.min(GEO.H - GEO.padB - h - 4, yy - h/2));
-    c.appendChild(el("rect", { x:bx, y:byy, width:w, height:h, rx:6,
-      fill:"rgba(8,15,28,.95)", stroke:"var(--edge)" }));
-    c.appendChild(el("text", { x:bx + 10, y:byy + 16, "font-size":11, fill:"var(--dim)" },
-      dayLabel(pt.d)));
-    c.appendChild(el("text", { x:bx + 10, y:byy + 32, "font-size":12.5,
-      "font-variant-numeric":"tabular-nums", fill:"var(--text)" }, money(pt.eq)));
-    c.appendChild(el("text", { x:bx + 10, y:byy + 46, "font-size":10.5,
+    // flip the tooltip to the left near the right edge so it never clips
+    const w = 116, flip = x + w + 12 > GEO.plotW;
+    const bx = flip ? x - w - 10 : x + 10;
+    const byy = Math.max(4, Math.min(GEO.H - GEO.padB - 42, y - 21));
+    c.appendChild(el("rect", { x:bx, y:byy, width:w, height:38, rx:6,
+      fill:"rgba(8,15,28,.94)", stroke:"var(--edge)" }));
+    c.appendChild(el("text", { x:bx + 9, y:byy + 15, "font-size":11,
+      "font-variant-numeric":"tabular-nums", fill:"var(--text)" }, fmtVal(pt.v)));
+    c.appendChild(el("text", { x:bx + 9, y:byy + 29, "font-size":10,
       "font-variant-numeric":"tabular-nums", fill: diff >= 0 ? "var(--pos)" : "var(--neg)" },
-      money(diff, true) + (dd > 0.005 ? "   \u2212" + dd.toFixed(2) + "% from peak" : "   at peak")));
+      (isEquity() ? money(diff, true)
+                  : (diff >= 0 ? "+" : "\u2212") + fmtVal(Math.abs(diff))) + "  " + hhmm(pt.t)));
 
     c.style.display = "";
   });
 })();
 
-addEventListener("resize", drawCurve);
+addEventListener("resize", () => { if (S.tf === "LIVE") drawTape(); });
 
 $("tabs").addEventListener("click", e => {
   const b = e.target.closest(".tab");
-  if (!b || !b.dataset.r) return;          // the Live link navigates instead
-  range = ["all","ytd","live"].includes(b.dataset.r) ? b.dataset.r : Number(b.dataset.r);
-  [...$("tabs").children].forEach(x => x.dataset.r && x.setAttribute("aria-pressed", x === b));
-  drawCurve(); renderKpis(); drawTotalSpark();
+  if (!b || !b.dataset.tf) return;
+  S.tf = b.dataset.tf;
+  [...$("tabs").children].forEach(x => x.dataset.tf && x.setAttribute("aria-pressed", x === b));
+  const live = S.tf === "LIVE";
+  $("tape").hidden = !live; $("ph").hidden = live; $("ph").textContent = S.tf + " series";
+  render();
 });
 
-/* -------------------------------------------------------- monthly table */
-function renderMonths() {
-  const by = new Map();
-  TRADES.forEach(t => {
-    const k = new Date(t.closed).toISOString().slice(0, 7);
-    if (!by.has(k)) by.set(k, []);
-    by.get(k).push(t);
-  });
-
-  const rows = [...by.entries()].sort((a, b) => b[0].localeCompare(a[0])).map(([k, rs]) => {
-    const s = stats(rs);
-    const cash = rs.reduce((a, t) => a + (t.cash || 0), 0);
-    const bal = rs.slice().sort((a, b) => a.closed - b.closed).pop().balance;
-    const nice = new Date(k + "-01T00:00:00").toLocaleDateString(undefined, { month: "long", year: "numeric" });
-    return `<tr>
-      <td class="lt">${nice}</td>
-      <td>${s.n}</td><td class="up">${s.wins}</td><td class="down">${s.losses}</td>
-      <td>${s.winRate.toFixed(0)}%</td>
-      <td class="${cls(s.net)}">${money(s.net, true)}</td>
-      <td class="${cash ? cls(cash) : ""}">${cash ? money(cash, true) : "\u2014"}</td>
-      <td>${money(bal)}</td>
-    </tr>`;
-  });
-
-  $("monthBody").innerHTML = rows.join("") ||
-    '<tr><td colspan="8" style="text-align:center;color:var(--dim);padding:26px">No closed trades yet</td></tr>';
-}
-
-/* ------------------------------------------------------------ trade log */
-function heldFor(a, b) {
-  const m = Math.round((b - a) / 60000);
-  if (m < 60) return m + "m";
-  if (m < 1440) return Math.floor(m / 60) + "h " + (m % 60) + "m";
-  return Math.floor(m / 1440) + "d " + Math.floor((m % 1440) / 60) + "h";
-}
-
-function renderLog() {
-  const rows = TRADES.filter(passes).slice().sort((a, b) => b.closed - a.closed);
-
-  $("logCount").textContent = rows.length + " of " + TRADES.length + " trades";
-
-  /* Page the rows. An active trader's log runs to thousands — rendering all of
-     them costs a long first paint and a scrollbar nobody can navigate. */
-  const size = CONFIG.pageSize;
-  const pages = Math.max(1, Math.ceil(rows.length / size));
-  if (page > pages) page = pages;
-  const from = (page - 1) * size;
-  const paged = rows.slice(from, from + size);
-  renderPager(rows.length, pages, from, paged.length);
-
-  const fmt = ts => new Date(ts).toLocaleDateString(undefined, { month: "short", day: "numeric" }) +
-    " " + new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-
-  $("logBody").innerHTML = paged.map(t => {
-    const ret = t.entry ? ((t.exit - t.entry) / t.entry) * 100 * (t.dir === "short" ? -1 : 1) : 0;
-    return `<tr data-i="${t.id}" tabindex="0" role="button"
-      aria-label="Trade ${t.id}, ${t.instId}, ${money(t.pnl, true)}">
-      <td class="lt">${t.id}</td>
-      <td class="lt">${t.instId}</td>
-      <td class="lt"><span class="tag ${t.dir}">${t.dir.toUpperCase()}</span></td>
-      <td>${fmt(t.opened)}</td><td>${fmt(t.closed)}</td>
-      <td>${heldFor(t.opened, t.closed)}</td>
-      <td>${t.size}</td>
-      <td>${t.entry.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-      <td>${t.exit.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-      <td class="${cls(t.pnl)}">${money(t.pnl, true)}</td>
-      <td class="${cls(ret)}">${pct(ret)}</td>
-      <td>${t.cash ? money(t.cash, true) : "\u2014"}</td>
-      <td>${money(t.balance)}</td>
-      <td class="lt note">${t.note || ""}</td>
-    </tr>`;
-  }).join("") ||
-    '<tr><td colspan="14" style="text-align:center;color:var(--dim);padding:26px">No trades match this filter</td></tr>';
-
-  /* Totals stay on the whole filtered set — a footer that only sums the visible
-     page would quietly change meaning as you page through. */
-  const s = stats(rows);
-  $("logFoot").innerHTML = rows.length ? `<tr>
-    <td colspan="9" class="lt" style="color:var(--muted)">${rows.length} trades &middot; ${s.wins}W / ${s.losses}L
-      ${pages > 1 ? `<span style="color:var(--dim)">&middot; all pages</span>` : ""}</td>
-    <td class="${cls(s.net)}">${money(s.net, true)}</td>
-    <td colspan="4"></td>
-  </tr>` : "";
-}
-
-/* ---- statements ------------------------------------------------------------
- * CSV is generated in the browser: no backend, works offline, and the file is
- * the raw record rather than a rendering of it. A PDF statement with a
- * statement ID has to come from the server to be worth anything for tax — that
- * one is deliberately not faked here.
- */
-function csvEscape(v) {
-  const t = String(v ?? "");
-  return /[",\n]/.test(t) ? '"' + t.replace(/"/g, '""') + '"' : t;
-}
-
-/* A statement that's only a row dump makes you total it yourself. Lead with the
-   summary, then the detail, then a totals row that ties back to it. */
-function statementSummary(rows) {
-  const st = stats(rows);
-  const cash = rows.reduce((a, t) => a + (t.cash || 0), 0);
-  const sorted = rows.slice().sort((a, b) => a.closed - b.closed);
-  const closing = sorted.length ? sorted[sorted.length - 1].balance : 0;
-  const opening = sorted.length
-    ? sorted[0].balance - sorted[0].pnl - (sorted[0].cash || 0) : 0;
-  return { st, cash, opening, closing,
-           ret: opening ? ((closing - opening - cash) / opening) * 100 : 0 };
-}
-
-function tradesToCsv(rows, meta = {}) {
-  const { st, cash, opening, closing, ret } = statementSummary(rows);
-  const n2 = v => v.toFixed(2);
-  const L = [];
-
-  L.push(["MX1 Trade — Account Statement"].map(csvEscape).join(","));
-  L.push(["Period", meta.period || "All time"].map(csvEscape).join(","));
-  L.push(["Generated", new Date().toISOString()].map(csvEscape).join(","));
-  if (meta.filters) L.push(["Filters", meta.filters].map(csvEscape).join(","));
-  L.push("");
-
-  L.push("SUMMARY");
-  [ ["Trades", st.n],
-    ["Wins", st.wins],
-    ["Losses", st.losses],
-    ["Win rate", st.winRate.toFixed(1) + "%"],
-    ["Gross profit", n2(st.gw)],
-    ["Gross loss", n2(-st.gl)],
-    ["Net realized P&L", n2(st.net)],
-    ["Profit factor", st.pf === null ? "n/a" : st.pf.toFixed(2)],
-    ["Avg win", n2(st.avgWin)],
-    ["Avg loss", n2(-st.avgLoss)],
-    ["Expectancy per trade", n2(st.expectancy)],
-    ["Opening balance", n2(opening)],
-    ["Deposits / withdrawals", n2(cash)],
-    ["Closing balance", n2(closing)],
-    ["Return on opening balance", (ret >= 0 ? "+" : "") + ret.toFixed(2) + "%"],
-  ].forEach(r => L.push(r.map(csvEscape).join(",")));
-  L.push("");
-
-  L.push("TRADES");
-  const head = ["#","Instrument","Direction","Mode","Venue","Type","Opened","Closed",
-                "Held","Size","Entry","Exit","PnL","Return %","Cash in/out","Balance","Notes"];
-  L.push(head.join(","));
-
-  const iso = ts => new Date(ts).toISOString();
-  rows.slice().sort((a, b) => a.closed - b.closed).forEach(t => {
-    const r = t.entry ? ((t.exit - t.entry) / t.entry) * 100 * (t.dir === "short" ? -1 : 1) : 0;
-    L.push([t.id, t.instId, t.dir, modeOf(t), venueOf(t), typeOf(t),
-            iso(t.opened), iso(t.closed), heldFor(t.opened, t.closed), t.size,
-            t.entry, t.exit, n2(t.pnl), r.toFixed(2),
-            n2(t.cash || 0), n2(t.balance), t.note || ""].map(csvEscape).join(","));
-  });
-
-  /* Totals row so the detail visibly reconciles with the summary above. */
-  L.push(["TOTAL", st.n + " trades", st.wins + "W / " + st.losses + "L", "", "", "", "", "",
-          "", "", "", "", n2(st.net), (ret >= 0 ? "+" : "") + ret.toFixed(2) + "%",
-          n2(cash), n2(closing), ""].map(csvEscape).join(","));
-
-  return L.join("\n");
-}
-
-function download(name, text) {
-  const blob = new Blob([text], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url; a.download = name;
-  document.body.appendChild(a); a.click(); a.remove();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
-const stamp = () => new Date().toISOString().slice(0, 10);
-
-function renderStatements() {
-  const by = new Map();
-  TRADES.forEach(t => {
-    const k = new Date(t.closed).toISOString().slice(0, 7);
-    if (!by.has(k)) by.set(k, []);
-    by.get(k).push(t);
-  });
-
-  const months = [...by.entries()].sort((a, b) => b[0].localeCompare(a[0]));
-  $("stmtNote").textContent = TRADES.length + " trades across " + months.length +
-    " month" + (months.length === 1 ? "" : "s");
-
-  $("stmtBody").innerHTML = months.map(([k, rs]) => {
-    const st = stats(rs);
-    const cash = rs.reduce((a, t) => a + (t.cash || 0), 0);
-    const bal = rs.slice().sort((a, b) => a.closed - b.closed).pop().balance;
-    const nice = new Date(k + "-01T00:00:00")
-      .toLocaleDateString(undefined, { month:"long", year:"numeric" });
-    return `<tr>
-      <td class="lt">${nice}</td>
-      <td>${st.n}</td>
-      <td class="${cls(st.net)}">${money(st.net, true)}</td>
-      <td class="${cash ? cls(cash) : ""}">${cash ? money(cash, true) : "\u2014"}</td>
-      <td>${money(bal)}</td>
-      <td><div class="dl-cell"><button class="dl" data-month="${k}">CSV</button></div></td>
-    </tr>`;
-  }).join("") ||
-    '<tr><td colspan="6" style="text-align:center;color:var(--dim);padding:26px">No statements yet</td></tr>';
-}
-
-$("stmtBody").addEventListener("click", e => {
-  const b = e.target.closest("[data-month]");
-  if (!b) return;
-  const k = b.dataset.month;
-  const rows = TRADES.filter(t => new Date(t.closed).toISOString().slice(0,7) === k)
-                     .sort((a, b2) => a.closed - b2.closed);
-  const period = new Date(k + "-01T00:00:00")
-    .toLocaleDateString(undefined, { month:"long", year:"numeric" });
-  download(`mx1-statement-${k}.csv`, tradesToCsv(rows, { period }));
-});
-
-$("dlAll").addEventListener("click", () =>
-  download(`mx1-trades-all-${stamp()}.csv`, tradesToCsv(TRADES, { period: "All time" })));
-
-/* "Current view" means exactly what's on screen — same filters, same order. */
-$("dlFiltered").addEventListener("click", () => {
-  const rows = TRADES.filter(passes);
-  /* Record which filters produced this file — a filtered export with no note of
-     the filter is a number you can't reproduce later. */
-  const active = Object.entries(F).filter(([, v]) => v !== "all")
-    .map(([k, v]) => k + "=" + v).join(" ");
-  download(`mx1-trades-filtered-${stamp()}.csv`,
-           tradesToCsv(rows, { period: RANGE_LABEL[range] || "Filtered",
-                               filters: active || "none" }));
-});
-
-/* ---- pager ---------------------------------------------------------------- */
-function renderPager(total, pages, from, shown) {
-  const box = $("pager");
-
-  /* Show it whenever there are rows, even on a single page: the count and the
-     rows-per-page control are useful regardless, and a control that only
-     materialises once your data grows is one you never learn exists. */
-  box.hidden = total === 0;
-  if (!total) return;
-
-  $("pagerInfo").textContent = pages > 1
-    ? "Showing " + (from + 1) + "\u2013" + (from + shown) + " of " + total + " trades"
-    : total + (total === 1 ? " trade" : " trades") + " \u00b7 one page";
-
-  $("pgFirst").disabled = $("pgPrev").disabled = page === 1;
-  $("pgLast").disabled  = $("pgNext").disabled = page === pages;
-
-  if (pages <= 1) { $("pgNums").innerHTML =
-    '<button class="pg" data-page="1" aria-current="true">1</button>'; return; }
-
-  /* Window the numbers: first, last, and a run around the current page. */
-  const want = new Set([1, pages, page, page - 1, page + 1]);
-  if (page <= 3) [2, 3, 4].forEach(n => want.add(n));
-  if (page >= pages - 2) [pages-1, pages-2, pages-3].forEach(n => want.add(n));
-  const list = [...want].filter(n => n >= 1 && n <= pages).sort((a, b) => a - b);
-
-  let html = "", prev = 0;
-  list.forEach(n => {
-    if (n - prev > 1) html += '<span class="pg-gap">\u2026</span>';
-    html += `<button class="pg" data-page="${n}" aria-current="${n === page}">${n}</button>`;
-    prev = n;
-  });
-  $("pgNums").innerHTML = html;
-}
-
-function goPage(n) {
-  page = Math.max(1, n);
-  renderLog();
-  /* Jump back to the table head, not the top of the document. */
-  document.querySelector("#logBody").closest(".scroller")
-    .scrollIntoView({ behavior: "smooth", block: "start" });
-}
-
-$("pgFirst").addEventListener("click", () => goPage(1));
-$("pgPrev").addEventListener("click", () => goPage(page - 1));
-$("pgNext").addEventListener("click", () => goPage(page + 1));
-$("pgLast").addEventListener("click", () => goPage(Infinity));
-$("pgNums").addEventListener("click", e => {
-  const b = e.target.closest("[data-page]");
-  if (b) goPage(Number(b.dataset.page));
-});
-$("pageSize").addEventListener("change", e => {
-  CONFIG.pageSize = Number(e.target.value);
-  page = 1;
-  renderLog();
-});
-
-$("toolbar").addEventListener("click", e => {
-  const b = e.target.closest("button[data-v]");
-  if (!b) return;
-  const set = b.parentElement;
-  F[set.dataset.f] = b.dataset.v;
-  [...set.children].forEach(x => x.setAttribute("aria-pressed", x === b));
-  page = 1;
-  renderLog();
-});
-
-/* ---- trade drawer ---------------------------------------------------------
- * Opens in place rather than navigating: you're usually scanning the log and
- * comparing, so losing scroll position on every look is the wrong trade.
- * Newer/Older step through the filtered list without closing.
- */
-let drOrder = [], drPos = -1;
-
-function openTrade(id) {
-  const t = TRADES.find(x => x.id === id);
-  if (!t) return;
-  /* Walk every filtered trade, not just the visible page — paging is a display
-     concern and shouldn't stop you stepping past the bottom row. */
-  drOrder = TRADES.filter(passes).slice().sort((a,b) => b.closed - a.closed).map(x => x.id);
-  drPos = drOrder.indexOf(id);
-  paintTrade(t);
-  $("scrim").classList.add("open");
-  $("drawer").classList.add("open");
-  $("drawer").setAttribute("aria-hidden", "false");
-  $("drClose").focus();
-}
-
-function closeTrade() {
-  $("scrim").classList.remove("open");
-  $("drawer").classList.remove("open");
-  $("drawer").setAttribute("aria-hidden", "true");
-  const row = document.querySelector(`tr[data-i="${drOrder[drPos]}"]`);
-  if (row) row.focus();
-}
-
-function stepTrade(d) {
-  const next = drPos + d;
-  if (next < 0 || next >= drOrder.length) return;
-  drPos = next;
-  paintTrade(TRADES.find(x => x.id === drOrder[drPos]));
-}
-
-function paintTrade(t) {
-  const ret = t.entry ? ((t.exit - t.entry) / t.entry) * 100 * (t.dir === "short" ? -1 : 1) : 0;
-  const notional = t.size * t.entry;
-  const good = t.pnl >= 0;
-  const fmtDT = ts => new Date(ts).toLocaleString(undefined,
-    { month:"short", day:"numeric", hour:"2-digit", minute:"2-digit" });
-  const px = v => v.toLocaleString(undefined, { maximumFractionDigits: 2 });
-  const moved = t.exit - t.entry;
-
-  /* Connector height scales with the size of the move, capped so a 12% swing
-     doesn't push the rest of the panel off screen. */
-  const gapFor = r => Math.round(28 + Math.min(Math.abs(r), 6) * 14);
-
-  $("drTitle").textContent = t.instId;
-  $("drSub").innerHTML = `<span class="tag ${t.dir}">${t.dir.toUpperCase()}</span>
-    Trade #${t.id} &middot; ${modeOf(t) === "auto" ? "Fusion auto" : "Manual"}
-    &middot; ${venueOf(t).toUpperCase()} &middot; ${typeOf(t)}`;
-
-  $("drHead").className = "dr-head " + (good ? "win" : "loss");
-  $("drHero").className = "dr-hero " + cls(t.pnl);
-  $("drHero").innerHTML = money(t.pnl, true) +
-    `<small>${pct(ret)} on ${money(notional)} notional &middot; held ${heldFor(t.opened, t.closed)}</small>`;
-
-  /* The trade as a sequence rather than a spec sheet: opened here, closed
-     there, and the connector carries the result. */
-  const tone = good ? "var(--pos)" : "var(--neg)";
-
-  $("drBody").innerHTML = `
-    <div class="tl" style="--tl-a:rgba(255,255,255,.25); --tl-b:${tone}">
-      <div class="tl-node" style="--tl-dot:rgba(255,255,255,.45)">
-        <div class="when">Opened &middot; ${fmtDT(t.opened)}</div>
-        <div class="what">Entry <b>${px(t.entry)}</b>
-          <span style="color:var(--dim)">&nbsp;&times;&nbsp;${t.size}</span></div>
-      </div>
-      <div class="tl-span" style="--tl-h:${gapFor(ret)}px">
-        <span class="amt">${moved >= 0 ? "+" : "\u2212"}${px(Math.abs(moved))}
-          <i>${heldFor(t.opened, t.closed)}</i></span>
-      </div>
-      <div class="tl-node" style="--tl-dot:${tone}">
-        <div class="when">Closed &middot; ${fmtDT(t.closed)}</div>
-        <div class="what">Exit <b>${px(t.exit)}</b>
-          <span class="${cls(t.pnl)}">&nbsp;&nbsp;${pct(ret)}</span></div>
-      </div>
-    </div>
-
-    <div class="dr-sec">
-      <span class="label">Detail</span>
-      <div class="frow"><span>Size</span><b>${t.size}</b></div>
-      <div class="frow"><span>Notional at entry</span><b>${money(notional)}</b></div>
-      <div class="frow"><span>Held</span><b>${heldFor(t.opened, t.closed)}</b></div>
-      <div class="frow"><span>Realized P&amp;L</span><b class="${cls(t.pnl)}">${money(t.pnl, true)}</b></div>
-      ${t.cash ? `<div class="frow"><span>Cash in/out</span>
-        <b class="${cls(t.cash)}">${money(t.cash, true)}</b></div>` : ""}
-      <div class="frow"><span>Balance after</span><b>${money(t.balance)}</b></div>
-    </div>
-
-    ${t.note ? `<div class="dr-sec"><span class="label">Note</span>
-      <div class="dr-note">${t.note}</div></div>` : ""}`;
-
-  $("drPrev").disabled = drPos <= 0;
-  $("drNext").disabled = drPos >= drOrder.length - 1;
-  $("drBody").scrollTop = 0;
-}
-
-/* wiring */
-$("logBody").addEventListener("click", e => {
-  const row = e.target.closest("tr[data-i]");
-  if (row) openTrade(Number(row.dataset.i));
-});
-$("logBody").addEventListener("keydown", e => {
-  if (e.key !== "Enter" && e.key !== " ") return;
-  const row = e.target.closest("tr[data-i]");
-  if (!row) return;
-  e.preventDefault();
-  openTrade(Number(row.dataset.i));
-});
-$("drClose").addEventListener("click", closeTrade);
-$("scrim").addEventListener("click", closeTrade);
-$("drPrev").addEventListener("click", () => stepTrade(-1));
-$("drNext").addEventListener("click", () => stepTrade(1));
-addEventListener("keydown", e => {
-  if (!$("drawer").classList.contains("open")) return;
-  if (e.key === "Escape") closeTrade();
-  if (e.key === "ArrowUp" || e.key === "ArrowLeft") { e.preventDefault(); stepTrade(-1); }
-  if (e.key === "ArrowDown" || e.key === "ArrowRight") { e.preventDefault(); stepTrade(1); }
-});
-
-/* --------------------------------------------------- sample data (demo) */
-/* One point per trade gives 15 vertices across a 1600px chart — all straight
-   lines and hard corners. Real accounts have a daily closing balance, so build
-   one: carry the balance forward across days with no fills, and add a little
-   mark-to-market drift so flat stretches aren't dead horizontal runs. */
-function equityFromTrades() {
-  if (!TRADES.length) return [];
-  const DAY = 86400000;
-  const sorted = TRADES.slice().sort((a, b) => a.closed - b.closed);
-
-  const startEq = sorted[0].balance - sorted[0].pnl - (sorted[0].cash || 0);
-  const startD = new Date(sorted[0].opened).setHours(0,0,0,0);
-  const endD   = new Date(sorted[sorted.length-1].closed).setHours(0,0,0,0);
-
-  // realized change and cash flow bucketed by day
-  const byDay = new Map();
-  sorted.forEach(t => {
-    const k = new Date(t.closed).setHours(0,0,0,0);
-    const cur = byDay.get(k) || { pnl: 0, cash: 0 };
-    cur.pnl += t.pnl; cur.cash += (t.cash || 0);
-    byDay.set(k, cur);
-  });
-
-  const out = [];
-  let eq = startEq;
-  let seed = 7;
-  const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648 - 0.5;
-
-  for (let day = startD; day <= endD; day += DAY) {
-    const hit = byDay.get(day);
-    if (hit) eq += hit.pnl + hit.cash;
-    /* Open positions still move on days with no closes. */
-    eq += rnd() * Math.max(eq * 0.0015, 0.05);
-    out.push({ d: day, eq: Number(eq.toFixed(2)), cash: hit ? hit.cash : 0 });
-  }
-  return out;
-}
-
-function sampleTrades() {
-  const day = 86400000, now = Date.now();
-  // instId, dir, daysAgoOpen, daysAgoClose, size, entry, exit, pnl, cash, note
-  const raw = [
-    ["BTC-USDT-SWAP", "long",  46, 44, 1, 61840, 63120,  1.28, 0, "Fusion signal, 15m breakout"],
-    ["ETH-USDT-SWAP", "short", 44, 43, 2,  3244,  3198,  0.92, 0, "Faded 1H exhaustion"],
-    ["BTC-USDT-SWAP", "long",  41, 41, 1, 63400, 62880, -0.52, 0, "Stopped, chop"],
-    ["SOL-USDT-SWAP", "long",  38, 36, 4, 141.2, 148.6,  2.96, 25, "Held through funding · topped up account"],
-    ["ETH-USDT-SWAP", "long",  34, 34, 2,  3102,  3079, -0.46, 0, "Signal reversed intrabar"],
-    ["BTC-USDT-SWAP", "short", 30, 29, 1, 64980, 63910,  1.07, 0, "Manual override"],
-    ["BNB-USDT",      "long",  27, 25, 6, 584.0, 591.5,  0.45, 0, ""],
-    ["ETH-USDT-SWAP", "short", 22, 22, 2,  3188,  3221, -0.66, 0, "Squeeze, cut fast"],
-    ["BTC-USDT-SWAP", "long",  18, 16, 1, 62100, 64020,  1.92, 0, "Best trade of the month"],
-    ["SOL-USDT-SWAP", "short", 14, 13, 4, 152.4, 149.1,  1.32, 0, ""],
-    ["ETH-USDT-SWAP", "long",  11, 11, 2,  3060,  3041, -0.38, 0, "Low conviction"],
-    ["BTC-USDT-SWAP", "long",   8,  7, 1, 63220, 62410, -0.81, 0, "Drawdown day"],
-    ["BNB-USDT",      "short",  5,  5, 6, 612.0, 604.8,  0.43, 0, ""],
-    ["ETH-USDT-SWAP", "short",  3,  2, 2,  3175,  3140,  0.70, 0, "Clean 1H setup"],
-    ["BTC-USDT-SWAP", "long",   1,  1, 1, 63980, 63510, -0.47, 0, "Open risk trimmed"],
-  ];
-
-  /* raw is already oldest-first. Reversing it made the running balance
-     accumulate backwards through time — balances fell as P&L rose, so the
-     statement's opening/closing never reconciled with net P&L. */
-  let bal = 338.50;
-  let seed = 11;
-  const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
-
-  return raw.map((r, i) => {
-    const [instId, dir, dOpen, dClose, size, entry, exit, pnl, cash, note] = r;
-    bal += pnl + cash;
-
-    /* Whole-day offsets made same-day trades open and close in the same minute,
-       so the drawer read "Held 0m". Give each one a real intraday span. */
-    const opened = now - dOpen * day + Math.floor(rnd() * 10 * 3600e3);
-    const minHold = 18 * 60e3 + Math.floor(rnd() * 5 * 3600e3);
-    const closed = Math.max(now - dClose * day + Math.floor(rnd() * 8 * 3600e3),
-                            opened + minHold);
-
-    return {
-      id: i + 1, instId, dir, size, entry, exit, pnl, cash, note,
-      mode: i % 4 === 0 ? "manual" : "auto", venue: "cex",
-      opened, closed,
-      balance: Number(bal.toFixed(2)),
+/* ---------------------------------------------------------------- socket */
+function connect() {
+  let attempt = 0, ws, hb, watch;
+  const touch = () => { S.status = "live"; clearTimeout(watch);
+    watch = setTimeout(()=>{ S.status="stalled"; render(); }, 15000); render(); };
+  const open = () => {
+    ws = new WebSocket(CONFIG.wsUrl);
+    ws.onopen = () => { attempt=0; touch(); hb = setInterval(()=>ws.readyState===1&&ws.send("ping"), 20000); };
+    ws.onmessage = ev => {
+      if (ev.data === "pong") return touch();
+      let m; try { m = JSON.parse(ev.data); } catch { return; }
+      touch();
+      if (m.type==="hello" && m.anchorEq!==undefined) S.anchor = num(m.anchorEq);
+      if (m.type==="account") {
+        S.equityExUpl = num(m.totalEq)-num(m.upl); S.cash = S.equityExUpl;
+        if (m.mgnRatio!==undefined && m.mgnRatio!=="") S.mgnRatio = num(m.mgnRatio);
+        if (Array.isArray(m.details)) {
+          S.balances.clear();
+          m.details.forEach(d => S.balances.set(d.ccy, {
+            ccy: d.ccy, bal: num(d.cashBal ?? d.bal), usd: num(d.eqUsd ?? d.usdValue),
+            network: d.network || "CEX",
+            chg24h: d.chg24h !== undefined ? num(d.chg24h) : undefined,
+            avgCost: d.avgPx ? num(d.avgPx) : undefined,
+            pnl: d.pnl !== undefined ? num(d.pnl) : undefined,
+          }));
+        }
+        recompute();
+      }
+      if (m.type==="positions") {
+        S.positions.clear();
+        m.data.forEach(p => S.positions.set(p.instId+":"+p.posSide, {
+          instId:p.instId, posSide:p.posSide, pos:num(p.pos), avgPx:num(p.avgPx),
+          ctVal:num(p.ctVal)||1, markPx:num(p.markPx), liqPx:num(p.liqPx)||null,
+          mode:p.mode, venue:p.venue, lever:num(p.lever)||null, mgnMode:p.mgnMode,
+          margin:num(p.margin)||null, tpPx:num(p.tpTriggerPx ?? p.tpPx)||null,
+          slPx:num(p.slTriggerPx ?? p.slPx)||null,
+          openedAt:Number(p.cTime ?? p.openedAt)||null }));
+        recompute();
+      }
+      if (m.type==="mark") {
+        S.marks.set(m.instId, num(m.markPx));
+        let hit = false;
+        S.positions.forEach(p => { if (p.instId===m.instId) { p.markPx = num(m.markPx); hit=true; } });
+        if (hit) recompute(); else if (S.chartKey === m.instId) { drawTape(); updateChartMeta(); }
+      }
+      if (m.type==="orders") { S.orders = Number(m.count ?? (m.data||[]).length) || 0; render(); }
+      if (m.type==="dex") {
+        S.dexUsd = num(m.usd); S.dexWallets = Number(m.wallets)||0;
+        if (Array.isArray(m.holdings)) {
+          S.dexHoldings.clear();
+          m.holdings.forEach(h => S.dexHoldings.set(h.ccy, { qty:num(h.qty), instId:h.instId }));
+        }
+        render();
+      }
+      if (m.type==="funding") { S.funding.set(m.instId,{rate:num(m.rate),nextTs:Number(m.nextTs)}); renderFunding(); }
+      if (m.type==="realized") { S.realized = num(m.value); render(); }
+      if (m.type==="fill") { S.realized += num(m.pnl);
+        pushActivity({ title:"Order filled", note:(m.instId||"")+" "+(m.side||""), pnl:num(m.pnl) }); render(); }
+      if (m.type==="activity") pushActivity({ title:m.title, note:m.note, detail:m.detail,
+        pnl:m.pnl!==undefined?num(m.pnl):undefined });
+      if (m.type==="signal") {
+        S.signals.set(m.instId+":"+(m.timeframe||""), { instId:m.instId, timeframe:m.timeframe,
+          verdict:m.verdict, score:num(m.score), source:m.source, ts:m.ts?Number(m.ts):Date.now() });
+        renderSignals();
+      }
+      if (m.type==="signals") { S.signals.clear();
+        (m.data||[]).forEach(s => S.signals.set(s.instId+":"+(s.timeframe||""),
+          { ...s, score:num(s.score), ts:Number(s.ts)||Date.now() }));
+        renderSignals(); }
     };
-  });
+    ws.onclose = () => { clearInterval(hb); clearTimeout(watch); S.status="down"; render();
+      setTimeout(open, Math.min(1000*2**attempt++, 15000) + Math.random()*400); };
+    ws.onerror = () => ws.close();
+  };
+  open();
 }
 
-load();
+/* ------------------------------------------------------- demo (no relay) */
+function demo() {
+  S.equityExUpl = 341.09; S.cash = 341.09; S.realized = -1.15;
+  S.status = "live"; S.mgnRatio = 3.42; S.orders = 2;
+
+  /* Demo wallet — in production these arrive on the "dex" message. Set
+     dexWallets to 0 and clear dexHoldings to show the disconnected state. */
+  S.dexWallets = 1;
+  S.dexHoldings.set("ETH",  { qty: 0.0182, instId: "ETH-USDT-SWAP" });
+  S.dexHoldings.set("USDC", { qty: 12.40 });
+
+  const marks = { "BTC-USDT-SWAP":64200, "ETH-USDT-SWAP":3120, "BNB-USDT":584.2, "SOL-USDT-SWAP":147.9 };
+  for (const id in marks) S.marks.set(id, marks[id]);
+  S.positions.set("BTC-USDT-SWAP:long",  { instId:"BTC-USDT-SWAP", posSide:"long",  pos:1, avgPx:64230, ctVal:0.001, markPx:64200, liqPx:58120, mode:"auto", venue:"cex",
+    lever:10, mgnMode:"cross", margin:6.42, tpPx:66150, slPx:63200, openedAt:Date.now()-2.4*3600e3 });
+  S.positions.set("ETH-USDT-SWAP:short", { instId:"ETH-USDT-SWAP", posSide:"short", pos:2, avgPx:3118,  ctVal:0.01,  markPx:3120,  liqPx:3402, mode:"manual", venue:"cex",
+    lever:5, mgnMode:"isolated", margin:12.47, tpPx:3040, slPx:3186, openedAt:Date.now()-19.5*3600e3 });
+  S.positions.set("SOL-USDT-SWAP:long",  { instId:"SOL-USDT-SWAP", posSide:"long",  pos:4, avgPx:148.2, ctVal:1,     markPx:147.9, liqPx:121.4, mode:"auto",   venue:"cex",
+    lever:5, mgnMode:"cross", margin:118.56, tpPx:156.4, slPx:143.9, openedAt:Date.now()-41*3600e3 });
+  S.positions.set("BNB-USDT:long",       { instId:"BNB-USDT",      posSide:"long",  pos:6, avgPx:584.0, ctVal:0.01,  markPx:582.1, liqPx:null,  mode:"auto",   venue:"cex",
+    lever:1, mgnMode:"spot", openedAt:Date.now()-6.2*3600e3 });
+  [ { ccy:"USDT", bal:341.09,   usd:341.09, network:"CEX" },
+    { ccy:"BNB",  bal:0.027209, usd:15.86,  network:"CEX", chg24h: 1.42, avgCost:672.10, pnl:-0.36 },
+    { ccy:"ETH",  bal:0.0182,   usd:56.79,  network:"DEX", chg24h:-0.61, avgCost:3102.4, pnl: 0.28 },
+    { ccy:"USDC", bal:12.40,    usd:12.40,  network:"DEX" },
+    { ccy:"BTC",  bal:0, usd:0, network:"CEX" },
+    { ccy:"SOL",  bal:0, usd:0, network:"CEX" },
+    { ccy:"DOGE", bal:0, usd:0, network:"CEX" },
+  ].forEach(b => S.balances.set(b.ccy, b));
+
+  S.funding.set("BTC-USDT-SWAP", { rate: 0.000082, nextTs: Date.now()+2.4*3600e3 });
+  S.funding.set("ETH-USDT-SWAP", { rate:-0.000041, nextTs: Date.now()+1.1*3600e3 });
+
+  [ { title:"Signal acted on", note:"BTC-USDT-SWAP · opened long 1 @ 64,230", detail:"AI AUTO", ts:Date.now()-340e3 },
+    { title:"Order filled",    note:"ETH-USDT-SWAP · short 2 @ 3,118", pnl:-0.41, ts:Date.now()-720e3 },
+    { title:"Stop moved",      note:"BTC-USDT-SWAP · trail to 63,540", detail:"Fusion", ts:Date.now()-1_100e3 },
+    { title:"Signal ignored",  note:"BNB-USDT · below confidence threshold", detail:"Skipped", ts:Date.now()-1_680e3 },
+  ].forEach(a => S.activity.push(a));
+
+  const seed = [
+    { instId:"BTC-USDT-SWAP", timeframe:"15m", verdict:"BUY",     score: 0.62, source:"MX1 Fusion v3" },
+    { instId:"ETH-USDT-SWAP", timeframe:"1H",  verdict:"SELL",    score:-0.48, source:"MX1 Fusion v3" },
+    { instId:"BNB-USDT",      timeframe:"4H",  verdict:"NEUTRAL", score: 0.04, source:"TV Technicals" },
+  ];
+  seed.forEach(s => S.signals.set(s.instId+":"+s.timeframe, { ...s, ts: Date.now()-Math.random()*240e3 }));
+  /* Seed a session so the axes, markers and fills have something to describe
+     the moment the page opens instead of drawing in over five minutes. */
+  let seedEq = 342.24;
+  const now0 = Date.now();
+  const seedPx = {};
+  for (const id in marks) { seedPx[id] = marks[id]; S.priceTape.set(id, []); }
+
+  /* Seed on the same basis the live series uses (CEX + DEX), or the first live
+     sample lands ~$68 above the seeded history and draws a cliff. */
+  const seedDex = 69.20;
+  for (let i = 240; i > 0; i--) {
+    const t = now0 - i * 1000;
+    seedEq += (Math.random() - 0.52) * 0.06;
+    S.tape.push({ t, v: Number((seedEq + seedDex).toFixed(4)) });
+    for (const id in seedPx) {
+      seedPx[id] *= 1 + (Math.random() - 0.5) * 0.0009;
+      S.priceTape.get(id).push({ t, v: seedPx[id] });
+    }
+  }
+  for (const id in seedPx) marks[id] = seedPx[id];
+
+  recompute();
+  drawTape();
+
+  setInterval(() => {
+    for (const id in marks) {
+      marks[id] *= 1 + (Math.random()-0.5)*0.0006;
+      S.marks.set(id, marks[id]);
+      S.positions.forEach(p => { if (p.instId===id) p.markPx = marks[id]; });
+    }
+    recompute();
+    if (!isEquity()) { drawTape(); updateChartMeta(); }
+  }, 220);
+
+  setInterval(() => {
+    const s = seed[Math.floor(Math.random()*seed.length)];
+    const score = Math.max(-1, Math.min(1, s.score + (Math.random()-0.5)*0.5));
+    const verdict = score>0.5?"STRONG BUY":score>0.15?"BUY":score<-0.5?"STRONG SELL":score<-0.15?"SELL":"NEUTRAL";
+    S.signals.set(s.instId+":"+s.timeframe, { ...s, score, verdict, ts:Date.now() });
+    renderSignals();
+  }, 6000);
+}
+
+CONFIG.wsUrl ? connect() : demo();
+render();
 
 /* AI AUTO is a real switch, not an ornament — the glow follows its state. */
 (function aiAutoSwitch() {
