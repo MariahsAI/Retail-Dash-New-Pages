@@ -134,7 +134,7 @@
     .card, .cell, .strip { transition:none; }
   }
   .card-head { display:flex; align-items:center; justify-content:space-between; gap:12px;
-               padding:13px 18px; background:var(--head); border-bottom:1px solid var(--edge); }
+               padding:17px 18px; background:var(--head); border-bottom:2px solid var(--edge); }
   .card-head h2 { font-family:Georgia,serif; font-weight:400; font-size:16px; margin:0; }
 
   /* A control has to look like one at rest. The old version styled itself as
@@ -214,7 +214,7 @@
   /* The card header already carries the band — a second filled bar directly
      beneath it just thickens the chrome. */
   thead th { text-align:right; font-size:10px; letter-spacing:.14em; text-transform:uppercase;
-             color:var(--muted); font-weight:500; padding:11px 16px; white-space:nowrap;
+             color:var(--muted); font-weight:700; padding:14px 16px; white-space:nowrap;
              background:transparent; border-bottom:1px solid var(--hair); }
   thead th:first-child, tbody td:first-child, .lt { text-align:left; }
   tbody td { text-align:right; padding:11px 16px; border-top:1px solid var(--hair);
@@ -365,9 +365,9 @@
   body.sharp .grid, body.sharp .lower { gap: 10px; }
   body.sharp .cell { padding: 11px 15px; }
   body.sharp .sub-cell { padding: 8px 15px; }
-  body.sharp .card-head { padding: 10px 15px; }
+  body.sharp .card-head { padding: 15px 15px; }
   body.sharp .card-body { padding: 13px 15px; }
-  body.sharp thead th { padding: 8px 15px; font-size: 9.5px; letter-spacing: .12em; }
+  body.sharp thead th { padding: 13px 15px; font-size: 10px; letter-spacing: .13em; font-weight: 700; }
   body.sharp tbody td { padding: 9px 15px; font-size: 12.5px; }
   body.sharp .feed-row { padding: 9px 15px; font-size: 12px; }
   body.sharp .sig { padding: 11px 15px; }
@@ -381,7 +381,8 @@
     font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
     font-weight: 600; letter-spacing: -.01em;
   }
-  body.sharp .card-head h2 { font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
+  body.sharp .card-head h2 { font-size: 14px; letter-spacing: .05em; text-transform: uppercase;
+                             font-weight: 700; }
   body.sharp .cell .v { font-size: 17px; font-weight: 600; }
 
   /* --- kept in Georgia: total equity, and the signal verdicts --- */
@@ -485,7 +486,7 @@
            transition:opacity .25s ease, transform .25s cubic-bezier(.22,.61,.36,1); }
   .modal.open { opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1); }
   .modal-head { display:flex; align-items:center; justify-content:space-between; gap:14px;
-                padding:14px 20px; background:var(--head); border-bottom:1px solid var(--edge); }
+                padding:17px 20px; background:var(--head); border-bottom:2px solid var(--edge); }
   .modal-head h2 { margin:0; font-family:Georgia,serif; font-weight:400; font-size:17px; }
   .modal-body { overflow:auto; }
   @supports not (backdrop-filter: blur(2px)) { .modal { background:var(--panel); } }
@@ -514,7 +515,7 @@
            transition:opacity .25s ease, transform .25s cubic-bezier(.22,.61,.36,1); }
   .modal.open { opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1); }
   .modal-head { display:flex; align-items:center; justify-content:space-between; gap:14px;
-                padding:14px 20px; background:var(--head); border-bottom:1px solid var(--edge); }
+                padding:17px 20px; background:var(--head); border-bottom:2px solid var(--edge); }
   .modal-head h2 { margin:0; font-family:Georgia,serif; font-weight:400; font-size:17px; }
   .modal-body { overflow:auto; }
   .modal-close { background:rgba(255,255,255,.04); border:1px solid var(--hair); color:var(--muted);
@@ -536,7 +537,7 @@
              z-index:47; display:flex; flex-direction:column; overflow:hidden;
              box-shadow:-24px 0 60px -30px rgba(0,0,0,.9); }
   .pdrawer.open { transform:translateX(0); }
-  .pd-head { padding:18px 22px 20px; border-bottom:1px solid var(--edge); background:var(--head); }
+  .pd-head { padding:20px 22px 22px; border-bottom:2px solid var(--edge); background:var(--head); }
   .pd-top { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
   .pd-head h3 { margin:0; font-family:Georgia,serif; font-weight:400; font-size:19px; }
   .pd-sub { color:var(--dim); font-size:11.5px; margin-top:5px; display:flex; gap:8px;
