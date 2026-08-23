@@ -1,0 +1,129 @@
+/* ============================================================================
+   MX1 — shared surface system
+   ----------------------------------------------------------------------------
+   Loaded AFTER each page's own <style>, so it wins on source order and becomes
+   the single place surfaces are defined. Tokens and surfaces only — no layout.
+   Each page keeps its own grid; this file makes them look like one product.
+
+   The model is depth, in three planes:
+
+     --bg       the page, furthest back
+     --surface  the plane a card sits on
+     --card     the card itself, recessed INTO that plane
+
+   Cards are darker than what they sit on, not lighter. A lighter card reads as
+   a raised chip you could pick up; a darker one reads as a well cut into the
+   surface. The second is sharper at this density, and it puts tabular figures
+   on near-black, which is where they read crispest.
+   ========================================================================== */
+
+:root {
+  /* ---- planes ---- */
+  --bg:      #080f1d;   /* page */
+  --surface: #0c1320;   /* plane beneath cards */
+  --card:    #05080f;   /* recessed card fill */
+  --bar:     #070e1c;   /* chrome bars */
+  --panel:   var(--card);
+  --panel-2: var(--surface);
+
+  /* ---- edges ---- */
+  --hair: rgba(255,255,255,.07);
+  --edge: rgba(59,130,246,.22);
+  --accent-edge: rgba(59,130,246,.34);
+  --head: #122140;
+
+  /* ---- type ---- */
+  --text:  #e9eff8;
+  --muted: #8093ab;
+  --dim:   #4c5a70;
+
+  /* ---- brand: chrome only, never follows PnL ---- */
+  --brand: #3b82f6;
+  --brand-2: #60a5fa;
+  --brand-strong: #2563eb;
+  --accent: var(--brand);
+  --accent-soft: rgba(59,130,246,.16);
+  --chart: #60a5fa;
+
+  /* ---- semantic: sign only ---- */
+  --pos:  #34d399;
+  --neg:  #fb7185;
+  --warn: #fbbf24;
+
+  /* ---- the recessed-card recipe, so every surface uses one definition ---- */
+  --well: inset 0 1px 0 rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.035);
+}
+
+/* Both Overview and Portfolio boot into sharp mode, which redefines --panel at
+   higher specificity than :root. Restating the planes here is what actually
+   makes the shared surface reach those pages. */
+body.sharp {
+  --panel:   var(--card);
+  --panel-2: var(--surface);
+  --hair: rgba(255,255,255,.055);
+  --edge: rgba(96,165,250,.26);
+  --head: #122140;
+  --text: #ffffff;
+  --muted: #6f8098;
+  --dim:   #47566c;
+}
+
+body, body.sharp { background: var(--bg); }
+
+/* ---- cards ---------------------------------------------------------------
+   The three pages name their card differently — Overview uses .card and
+   .stripwrap, Portfolio uses .panel / .balcard / .rollup / .scroller, Trading
+   uses .pos-card. All of them are the same object, so all of them are listed.
+   The body.sharp copy exists to out-specify each page's own sharp rules. */
+.card, .stripwrap, .panel, .balcard, .rollup, .scroller, .pos-card,
+body.sharp .card, body.sharp .stripwrap, body.sharp .panel,
+body.sharp .balcard, body.sharp .rollup, body.sharp .scroller,
+body.sharp .pos-card {
+  background: var(--card);
+  border-color: rgba(255,255,255,.07);
+  box-shadow: var(--well);
+}
+
+/* Header bands stay lifted so they read as the card's lid, not more card. */
+.card-head, .rail-head, .dock-tabs, thead th,
+body.sharp .card-head, body.sharp thead th {
+  background: var(--head);
+}
+
+/* Anything that hosts cards is the middle plane. */
+.dock-body,
+.modal-body {
+  background: var(--surface);
+  --pane-bg: var(--surface);
+}
+
+/* ---- inner wells ---------------------------------------------------------
+   Sub-panels inside a card (stat cells, meters, drawer sections) sit on the
+   card, so they lift rather than recess — otherwise everything is one flat
+   black and the nesting is lost. */
+.stat, .kpi, .kpicell, .balance-row, .read-card, .pd-inner, .cell, .tl-body,
+body.sharp .stat, body.sharp .kpi, body.sharp .kpicell {
+  background: rgba(255,255,255,.022);
+}
+
+/* ---- tables --------------------------------------------------------------
+   Zebra striping is unnecessary when rows sit on near-black; a hairline is
+   enough and stays quieter. */
+tbody tr { border-top: 1px solid rgba(255,255,255,.05); }
+tbody tr:hover { background: rgba(96,165,250,.05); }
+
+/* ---- scrollbars ---------------------------------------------------------- */
+* { scrollbar-width: thin; scrollbar-color: rgba(96,165,250,.45) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb {
+  background: rgba(96,165,250,.45);
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(96,165,250,.75); background-clip: padding-box; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ---- focus ---------------------------------------------------------------
+   One visible focus ring across all three pages rather than three near-misses. */
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
