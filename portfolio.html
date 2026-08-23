@@ -18,7 +18,7 @@
     --brand-2: #60a5fa;
     --brand-strong: #2563eb;
     --edge: rgba(59, 130, 246, 0.22);
-    --head: #0e1a2e;                   /* card + table header band */
+    --head: #122140;                   /* card + table header band — dark blue */
     --chart: #60a5fa;
     --warn: #fbbf24;
     --accent: var(--brand);
@@ -132,8 +132,8 @@
   .scroller { overflow-x: auto; border: 1px solid var(--edge); border-radius: 14px; background: var(--panel); }
   table { width: 100%; border-collapse: collapse; }
   thead th { text-align: right; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
-             color: var(--muted); font-weight: 500; padding: 13px 14px;
-             background: var(--head); border-bottom: 1px solid var(--edge); white-space: nowrap; }
+             color: var(--muted); font-weight: 700; padding: 17px 14px;
+             background: var(--head); border-bottom: 2px solid var(--edge); white-space: nowrap; }
   thead th:first-child, tbody td:first-child, .lt { text-align: left; }
   tbody td { text-align: right; padding: 12px 14px; border-top: 1px solid var(--hair);
              font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -354,6 +354,119 @@
      already position:fixed — do NOT include them here, or this rule wins on
      source order and drops the drawer into normal flow at the end of the page. */
   .topbar, .nav, .page { position:relative; z-index:1; }
+
+  /* ---- sharp mode (see index.html for the reasoning) ---- */
+  body.sharp {
+    --panel: #0a0f19; --panel-2: #080d15;
+    --hair: rgba(255,255,255,.055); --edge: rgba(255,255,255,.09); --head: #122140;
+    --text: #ffffff; --muted: #6f8098; --dim: #47566c;
+  }
+  /* Corners stay soft — density and contrast do the sharpening. */
+  body.sharp .panel, body.sharp .scroller, body.sharp .balcard,
+  body.sharp .rollup { border-radius: 13px; }
+  body.sharp .drawer { border-radius: 16px 0 0 16px; }
+  body.sharp .segset, body.sharp .tabs, body.sharp .seg { border-radius: 10px; }
+  body.sharp .tab, body.sharp .segset button, body.sharp .seg button { border-radius: 7px; }
+
+  body.sharp .panel, body.sharp .scroller, body.sharp .balcard, body.sharp .rollup {
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+  }
+
+  body.sharp .page { padding: 14px 18px 34px; }
+  body.sharp .panel { padding: 14px 16px; margin-top: 10px; }
+  body.sharp .balcard { padding: 13px 15px; }
+  body.sharp .balrow { gap: 10px; }
+  body.sharp thead th { padding: 14px 13px; font-size: 10px; letter-spacing: .13em; font-weight: 700; }
+  body.sharp tbody td { padding: 9px 13px; font-size: 12.5px; }
+  body.sharp .section-title { margin: 18px 0 8px; }
+
+  /* Sans for structure, serif kept for the figures you actually read. */
+  body.sharp .page-head h1, body.sharp .section-title h2, body.sharp .dr-head h3 {
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 600; letter-spacing: -.01em;
+  }
+  body.sharp .section-title h2 { font-size: 14px; letter-spacing: .05em; text-transform: uppercase;
+                                 font-weight: 700; }
+  body.sharp .kpi .v { font-family: "Inter", sans-serif; font-weight: 600; font-size: 20px;
+                       letter-spacing: -.02em; }
+
+  /* --- kept in Georgia: the equity figure and the drawer's P&L --- */
+  body.sharp #curEq { font-family: Georgia, "Times New Roman", serif; font-weight: 400;
+                      letter-spacing: 0; }
+  body.sharp .dr-hero { font-family: Georgia, serif; font-weight: 400; letter-spacing: 0; }
+  body.sharp .label { color: var(--muted); font-size: 9.5px; letter-spacing: .14em; }
+  body.sharp::before { opacity: .45; }
+
+  /* ---- high-DPI polish ---------------------------------------------------
+   * What reads as "cheap" on a big dark UI is almost always one of three
+   * things: banded gradients, borders that thicken on retina, and hinted text.
+   * These fix all three.
+   */
+
+  /* 1. Dither. Large dark radial gradients quantise into visible rings on
+     8-bit displays; a faint noise layer breaks the bands up. This is the
+     single biggest fidelity gain on a page like this. */
+  body::after {
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    opacity:.035; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size:140px 140px;
+  }
+  body.glow-off::after { display:none; }
+
+  /* 2. True hairlines. A 1px border becomes 2 device px at 2dppx and reads
+     heavy; 0.5px lands on one. */
+  @media (min-resolution: 2dppx) {
+    .card, .stripwrap, .panel, .scroller, .balcard, .rollup, .feed, table,
+    .segset, .tabs, .seg, .chip, .uid, .drawer { border-width: .5px; }
+    .frow, .sig, .feed-row, tbody td, thead th, .cell, .sub-cell,
+    .card-head, .filterbar, .substrip { border-bottom-width:.5px; border-top-width:.5px; }
+  }
+
+  /* 3. Text. Let the renderer use real outlines rather than hinted stems, and
+     pull tracking in on the large serif numerals — display sizes need less. */
+  body { text-rendering: optimizeLegibility;
+         font-feature-settings: "tnum" 1, "kern" 1, "liga" 1; }
+  .cell .v.hero, #curEq, .dr-hero, .equity, .kpi .v {
+    -webkit-font-smoothing: antialiased; letter-spacing: -.015em;
+    font-feature-settings: "tnum" 1, "kern" 1;
+  }
+
+  /* 4. Vector output: precision over speed, and a finer stroke that still
+     resolves on a 2x panel. */
+  svg { shape-rendering: geometricPrecision; }
+  @media (min-resolution: 2dppx) {
+    #line, #curve #line { stroke-width: 1.1; }
+    #base, #grid line { stroke-width: .75; }
+  }
+
+  /* ---- glass, used only where it means something -------------------------
+   * backdrop-filter needs content behind it. On a solid panel sitting on a flat
+   * page it costs GPU and lowers text contrast for no visual gain, so the cards
+   * stay opaque. The two surfaces that genuinely sit over other content — the
+   * bar you scroll under, and the drawer over the table — get the real thing.
+   */
+  .topbar, .nav {
+    position: sticky; z-index: 30;
+    background: rgba(7, 14, 28, .72);
+    backdrop-filter: blur(16px) saturate(1.5);
+    -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  }
+  .topbar { top: 0; }
+  .nav { top: 45px; }
+
+  .drawer {
+    background: rgba(11, 20, 36, .82);
+    backdrop-filter: blur(22px) saturate(1.4);
+    -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  }
+  .dr-head { background: rgba(18, 33, 64, .72); }
+
+  /* Fallback: no backdrop-filter means no translucency, or the text goes soft. */
+  @supports not (backdrop-filter: blur(2px)) {
+    .topbar, .nav { background: var(--bar); }
+    .drawer { background: var(--panel); }
+  }
 </style>
 
 <!-- ============================================================== chrome -->
@@ -583,6 +696,7 @@
 <script>
 /* ------------------------------------------------------------------ config */
 const CONFIG = {
+  density: "sharp",  // "sharp" | "soft" — Shift+D toggles live
   tradesUrl: "",     // e.g. "/api/trades" — blank uses the sample set below
   equityUrl: "",     // e.g. "/api/equity" — daily closes [{ d, eq }]
   balancesUrl: "",   // e.g. "/api/balances"
@@ -596,6 +710,17 @@ const pct = v => (v >= 0 ? "+" : "\u2212") + Math.abs(v).toFixed(2) + "%";
 const cls = v => (v >= 0 ? "up" : "down");
 
 let TRADES = [], EQUITY = [], range = 30;
+
+function applyDensity() {
+  document.body.classList.toggle("sharp", CONFIG.density === "sharp");
+}
+applyDensity();
+addEventListener("keydown", e => {
+  if (e.shiftKey && (e.key === "D" || e.key === "d")) {
+    CONFIG.density = CONFIG.density === "sharp" ? "soft" : "sharp";
+    applyDensity(); drawCurve();
+  }
+});
 let F = { result:"all", dir:"all", mode:"all", venue:"all", type:"all" };
 
 const typeOf  = t => (t.instId || "").includes("SWAP") ? "perp" : "spot";
