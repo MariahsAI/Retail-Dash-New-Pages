@@ -9,7 +9,7 @@
     --text: #e9eff8; --muted: #8093ab; --dim: #4c5a70;
     --brand: #3b82f6; --brand-2: #60a5fa;
     --brand-strong: #2563eb;
-    --edge: rgba(59,130,246,.22); --head: #0e1a2e; --chart: #60a5fa; --warn: #fbbf24;
+    --edge: rgba(59,130,246,.22); --head: #122140; --chart: #60a5fa; --warn: #fbbf24;
     --accent: var(--brand); --accent-soft: rgba(59,130,246,.16); --accent-edge: rgba(59,130,246,.34);
     --pos: #34d399; --neg: #fb7185;
   }
@@ -93,10 +93,15 @@
 
   /* --------------------------------------------------------------- grid */
   .grid { display:grid; gap:16px; margin-top:16px; grid-template-columns:1fr; }
-  @media (min-width:1200px) { .grid { grid-template-columns: minmax(0,1.9fr) minmax(0,1fr); } }
+  @media (min-width:1200px) {
+    .grid { grid-template-columns: minmax(0,1.9fr) minmax(0,1fr); align-items: start; }
+  }
+  /* Cards size to their content; the column doesn't stretch them to fill. */
+  .col { display:grid; gap:16px; min-width:0; align-content:start; }
 
   .card { background:var(--panel); border:1px solid var(--edge); border-radius:14px; overflow:hidden;
-          display:flex; flex-direction:column; transition:box-shadow .55s ease, border-color .55s ease; }
+          display:flex; flex-direction:column; align-self:start;
+          transition:box-shadow .55s ease, border-color .55s ease; }
 
   /* ---- glow -------------------------------------------------------------
      Inset box-shadow rather than a pseudo-element: no stacking context to
@@ -321,6 +326,117 @@
      already position:fixed — do NOT include them here, or this rule wins on
      source order and drops the drawer into normal flow at the end of the page. */
   .topbar, .nav, .page { position:relative; z-index:1; }
+
+  /* ---- sharp mode -------------------------------------------------------
+   * What reads as "glass" on exchange UIs is mostly the opposite of glass:
+   * small radii, hairline seams instead of gaps, higher value contrast, denser
+   * type, and almost no bloom. This is that pass, behind a class so you can
+   * flip between the two and judge them side by side.
+   */
+  body.sharp {
+    --panel: #0a0f19;
+    --panel-2: #080d15;
+    --hair: rgba(255,255,255,.055);
+    --edge: rgba(96,165,250,.26);
+    --head: #122140;              /* header band — dark blue */
+    --text: #ffffff;          /* values go full white — biggest single gain */
+    --muted: #6f8098;
+    --dim: #47566c;
+  }
+
+  /* Corners stay soft. Sharpness here comes from density and contrast, not
+     from squaring everything off. */
+  body.sharp .stripwrap, body.sharp .card { border-radius: 13px; }
+  body.sharp .drawer { border-radius: 16px 0 0 16px; }
+  body.sharp .segset, body.sharp .tabs, body.sharp .seg { border-radius: 10px; }
+  body.sharp .tab, body.sharp .segset button, body.sharp .seg button { border-radius: 7px; }
+  body.sharp .picker-face { border-radius: 9px; }
+
+  /* A single hairline highlight along the top edge — this is the "glass" cue,
+     not blur. It suggests a lit surface without softening anything. */
+  body.sharp .stripwrap, body.sharp .card {
+    border-color: var(--edge);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
+  }
+  body.sharp .stripwrap { border-color: rgba(59,130,246,.28); }
+
+  /* Density: more rows per screen is most of the effect. */
+  body.sharp .page { padding: 14px 18px 34px; }
+  body.sharp .grid, body.sharp .lower { gap: 10px; }
+  body.sharp .cell { padding: 11px 15px; }
+  body.sharp .sub-cell { padding: 8px 15px; }
+  body.sharp .card-head { padding: 10px 15px; }
+  body.sharp .card-body { padding: 13px 15px; }
+  body.sharp thead th { padding: 8px 15px; font-size: 9.5px; letter-spacing: .12em; }
+  body.sharp tbody td { padding: 9px 15px; font-size: 12.5px; }
+  body.sharp .feed-row { padding: 9px 15px; font-size: 12px; }
+  body.sharp .sig { padding: 11px 15px; }
+  body.sharp .filterbar { padding: 8px 15px; }
+
+  /* Type: the serif is warm, and warmth is what you're trading away here. */
+  /* Sans for structure — headings, labels, chrome. The serif is reserved for
+     the two figures you actually look at, so the page reads as an instrument
+     without sounding like every other exchange. */
+  body.sharp .card-head h2, body.sharp .picker-face, body.sharp .page-head h1 {
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight: 600; letter-spacing: -.01em;
+  }
+  body.sharp .card-head h2 { font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
+  body.sharp .cell .v { font-size: 17px; font-weight: 600; }
+
+  /* --- kept in Georgia: total equity, and the signal verdicts --- */
+  body.sharp .cell .v.hero { font-family: Georgia, "Times New Roman", serif;
+                             font-weight: 400; font-size: 30px; letter-spacing: 0; }
+  body.sharp .verdict { font-family: Georgia, serif; font-weight: 400; font-size: 23px; }
+  body.sharp .label { color: var(--muted); font-size: 9.5px; letter-spacing: .14em; }
+
+  /* Bloom drops back so the alert states stay the brightest thing left. */
+  body.sharp::before { opacity: .45; }
+  body.sharp .stripwrap { box-shadow: inset 0 1px 0 rgba(255,255,255,.05),
+                                      inset 60px -40px 110px -80px rgba(59,130,246,.3); }
+
+  /* ---- high-DPI polish ---------------------------------------------------
+   * What reads as "cheap" on a big dark UI is almost always one of three
+   * things: banded gradients, borders that thicken on retina, and hinted text.
+   * These fix all three.
+   */
+
+  /* 1. Dither. Large dark radial gradients quantise into visible rings on
+     8-bit displays; a faint noise layer breaks the bands up. This is the
+     single biggest fidelity gain on a page like this. */
+  body::after {
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    opacity:.035; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size:140px 140px;
+  }
+  body.glow-off::after { display:none; }
+
+  /* 2. True hairlines. A 1px border becomes 2 device px at 2dppx and reads
+     heavy; 0.5px lands on one. */
+  /* Only inner dividers thin out. Outer borders stay 1px — at .5px against a
+     low-alpha edge colour the panels stop reading as panels. */
+  @media (min-resolution: 2dppx) {
+    .frow, .sig, .feed-row, tbody td, thead th, .cell, .sub-cell,
+    .card-head, .filterbar, .substrip { border-bottom-width:.5px; border-top-width:.5px; }
+  }
+
+  /* 3. Text. Let the renderer use real outlines rather than hinted stems, and
+     pull tracking in on the large serif numerals — display sizes need less. */
+  body { text-rendering: optimizeLegibility;
+         font-feature-settings: "tnum" 1, "kern" 1, "liga" 1; }
+  .cell .v.hero, #curEq, .dr-hero, .equity, .kpi .v {
+    -webkit-font-smoothing: antialiased; letter-spacing: -.015em;
+    font-feature-settings: "tnum" 1, "kern" 1;
+  }
+
+  /* 4. Vector output: precision over speed, and a finer stroke that still
+     resolves on a 2x panel. */
+  svg { shape-rendering: geometricPrecision; }
+  @media (min-resolution: 2dppx) {
+    #line, #curve #line { stroke-width: 1.1; }
+    #base, #grid line { stroke-width: .75; }
+  }
 </style>
 
 <div class="topbar">
@@ -419,7 +535,7 @@
   <div class="grid">
 
     <!-- ---- left column ---- -->
-    <div style="display:grid;gap:16px;min-width:0">
+    <div class="col">
       <section class="card">
         <div class="card-head">
           <div style="display:flex;align-items:center;gap:12px;min-width:0">
@@ -512,7 +628,7 @@
     </div>
 
     <!-- ---- right column ---- -->
-    <div style="display:grid;gap:16px;min-width:0">
+    <div class="col">
       <section class="card">
         <div class="card-head"><h2>TradingView Signals</h2><span class="sub">Alert webhooks</span></div>
         <div class="card-body flush" id="signals"></div>
@@ -536,6 +652,7 @@ const CONFIG = {
   signalStaleAfter: 15 * 60,
   dailyLossLimit: 12.00,
   glow: "state",                 // "state" = glow only when something needs you | "all" | "off"
+  density: "sharp",              // "sharp" = tight, high-contrast, small radii | "soft"
 };
 
 const S = {
@@ -574,7 +691,7 @@ function recompute() {
 
 /* -------------------------------------------------- glide + flash tickers */
 const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
-function ticker(el, { signed=false, tint=false } = {}) {
+function ticker(el, { signed=false, tint=false, flash=true } = {}) {
   let cur=0, target=0, raf=null, last=0, prev=0;
   const paint = () => {
     el.textContent = money(cur, signed);
@@ -588,8 +705,9 @@ function ticker(el, { signed=false, tint=false } = {}) {
   };
   return v => {
     if (v === target) return;
-    if (v !== prev) { const c = v > prev ? "flash-up" : "flash-down";
+    if (flash && v !== prev) { const c = v > prev ? "flash-up" : "flash-down";
       el.classList.add(c); setTimeout(()=>el.classList.remove(c), 420); prev = v; }
+    else prev = v;
     target = v;
     if (reduce) { cur = v; return paint(); }
     if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); }
@@ -599,8 +717,8 @@ const T = {
   equity: ticker($("equity")),
   delta:  ticker($("delta"), { signed:true, tint:true }),
   net:    ticker($("net"),   { signed:true, tint:true }),
-  cex:    ticker($("cexBal")),
-  dex:    ticker($("dexBal")),
+  cex:    ticker($("cexBal"), { flash:false }),
+  dex:    ticker($("dexBal"), { flash:false }),
   posPnl: ticker($("posPnl"), { signed:true, tint:true }),
 };
 
@@ -619,8 +737,17 @@ function setAttn(el, level) {
 function applyGlowMode() {
   document.body.classList.toggle("glow-all", CONFIG.glow === "all");
   document.body.classList.toggle("glow-off", CONFIG.glow === "off");
+  document.body.classList.toggle("sharp", CONFIG.density === "sharp");
 }
 applyGlowMode();
+
+/* Shift+D flips density live so the two can be compared without a reload. */
+addEventListener("keydown", e => {
+  if (e.shiftKey && (e.key === "D" || e.key === "d")) {
+    CONFIG.density = CONFIG.density === "sharp" ? "soft" : "sharp";
+    applyGlowMode();
+  }
+});
 
 
 /* DEX value: if the relay sends a figure we trust it; otherwise price the
@@ -1278,7 +1405,7 @@ function connect() {
 /* ------------------------------------------------------- demo (no relay) */
 function demo() {
   S.equityExUpl = 341.09; S.cash = 341.09; S.realized = -1.15;
-  S.anchor = 342.24; S.status = "live"; S.mgnRatio = 3.42; S.orders = 2;
+  S.status = "live"; S.mgnRatio = 3.42; S.orders = 2;
 
   /* Demo wallet — in production these arrive on the "dex" message. Set
      dexWallets to 0 and clear dexHoldings to show the disconnected state. */
@@ -1317,10 +1444,13 @@ function demo() {
   const seedPx = {};
   for (const id in marks) { seedPx[id] = marks[id]; S.priceTape.set(id, []); }
 
+  /* Seed on the same basis the live series uses (CEX + DEX), or the first live
+     sample lands ~$68 above the seeded history and draws a cliff. */
+  const seedDex = 69.20;
   for (let i = 240; i > 0; i--) {
     const t = now0 - i * 1000;
     seedEq += (Math.random() - 0.52) * 0.06;
-    S.tape.push({ t, v: Number(seedEq.toFixed(4)) });
+    S.tape.push({ t, v: Number((seedEq + seedDex).toFixed(4)) });
     for (const id in seedPx) {
       seedPx[id] *= 1 + (Math.random() - 0.5) * 0.0009;
       S.priceTape.get(id).push({ t, v: seedPx[id] });
