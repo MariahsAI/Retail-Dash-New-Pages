@@ -246,6 +246,114 @@
   @media (max-width:820px) { .balrow { grid-template-columns:1fr; } }
   .nav a.soon { opacity:.55; cursor:not-allowed; }
   .nav a.soon:hover { background:none; color:var(--muted); }
+
+  /* ---- category rollup: the one cut the asset table can't give ---- */
+  .rollup { background:var(--panel); border:1px solid var(--edge); border-radius:14px;
+            padding:16px 18px; margin-top:14px; }
+  .rollup-head { display:flex; justify-content:space-between; align-items:baseline; gap:12px; }
+  .stack { display:flex; height:8px; border-radius:4px; overflow:hidden; margin-top:12px;
+           background:rgba(255,255,255,.06); }
+  .stack i { display:block; height:100%; transition:width .45s ease; }
+  .stack-legend { display:flex; gap:22px; flex-wrap:wrap; margin-top:11px;
+                  font-size:12px; color:var(--muted); }
+  .stack-legend span { display:inline-flex; align-items:center; gap:7px; }
+  .stack-legend b { color:var(--text); font-variant-numeric:tabular-nums; font-weight:600; }
+  .swatch-dot { width:8px; height:8px; border-radius:2px; flex:0 0 auto; }
+
+  /* ---- trade drawer ---------------------------------------------------- */
+  tbody tr[data-i] { cursor:pointer; }
+  tbody tr[data-i]:focus-visible { outline:2px solid var(--brand); outline-offset:-2px; }
+
+  .scrim { position:fixed; inset:0; background:rgba(3,7,15,.62); backdrop-filter:blur(2px);
+           opacity:0; pointer-events:none; transition:opacity .28s ease; z-index:40; }
+  .scrim.open { opacity:1; pointer-events:auto; }
+
+  .drawer { position:fixed; top:0; right:0; height:100%; width:min(520px, 100%);
+            background:var(--panel); border-left:1px solid var(--accent-edge);
+            border-radius:18px 0 0 18px; overflow:hidden;
+            transform:translateX(100%); transition:transform .32s cubic-bezier(.22,.61,.36,1);
+            z-index:41; display:flex; flex-direction:column;
+            box-shadow:-24px 0 60px -30px rgba(0,0,0,.9); }
+  .drawer.open { transform:translateX(0); }
+
+  /* Result band: the drawer announces win or loss before you read a number. */
+  .dr-head { padding:20px 24px 22px; border-bottom:1px solid var(--edge); position:relative;
+             transition:box-shadow .4s ease; }
+  .dr-head.win  { box-shadow: inset 0 90px 120px -90px rgba(52,211,153,.55); }
+  .dr-head.loss { box-shadow: inset 0 90px 120px -90px rgba(251,113,133,.55); }
+  .dr-top { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
+  .dr-head h3 { margin:0; font-family:Georgia,serif; font-weight:400; font-size:19px; }
+  .dr-sub { color:var(--dim); font-size:11.5px; margin-top:5px; display:flex; align-items:center;
+            gap:8px; flex-wrap:wrap; }
+  .dr-close { background:rgba(255,255,255,.04); border:1px solid var(--hair); color:var(--muted);
+              font:inherit; width:30px; height:30px; border-radius:50%; cursor:pointer;
+              line-height:1; flex:0 0 auto; }
+  .dr-close:hover { color:var(--text); border-color:var(--edge); }
+  .dr-hero { font-family:Georgia,serif; font-size:38px; line-height:1.05; margin-top:16px;
+             font-variant-numeric:tabular-nums; }
+  .dr-hero small { display:block; font-family:"Inter",sans-serif; font-size:12.5px;
+                   color:var(--muted); margin-top:6px; }
+
+  .dr-body { flex:1 1 auto; padding:22px 24px 30px; overflow-y:auto; }
+
+  /* Timeline instead of a boxed grid — a trade is a journey, not a spec sheet. */
+  .tl { position:relative; padding-left:26px; }
+  .tl::before { content:""; position:absolute; left:5px; top:9px; bottom:9px; width:2px;
+                border-radius:1px; background:linear-gradient(var(--tl-a), var(--tl-b)); }
+  .tl-node { position:relative; }
+  .tl-node::before { content:""; position:absolute; left:-26px; top:5px; width:12px; height:12px;
+                     border-radius:50%; background:var(--panel); border:2px solid var(--tl-dot); }
+  .tl-node .when { font-size:11px; color:var(--dim); }
+  .tl-node .what { font-size:15px; font-variant-numeric:tabular-nums; margin-top:3px; }
+  .tl-node .what b { font-weight:600; }
+
+  /* The gap between nodes carries the size of the move: bigger % swing, taller
+     connector. Keeps the spatial cue the old price bar had, without the
+     floating labels that collided with everything. */
+  .tl-span { position:relative; height:var(--tl-h, 34px); transition:height .3s ease; }
+  .tl-span .amt { position:absolute; left:6px; top:50%; transform:translateY(-50%);
+                  font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums;
+                  white-space:nowrap; }
+  .tl-span .amt i { color:var(--dim); font-style:normal; margin-left:7px; }
+
+  /* Facts as hairline rows, not a field of cells. */
+  .dr-sec { margin-top:26px; }
+  .dr-sec > .label { display:block; margin-bottom:4px; }
+  .frow { display:flex; justify-content:space-between; align-items:baseline; gap:14px;
+          padding:11px 0; border-bottom:1px solid var(--hair); font-size:13px; }
+  .frow:last-child { border-bottom:0; }
+  .frow span { color:var(--dim); }
+  .frow b { font-weight:600; font-variant-numeric:tabular-nums; }
+
+  .dr-note { margin-top:6px; font-size:13px; color:var(--muted); line-height:1.55;
+             border-left:2px solid var(--edge); padding-left:14px; font-style:italic; }
+
+  .dr-nav { display:flex; gap:8px; padding:14px 24px; border-top:1px solid var(--edge);
+            background:rgba(255,255,255,.012); flex:0 0 auto; }
+  .dr-nav button { flex:1; background:rgba(255,255,255,.02); border:1px solid var(--hair);
+                   color:var(--muted); font:inherit; font-size:12px; padding:9px; border-radius:999px;
+                   cursor:pointer; transition:color .2s, border-color .2s; }
+  .dr-nav button:hover:not(:disabled) { color:var(--text); border-color:var(--edge); }
+  .dr-nav button:disabled { opacity:.3; cursor:default; }
+
+  @media (prefers-reduced-motion: reduce) { .drawer { transition:none; } }
+
+  /* ---- ambient light ----------------------------------------------------
+     Panels are opaque, so this only shows in the gutters and the gaps between
+     cards — the dead black areas. Kept very low so it never competes with the
+     semantic glow, which has to stay the brightest thing on the page. */
+  body::before {
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(1100px 520px at 15% -8%,  rgba(59,130,246,.13), transparent 62%),
+      radial-gradient(820px 420px at 88% 4%,    rgba(99,102,241,.09), transparent 60%),
+      radial-gradient(1200px 620px at 55% 112%, rgba(37,99,235,.07),  transparent 66%);
+  }
+  body.glow-off::before { display:none; }
+  /* Lift page content above the ambient layer. The drawer and scrim are
+     already position:fixed — do NOT include them here, or this rule wins on
+     source order and drops the drawer into normal flow at the end of the page. */
+  .topbar, .nav, .page { position:relative; z-index:1; }
 </style>
 
 <!-- ============================================================== chrome -->
@@ -282,6 +390,10 @@
 
   <!-- ====================================================== headline -->
   <section class="panel">
+    <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:14px">
+      <span class="label">Performance</span>
+      <span class="label" id="kpiRange" style="color:var(--brand-2)"></span>
+    </div>
     <div class="kpis">
       <div class="kpi"><div class="label">Net P&amp;L</div><div class="v num" id="kNet">&mdash;</div><div class="n" id="kNetPct">All time</div></div>
       <div class="kpi"><div class="label">Win rate</div><div class="v num" id="kWin">&mdash;</div><div class="n" id="kWinN">&mdash;</div></div>
@@ -362,7 +474,16 @@
     </div>
   </div>
 
-  <div class="scroller" style="margin-top:16px">
+  <div class="rollup">
+    <div class="rollup-head">
+      <span class="label">By category</span>
+      <span class="num" id="rollupTotal" style="font-size:13px"></span>
+    </div>
+    <div class="stack" id="stack"></div>
+    <div class="stack-legend" id="stackLegend"></div>
+  </div>
+
+  <div class="scroller" style="margin-top:14px">
     <table>
       <thead><tr><th>Asset</th><th>Network</th><th>Balance</th><th>USD value</th>
         <th class="lt">Allocation</th><th>24h change</th><th>Avg cost</th><th>Unrealized PnL</th></tr></thead>
@@ -439,6 +560,26 @@
   </div>
 </div>
 
+
+<div class="scrim" id="scrim"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="drTitle" aria-hidden="true">
+  <div class="dr-head" id="drHead">
+    <div class="dr-top">
+      <div>
+        <h3 id="drTitle">&mdash;</h3>
+        <div class="dr-sub" id="drSub"></div>
+      </div>
+      <button class="dr-close" id="drClose" aria-label="Close">&times;</button>
+    </div>
+    <div class="dr-hero" id="drHero"></div>
+  </div>
+  <div class="dr-body" id="drBody"></div>
+  <div class="dr-nav">
+    <button id="drPrev">&larr; Newer</button>
+    <button id="drNext">Older &rarr;</button>
+  </div>
+</aside>
+
 <script>
 /* ------------------------------------------------------------------ config */
 const CONFIG = {
@@ -486,7 +627,7 @@ async function load() {
     catch { BALANCES = sampleBalances(); }
   } else BALANCES = sampleBalances();
 
-  renderKpis(); renderBalances(); renderMonths(); renderLog(); drawCurve();
+  drawCurve(); renderKpis(); renderBalances(); renderMonths(); renderLog();
 }
 
 
@@ -504,6 +645,45 @@ const COIN = {
 
 let BALANCES = [];
 
+
+/* ---- category rollup ------------------------------------------------------
+ * Grouping is the whole point here — the asset table already gives per-asset
+ * allocation, but it can't tell you how much of the book is stables. One
+ * stacked bar carries that in ~40px.
+ */
+const STABLES = new Set(["USDT","USDC","DAI","TUSD","FDUSD","BUSD","USDE","PYUSD"]);
+const MAJORS  = new Set(["BTC","ETH","SOL"]);
+
+const CATEGORIES = [
+  { key:"stable", label:"Stables",         color:"#34d399", test:c => STABLES.has(c) },
+  { key:"major",  label:"BTC / ETH / SOL", color:"#60a5fa", test:c => MAJORS.has(c) },
+  { key:"other",  label:"Other tokens",    color:"#a78bfa", test:() => true },
+];
+
+function renderRollup(rows, total) {
+  const buckets = CATEGORIES.map(c => ({ ...c, usd: 0 }));
+  rows.forEach(r => {
+    const b = buckets.find(x => x.test(r.ccy));
+    b.usd += r.usd;
+  });
+
+  $("rollupTotal").textContent = money(total);
+
+  /* Zero-value categories are dropped rather than rendered as slivers — a
+     hairline segment reads as "a little" when the answer is "none". */
+  const live = buckets.filter(b => b.usd > 0);
+  $("stack").innerHTML = live.map(b =>
+    `<i style="width:${total ? (b.usd/total*100).toFixed(3) : 0}%;background:${b.color}"></i>`
+  ).join("");
+
+  $("stackLegend").innerHTML = buckets.map(b => {
+    const p = total ? (b.usd/total)*100 : 0;
+    return `<span><i class="swatch-dot" style="background:${b.color}"></i>
+      ${b.label} <b>${p.toFixed(2)}%</b>
+      <span style="color:var(--dim)">${money(b.usd)}</span></span>`;
+  }).join("");
+}
+
 function renderBalances() {
   const rows = BALANCES.slice().sort((a,b) => b.usd - a.usd);
   const total = rows.reduce((s,r) => s + r.usd, 0);
@@ -517,6 +697,8 @@ function renderBalances() {
   $("dexNote").textContent = wallets ? "On-chain holdings" : "Not connected";
   $("dexPill").textContent = wallets + " wallet" + (wallets === 1 ? "" : "s");
   $("totPill").textContent = rows.filter(r => r.usd > 0).length + " assets held";
+
+  renderRollup(rows, total);
 
   const b = $("balBody");
   if (!rows.length) {
@@ -587,17 +769,38 @@ function maxDrawdown(series) {
   return { pct: worst * 100, abs: worstAbs };
 }
 
+/* The range selector on the equity curve now drives the whole panel. A stat
+   panel with a hardcoded window quietly disagrees with the chart above it. */
+const RANGE_LABEL = { 7:"Last 7 days", 30:"Last 30 days", 90:"Last 90 days",
+                      ytd:"Year to date", all:"All time" };
+
+function windowStart() {
+  if (range === "all") return -Infinity;
+  if (range === "ytd") return new Date(new Date().getFullYear(), 0, 1).getTime();
+  return Date.now() - range * 86400000;
+}
+
+function tradesInRange() {
+  const from = windowStart();
+  const rows = TRADES.filter(t => t.closed >= from);
+  return rows.length ? rows : (range === "all" ? TRADES : rows);
+}
+
 function renderKpis() {
-  const s = stats(TRADES);
-  const dd = maxDrawdown(EQUITY);
-  const start = EQUITY.length ? EQUITY[0].eq : 0;
+  const rows = tradesInRange();
+  const s = stats(rows);
+  const win = windowed();
+  const dd = maxDrawdown(win);
+  const start = win.length ? win[0].eq : 0;
+
+  $("kpiRange").textContent = RANGE_LABEL[range] || "";
 
   $("kNet").textContent = money(s.net, true);
   $("kNet").className = "v num " + cls(s.net);
-  $("kNetPct").textContent = start ? pct((s.net / start) * 100) + " on opening balance" : "All time";
+  $("kNetPct").textContent = start ? pct((s.net / start) * 100) + " on period open" : "No trades in range";
 
   $("kWin").textContent = s.winRate.toFixed(1) + "%";
-  $("kWinN").textContent = s.wins + "W / " + s.losses + "L of " + s.n;
+  $("kWinN").textContent = s.n ? s.wins + "W / " + s.losses + "L of " + s.n : "No closed trades";
 
   $("kPf").textContent = s.pf === null ? "\u2014" : s.pf.toFixed(2);
   $("kPf").className = "v num " + (s.pf === null ? "" : s.pf >= 1 ? "up" : "down");
@@ -788,7 +991,7 @@ $("tabs").addEventListener("click", e => {
   if (!b || !b.dataset.r) return;          // the Live link navigates instead
   range = (b.dataset.r === "all" || b.dataset.r === "ytd") ? b.dataset.r : Number(b.dataset.r);
   [...$("tabs").children].forEach(x => x.dataset.r && x.setAttribute("aria-pressed", x === b));
-  drawCurve();
+  drawCurve(); renderKpis();
 });
 
 /* -------------------------------------------------------- monthly table */
@@ -837,7 +1040,8 @@ function renderLog() {
 
   $("logBody").innerHTML = rows.map(t => {
     const ret = t.entry ? ((t.exit - t.entry) / t.entry) * 100 * (t.dir === "short" ? -1 : 1) : 0;
-    return `<tr>
+    return `<tr data-i="${t.id}" tabindex="0" role="button"
+      aria-label="Trade ${t.id}, ${t.instId}, ${money(t.pnl, true)}">
       <td class="lt">${t.id}</td>
       <td class="lt">${t.instId}</td>
       <td class="lt"><span class="tag ${t.dir}">${t.dir.toUpperCase()}</span></td>
@@ -870,6 +1074,128 @@ $("toolbar").addEventListener("click", e => {
   F[set.dataset.f] = b.dataset.v;
   [...set.children].forEach(x => x.setAttribute("aria-pressed", x === b));
   renderLog();
+});
+
+
+/* ---- trade drawer ---------------------------------------------------------
+ * Opens in place rather than navigating: you're usually scanning the log and
+ * comparing, so losing scroll position on every look is the wrong trade.
+ * Newer/Older step through the filtered list without closing.
+ */
+let drOrder = [], drPos = -1;
+
+function openTrade(id) {
+  const t = TRADES.find(x => x.id === id);
+  if (!t) return;
+  drOrder = TRADES.filter(passes).slice().sort((a,b) => b.closed - a.closed).map(x => x.id);
+  drPos = drOrder.indexOf(id);
+  paintTrade(t);
+  $("scrim").classList.add("open");
+  $("drawer").classList.add("open");
+  $("drawer").setAttribute("aria-hidden", "false");
+  $("drClose").focus();
+}
+
+function closeTrade() {
+  $("scrim").classList.remove("open");
+  $("drawer").classList.remove("open");
+  $("drawer").setAttribute("aria-hidden", "true");
+  const row = document.querySelector(`tr[data-i="${drOrder[drPos]}"]`);
+  if (row) row.focus();
+}
+
+function stepTrade(d) {
+  const next = drPos + d;
+  if (next < 0 || next >= drOrder.length) return;
+  drPos = next;
+  paintTrade(TRADES.find(x => x.id === drOrder[drPos]));
+}
+
+function paintTrade(t) {
+  const ret = t.entry ? ((t.exit - t.entry) / t.entry) * 100 * (t.dir === "short" ? -1 : 1) : 0;
+  const notional = t.size * t.entry;
+  const good = t.pnl >= 0;
+  const fmtDT = ts => new Date(ts).toLocaleString(undefined,
+    { month:"short", day:"numeric", hour:"2-digit", minute:"2-digit" });
+  const px = v => v.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  const moved = t.exit - t.entry;
+
+  /* Connector height scales with the size of the move, capped so a 12% swing
+     doesn't push the rest of the panel off screen. */
+  const gapFor = r => Math.round(28 + Math.min(Math.abs(r), 6) * 14);
+
+  $("drTitle").textContent = t.instId;
+  $("drSub").innerHTML = `<span class="tag ${t.dir}">${t.dir.toUpperCase()}</span>
+    Trade #${t.id} &middot; ${modeOf(t) === "auto" ? "Fusion auto" : "Manual"}
+    &middot; ${venueOf(t).toUpperCase()} &middot; ${typeOf(t)}`;
+
+  $("drHead").className = "dr-head " + (good ? "win" : "loss");
+  $("drHero").className = "dr-hero " + cls(t.pnl);
+  $("drHero").innerHTML = money(t.pnl, true) +
+    `<small>${pct(ret)} on ${money(notional)} notional &middot; held ${heldFor(t.opened, t.closed)}</small>`;
+
+  /* The trade as a sequence rather than a spec sheet: opened here, closed
+     there, and the connector carries the result. */
+  const tone = good ? "var(--pos)" : "var(--neg)";
+
+  $("drBody").innerHTML = `
+    <div class="tl" style="--tl-a:rgba(255,255,255,.25); --tl-b:${tone}">
+      <div class="tl-node" style="--tl-dot:rgba(255,255,255,.45)">
+        <div class="when">Opened &middot; ${fmtDT(t.opened)}</div>
+        <div class="what">Entry <b>${px(t.entry)}</b>
+          <span style="color:var(--dim)">&nbsp;&times;&nbsp;${t.size}</span></div>
+      </div>
+      <div class="tl-span" style="--tl-h:${gapFor(ret)}px">
+        <span class="amt">${moved >= 0 ? "+" : "\u2212"}${px(Math.abs(moved))}
+          <i>${heldFor(t.opened, t.closed)}</i></span>
+      </div>
+      <div class="tl-node" style="--tl-dot:${tone}">
+        <div class="when">Closed &middot; ${fmtDT(t.closed)}</div>
+        <div class="what">Exit <b>${px(t.exit)}</b>
+          <span class="${cls(t.pnl)}">&nbsp;&nbsp;${pct(ret)}</span></div>
+      </div>
+    </div>
+
+    <div class="dr-sec">
+      <span class="label">Detail</span>
+      <div class="frow"><span>Size</span><b>${t.size}</b></div>
+      <div class="frow"><span>Notional at entry</span><b>${money(notional)}</b></div>
+      <div class="frow"><span>Held</span><b>${heldFor(t.opened, t.closed)}</b></div>
+      <div class="frow"><span>Realized P&amp;L</span><b class="${cls(t.pnl)}">${money(t.pnl, true)}</b></div>
+      ${t.cash ? `<div class="frow"><span>Cash in/out</span>
+        <b class="${cls(t.cash)}">${money(t.cash, true)}</b></div>` : ""}
+      <div class="frow"><span>Balance after</span><b>${money(t.balance)}</b></div>
+    </div>
+
+    ${t.note ? `<div class="dr-sec"><span class="label">Note</span>
+      <div class="dr-note">${t.note}</div></div>` : ""}`;
+
+  $("drPrev").disabled = drPos <= 0;
+  $("drNext").disabled = drPos >= drOrder.length - 1;
+  $("drBody").scrollTop = 0;
+}
+
+/* wiring */
+$("logBody").addEventListener("click", e => {
+  const row = e.target.closest("tr[data-i]");
+  if (row) openTrade(Number(row.dataset.i));
+});
+$("logBody").addEventListener("keydown", e => {
+  if (e.key !== "Enter" && e.key !== " ") return;
+  const row = e.target.closest("tr[data-i]");
+  if (!row) return;
+  e.preventDefault();
+  openTrade(Number(row.dataset.i));
+});
+$("drClose").addEventListener("click", closeTrade);
+$("scrim").addEventListener("click", closeTrade);
+$("drPrev").addEventListener("click", () => stepTrade(-1));
+$("drNext").addEventListener("click", () => stepTrade(1));
+addEventListener("keydown", e => {
+  if (!$("drawer").classList.contains("open")) return;
+  if (e.key === "Escape") closeTrade();
+  if (e.key === "ArrowUp" || e.key === "ArrowLeft") { e.preventDefault(); stepTrade(-1); }
+  if (e.key === "ArrowDown" || e.key === "ArrowRight") { e.preventDefault(); stepTrade(1); }
 });
 
 /* --------------------------------------------------- sample data (demo) */
@@ -932,13 +1258,24 @@ function sampleTrades() {
   ];
 
   let bal = 338.50;
+  let seed = 11;
+  const rnd = () => (seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648;
+
   return raw.slice().reverse().map((r, i) => {
     const [instId, dir, dOpen, dClose, size, entry, exit, pnl, cash, note] = r;
     bal += pnl + cash;
+
+    /* Whole-day offsets made same-day trades open and close in the same minute,
+       so the drawer read "Held 0m". Give each one a real intraday span. */
+    const opened = now - dOpen * day + Math.floor(rnd() * 10 * 3600e3);
+    const minHold = 18 * 60e3 + Math.floor(rnd() * 5 * 3600e3);
+    const closed = Math.max(now - dClose * day + Math.floor(rnd() * 8 * 3600e3),
+                            opened + minHold);
+
     return {
       id: i + 1, instId, dir, size, entry, exit, pnl, cash, note,
       mode: i % 4 === 0 ? "manual" : "auto", venue: "cex",
-      opened: now - dOpen * day, closed: now - dClose * day,
+      opened, closed,
       balance: Number(bal.toFixed(2)),
     };
   });
