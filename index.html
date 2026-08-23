@@ -296,6 +296,23 @@
   .segset button[aria-pressed="true"] { background:var(--brand); color:#fff; }
   .segset button:focus-visible { outline:2px solid var(--brand); outline-offset:-2px; }
   .fcount { margin-left:auto; font-size:11.5px; color:var(--dim); font-variant-numeric:tabular-nums; }
+  .nav a.soon { opacity:.55; cursor:not-allowed; }
+  .nav a.soon:hover { background:none; color:var(--muted); }
+
+  /* ---- ambient light ----------------------------------------------------
+     Panels are opaque, so this only shows in the gutters and the gaps between
+     cards — the dead black areas. Kept very low so it never competes with the
+     semantic glow, which has to stay the brightest thing on the page. */
+  body::before {
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(1100px 520px at 15% -8%,  rgba(59,130,246,.13), transparent 62%),
+      radial-gradient(820px 420px at 88% 4%,    rgba(99,102,241,.09), transparent 60%),
+      radial-gradient(1200px 620px at 55% 112%, rgba(37,99,235,.07),  transparent 66%);
+  }
+  body.glow-off::before { display:none; }
+  .topbar, .nav, .page, .drawer, .scrim { position:relative; z-index:1; }
+  .drawer { z-index:41; } .scrim { z-index:40; }
 </style>
 
 <div class="topbar">
@@ -310,13 +327,13 @@
 </div>
 
 <nav class="nav">
-  <a href="overview.html" class="on"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2.5" y="2.5" width="5.5" height="5.5" rx="1"/><rect x="10" y="2.5" width="5.5" height="5.5" rx="1"/><rect x="2.5" y="10" width="5.5" height="5.5" rx="1"/><rect x="10" y="10" width="5.5" height="5.5" rx="1"/></svg>Overview</a>
-  <a href="#"><svg viewBox="0 0 18 18" aria-hidden="true"><polyline points="2 12.5 6.3 8.2 9.8 11 15.5 4.5"/><polyline points="11.6 4.5 15.5 4.5 15.5 8.4"/></svg>Trading</a>
-  <a href="#"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="6.6" cy="6" r="2.7"/><path d="M2 15.2c0-2.6 2.1-4.2 4.6-4.2s4.6 1.6 4.6 4.2"/><path d="M12.1 3.7a2.7 2.7 0 0 1 0 5.2"/><path d="M13.2 11.2c1.9.5 2.9 1.9 2.9 4"/></svg>Community</a>
-  <a href="#"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="3" y="6.2" width="12" height="8" rx="2.6"/><circle cx="6.9" cy="10.2" r=".95" fill="currentColor" stroke="none"/><circle cx="11.1" cy="10.2" r=".95" fill="currentColor" stroke="none"/><path d="M9 6.2V3.8"/><circle cx="9" cy="2.9" r="1.1"/></svg>AI Assistant</a>
-  <a href="#"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M15.2 10.4A2.6 2.6 0 0 1 12.6 13H6.2l-3.4 2.7V4.9A2.6 2.6 0 0 1 5.4 2.3h7.2a2.6 2.6 0 0 1 2.6 2.6z"/></svg>Chat</a>
+  <a href="index.html" class="on"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2.5" y="2.5" width="5.5" height="5.5" rx="1"/><rect x="10" y="2.5" width="5.5" height="5.5" rx="1"/><rect x="2.5" y="10" width="5.5" height="5.5" rx="1"/><rect x="10" y="10" width="5.5" height="5.5" rx="1"/></svg>Overview</a>
+  <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><polyline points="2 12.5 6.3 8.2 9.8 11 15.5 4.5"/><polyline points="11.6 4.5 15.5 4.5 15.5 8.4"/></svg>Trading</a>
+  <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="6.6" cy="6" r="2.7"/><path d="M2 15.2c0-2.6 2.1-4.2 4.6-4.2s4.6 1.6 4.6 4.2"/><path d="M12.1 3.7a2.7 2.7 0 0 1 0 5.2"/><path d="M13.2 11.2c1.9.5 2.9 1.9 2.9 4"/></svg>Community</a>
+  <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="3" y="6.2" width="12" height="8" rx="2.6"/><circle cx="6.9" cy="10.2" r=".95" fill="currentColor" stroke="none"/><circle cx="11.1" cy="10.2" r=".95" fill="currentColor" stroke="none"/><path d="M9 6.2V3.8"/><circle cx="9" cy="2.9" r="1.1"/></svg>AI Assistant</a>
+  <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M15.2 10.4A2.6 2.6 0 0 1 12.6 13H6.2l-3.4 2.7V4.9A2.6 2.6 0 0 1 5.4 2.3h7.2a2.6 2.6 0 0 1 2.6 2.6z"/></svg>Chat</a>
   <a href="portfolio.html"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2" y="5.4" width="14" height="9.8" rx="2.2"/><path d="M6.4 5.4V4a1.6 1.6 0 0 1 1.6-1.6h2A1.6 1.6 0 0 1 11.6 4v1.4"/><path d="M2 9.6h14"/></svg>Portfolio</a>
-  <a href="#"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="2.5"/><path d="M9 1.7v1.7M9 14.6v1.7M2.7 9H1M17 9h-1.7M4.6 4.6 3.4 3.4M14.6 14.6l-1.2-1.2M4.6 13.4l-1.2 1.2M14.6 3.4l-1.2 1.2"/></svg>Settings</a>
+  <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="2.5"/><path d="M9 1.7v1.7M9 14.6v1.7M2.7 9H1M17 9h-1.7M4.6 4.6 3.4 3.4M14.6 14.6l-1.2-1.2M4.6 13.4l-1.2 1.2M14.6 3.4l-1.2 1.2"/></svg>Settings</a>
 </nav>
 
 <div class="page">
@@ -1325,4 +1342,8 @@ render();
     b.querySelector(".toggle").classList.toggle("on", on);
   });
 })();
+
+/* Placeholder nav items shouldn't jump the page to the top on click. */
+document.querySelectorAll(".nav a.soon").forEach(a =>
+  a.addEventListener("click", e => e.preventDefault()));
 </script>
