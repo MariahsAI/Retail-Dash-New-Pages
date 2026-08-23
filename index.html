@@ -437,6 +437,34 @@
     #line, #curve #line { stroke-width: 1.1; }
     #base, #grid line { stroke-width: .75; }
   }
+
+  /* ---- glass, used only where it means something -------------------------
+   * backdrop-filter needs content behind it. On a solid panel sitting on a flat
+   * page it costs GPU and lowers text contrast for no visual gain, so the cards
+   * stay opaque. The two surfaces that genuinely sit over other content — the
+   * bar you scroll under, and the drawer over the table — get the real thing.
+   */
+  .topbar, .nav {
+    position: sticky; z-index: 30;
+    background: rgba(7, 14, 28, .72);
+    backdrop-filter: blur(16px) saturate(1.5);
+    -webkit-backdrop-filter: blur(16px) saturate(1.5);
+  }
+  .topbar { top: 0; }
+  .nav { top: 45px; }
+
+  .drawer {
+    background: rgba(11, 20, 36, .82);
+    backdrop-filter: blur(22px) saturate(1.4);
+    -webkit-backdrop-filter: blur(22px) saturate(1.4);
+  }
+  .dr-head { background: rgba(18, 33, 64, .72); }
+
+  /* Fallback: no backdrop-filter means no translucency, or the text goes soft. */
+  @supports not (backdrop-filter: blur(2px)) {
+    .topbar, .nav { background: var(--bar); }
+    .drawer { background: var(--panel); }
+  }
 </style>
 
 <div class="topbar">
@@ -1187,13 +1215,15 @@ function drawTape() {
   /* ---- horizontal grid + value axis ---- */
   const g = $("grid"); clear(g);
   const step = niceStep(span / 4);
+  const lastY0 = yOf(vals[vals.length - 1]);
   for (let v = Math.ceil(lo/step)*step; v <= hi; v += step) {
     const y = yOf(v);
     g.appendChild(el("line", { x1:0, x2:plotW, y1:y, y2:y,
       stroke:"rgba(255,255,255,.045)", "stroke-width":1, "vector-effect":"non-scaling-stroke" }));
+    /* Skip the label the live price pill would sit on top of. */
+    if (Math.abs(y - lastY0) < 13) continue;
     g.appendChild(el("text", { x:plotW + 8, y:y + 3.5, fill:"var(--dim)", "font-size":10.5,
-      "font-variant-numeric":"tabular-nums" },
-      fmtVal(v)));
+      "font-variant-numeric":"tabular-nums" }, fmtVal(v)));
   }
 
   /* ---- the curve ---- */
@@ -1216,10 +1246,13 @@ function drawTape() {
     if (i < 0) return;
     m.appendChild(el("circle", { cx:xOf(i), cy:yOf(vals[i]), r:2.5,
       fill:"var(--bg)", stroke:"rgba(255,255,255,.45)", "stroke-width":1.2 }));
+    /* Clamp by the label's own half-width, not a fixed guess. */
+    const txt = label + " " + fmtVal(vals[i]);
+    const half = txt.length * 2.9 + 4;
     m.appendChild(el("text", {
-      x: Math.min(Math.max(xOf(i), 26), plotW - 26), y: yOf(vals[i]) + dy,
+      x: Math.min(Math.max(xOf(i), half), plotW - half), y: yOf(vals[i]) + dy,
       fill:"var(--dim)", "font-size":10, "text-anchor":"middle", "font-variant-numeric":"tabular-nums" },
-      label + " " + fmtVal(vals[i])));
+      txt));
   });
 
   /* Fills land on the curve so you can see what the engine did to the line.
@@ -1252,12 +1285,17 @@ function drawTape() {
   /* ---- time axis ---- */
   const x = $("xaxis"); clear(x);
   const ticks = Math.max(2, Math.min(6, Math.floor(plotW / 130)));
+  let lastLabel = null;
   for (let k = 0; k <= ticks; k++) {
     const i = Math.round((k/ticks) * (d.length - 1));
+    const txt = hhmm(d[i].t);
+    if (txt === lastLabel) continue;      // a 5-minute tape repeats minutes
+    lastLabel = txt;
+    const half = txt.length * 2.9 + 4;
     x.appendChild(el("text", {
-      x: Math.min(Math.max(xOf(i), 18), plotW - 18), y: H - 5,
+      x: Math.min(Math.max(xOf(i), half), plotW - half), y: H - 5,
       fill:"var(--dim)", "font-size":10, "text-anchor":"middle",
-      "font-variant-numeric":"tabular-nums" }, hhmm(d[i].t)));
+      "font-variant-numeric":"tabular-nums" }, txt));
   }
 
   /* ---- last-value pill riding the right edge ---- */
