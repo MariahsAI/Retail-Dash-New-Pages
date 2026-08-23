@@ -12,6 +12,7 @@
     --edge: rgba(59,130,246,.22); --head: #122140; --chart: #60a5fa; --warn: #fbbf24;
     --accent: var(--brand); --accent-soft: rgba(59,130,246,.16); --accent-edge: rgba(59,130,246,.34);
     --pos: #34d399; --neg: #fb7185;
+    --hero: #0d1730;   /* hero surfaces — navy, so they read blue */
   }
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
@@ -60,7 +61,9 @@
   .page { width:100%; max-width:1680px; margin:0 auto; padding:18px 22px 40px; }
 
   /* ---- status strip: every number that matters, one row, no chart ---- */
-  .stripwrap { background:var(--panel); border:1px solid var(--accent-edge); border-radius:14px;
+  /* Hero surface: navy fill rather than the ordinary card plane, so the strip
+     reads blue on its own instead of relying on the bloom to tint it. */
+  .stripwrap { background:var(--hero); border:1px solid var(--accent-edge); border-radius:14px;
                overflow:hidden; }
   .strip { display:grid; grid-template-columns:1.5fr repeat(5, 1fr) .9fr; }
 
@@ -342,6 +345,9 @@
     --text: #ffffff;          /* values go full white — biggest single gain */
     --muted: #6f8098;
     --dim: #47566c;
+    /* Restated because body.sharp out-specifies :root — a token defined only
+       there silently does nothing on a page that boots into sharp. */
+    --hero: #0d1730;
   }
 
   /* Corners stay soft. Sharpness here comes from density and contrast, not
@@ -352,13 +358,12 @@
   body.sharp .tab, body.sharp .segset button, body.sharp .seg button { border-radius: 7px; }
   body.sharp .picker-face { border-radius: 9px; }
 
-  /* A single hairline highlight along the top edge — this is the "glass" cue,
-     not blur. It suggests a lit surface without softening anything. */
-  body.sharp .stripwrap, body.sharp .card {
-    border-color: var(--edge);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
-  }
-  body.sharp .stripwrap { border-color: rgba(59,130,246,.28); }
+  /* Border colour only. This block used to also set box-shadow, which at
+     (0,2,1) specificity beat the full edge-definition stack at the end of the
+     file — so sharp mode silently lost its separation ring and the strip read
+     as floating rather than framed. The stack lives in one place now. */
+  body.sharp .card { border-color: rgba(96, 165, 250, .30); }
+  body.sharp .stripwrap { border-color: rgba(96, 165, 250, .42); }
 
   /* Density: more rows per screen is most of the effect. */
   body.sharp .page { padding: 14px 18px 34px; }
@@ -393,8 +398,6 @@
 
   /* Bloom drops back so the alert states stay the brightest thing left. */
   body.sharp::before { opacity: .45; }
-  body.sharp .stripwrap { box-shadow: inset 0 1px 0 rgba(255,255,255,.05),
-                                      inset 60px -40px 110px -80px rgba(59,130,246,.3); }
 
   /* ---- high-DPI polish ---------------------------------------------------
    * What reads as "cheap" on a big dark UI is almost always one of three
@@ -597,8 +600,21 @@
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05);
   }
 
-  /* Alert states keep priority: they override the resting edge entirely. */
-  .card.attn-warn, .cell.attn-warn, .card.attn-neg, .cell.attn-neg { border-color: currentColor; }
+  /* Alert states keep priority, but tinted per state. currentColor resolves to
+     --text, which is #ffffff under body.sharp — that painted a hard white rule
+     down the left of every flagged cell, reading as a rendering fault rather
+     than a warning. */
+  .card.attn-warn, .cell.attn-warn { border-color: rgba(251, 191, 36, .50); }
+  .card.attn-neg,  .cell.attn-neg  { border-color: rgba(251, 113, 133, .55); }
+
+  /* The neighbouring seam picks the tint up, so a flagged cell is bracketed
+     rather than lopsided. */
+  .cell.attn-warn + .cell { border-left-color: rgba(251, 191, 36, .38); }
+  .cell.attn-neg  + .cell { border-left-color: rgba(251, 113, 133, .40); }
+  @media (max-width: 1100px) {
+    .cell.attn-warn + .cell { border-top-color: rgba(251, 191, 36, .38); }
+    .cell.attn-neg  + .cell { border-top-color: rgba(251, 113, 133, .40); }
+  }
 
   /* Hairlines inside a panel stay hairlines — sharpening the outside only. */
   tbody tr:hover { background: rgba(255, 255, 255, .028); }
