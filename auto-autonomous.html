@@ -836,21 +836,26 @@
      indefinite width and blew the shrink-to-fit panel out to fill the
      viewport — 433px of item holding 165px of text. */
   .navmenu-panel {
-    /* max-content now that the items no longer carry width:100% — the panel
-       sizes to its longest line instead of a guessed constant, so there is
-       no trailing gap to the right of the labels. */
-    position:fixed; z-index:80; width:max-content; min-width:200px; max-width:300px;
+    /* Width is measured and written by place() below. Doing it in JS makes it
+       font-agnostic and immune to the circular case where an item's
+       width:100% resolves against an indefinite max-content parent. */
+    position:fixed; z-index:80; min-width:200px;
     background:rgba(11,20,36,.97); backdrop-filter:blur(18px) saturate(1.4);
     -webkit-backdrop-filter:blur(18px) saturate(1.4);
     border:1px solid rgba(96,165,250,.42); border-radius:12px; padding:6px;
     box-shadow:0 0 0 1px rgba(2,6,14,.9), 0 26px 52px -26px rgba(0,0,0,.95);
     display:none;
   }
-  .navmenu[data-open="true"] .navmenu-panel { display:block; }
+  /* Flex column with stretch, not width:100% on the items — a percentage
+     width resolving against a max-content parent is circular, which is
+     what blew the panel out to 433px the first time. Stretch gets the
+     full-width rows with no cycle. */
+  .navmenu[data-open="true"] .navmenu-panel { display:flex; flex-direction:column;
+                                              align-items:stretch; gap:2px; }
   @supports not (backdrop-filter: blur(2px)) { .navmenu-panel { background:var(--panel); } }
 
   .navmenu-item {
-    display:flex; align-items:flex-start; gap:10px; text-align:left;
+    display:flex; align-items:flex-start; gap:10px; text-align:left; width:100%;
     background:none; border:0; color:var(--muted); font:inherit; font-size:13px;
     padding:9px 11px; border-radius:8px; cursor:pointer; text-decoration:none;
     transition:background .18s, color .18s;
@@ -888,10 +893,20 @@
 
     /* Place the fixed panel under its trigger, and keep it on screen if the
        trigger sits near the right edge. */
+    /* Two passes: let the panel size to its content, read that, then pin it as
+       a definite px width. The items' width:100% then resolves against a real
+       number and every row fills the panel — no trailing gap at any font. */
+    const sizeToContent = () => {
+      panel.style.width = "max-content";
+      const w = Math.min(Math.ceil(panel.getBoundingClientRect().width), 360);
+      panel.style.width = w + "px";
+      return w;
+    };
+
     const place = () => {
+      const w = sizeToContent();
       const r = trigger.getBoundingClientRect();
       panel.style.top = (r.bottom + 6) + "px";
-      const w = panel.offsetWidth || 216;
       panel.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + "px";
     };
 
@@ -922,6 +937,17 @@
     /* A placeholder item shouldn't jump the page to the top. */
     m.querySelectorAll(".navmenu-item.soon").forEach(a =>
       a.addEventListener("click", e => e.preventDefault()));
+
+    /* The item for the page you are already on is a no-op: navigating to your
+       own URL is a full reload, which reseeds the chart, empties the tape and
+       resets the dock. Close the menu and stay put. */
+    m.querySelectorAll('.navmenu-item[aria-current="page"]').forEach(a =>
+      a.addEventListener("click", e => {
+        e.preventDefault();
+        close(m);
+        trigger.setAttribute("aria-expanded", "false");
+        trigger.focus({ preventScroll: true });
+      }));
   });
 
   document.addEventListener("click", () => closeAll(null));
