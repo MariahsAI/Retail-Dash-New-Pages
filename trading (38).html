@@ -1,0 +1,2247 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MX1 Trade — Trading</title>
+
+<style>
+  :root {
+    --bg: #050b16; --bar: #070e1c; --panel: #0b1424; --panel-2: #0a1220;
+    --hair: rgba(255,255,255,.07);
+    --text: #e9eff8; --muted: #8093ab; --dim: #4c5a70;
+    --brand: #3b82f6; --brand-2: #60a5fa; --brand-strong: #2563eb;
+    --edge: rgba(59,130,246,.22); --head: #122140; --chart: #60a5fa; --warn: #fbbf24;
+    --accent: var(--brand); --accent-soft: rgba(59,130,246,.16); --accent-edge: rgba(59,130,246,.34);
+    --pos: #34d399; --neg: #fb7185;
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin:0; background:var(--bg); color:var(--text); font-size:14px;
+         font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+         -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+         font-feature-settings:"tnum" 1,"kern" 1; }
+  .label { font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); }
+  .num { font-variant-numeric:tabular-nums; transition:color .3s ease; }
+  .up { color:var(--pos); } .down { color:var(--neg); }
+  .flash-up { color:var(--pos) !important; } .flash-down { color:var(--neg) !important; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  /* ------------------------------------------------------------- chrome */
+  .topbar { display:flex; align-items:center; gap:14px; padding:9px 18px;
+            border-bottom:1px solid var(--hair); flex-wrap:wrap; }
+  .brand { display:flex; flex-direction:column; line-height:1; margin-right:4px; }
+  .brand b { font-size:19px; letter-spacing:.06em; }
+  .brand b i { font-style:normal; color:var(--brand); }
+  .brand span { font-size:9px; color:var(--dim); margin-top:2px; }
+  .seg { display:inline-flex; border:1px solid var(--hair); border-radius:10px; padding:3px; }
+  .seg button { background:none; border:0; color:var(--muted); font:inherit; font-size:12px;
+                font-weight:600; padding:6px 15px; cursor:pointer; border-radius:7px; }
+  .seg button[aria-pressed="true"] { background:linear-gradient(135deg,#60a5fa,#6366f1); color:#fff;
+                                     box-shadow:0 0 20px -5px rgba(99,102,241,.8); }
+  .chip { font:inherit; display:inline-flex; align-items:center; gap:7px; border:1px solid var(--hair);
+          border-radius:999px; padding:5px 13px; font-size:11.5px; color:var(--muted);
+          background:rgba(255,255,255,.02); white-space:nowrap; }
+  button.chip { cursor:pointer; }
+  .chip.online { border-color:rgba(52,211,153,.45); color:var(--pos);
+                 box-shadow:0 0 22px -9px rgba(52,211,153,.75), inset 0 0 26px -16px rgba(52,211,153,.95); }
+  .chip.kill { border-color:rgba(251,113,133,.32); color:var(--neg);
+               transition:box-shadow .25s ease, border-color .25s ease; }
+  .chip.kill:hover { border-color:rgba(251,113,133,.75);
+                     box-shadow:0 0 24px -8px rgba(251,113,133,.8); }
+  .toggle { width:34px; height:18px; border-radius:999px; background:#16233a; position:relative;
+            cursor:pointer; transition:background .3s ease, box-shadow .3s ease; }
+  .toggle::after { content:""; position:absolute; top:2px; left:2px; width:14px; height:14px;
+                   border-radius:50%; background:#e9eff8; transition:left .28s cubic-bezier(.4,0,.2,1); }
+  .toggle.on { background:linear-gradient(135deg,#60a5fa,#6366f1);
+               box-shadow:0 0 18px -4px rgba(99,102,241,.85); }
+  .toggle.on::after { left:18px; }
+  .pill-price { display:inline-flex; align-items:center; gap:10px; border:1px solid var(--accent-edge);
+                border-radius:999px; padding:6px 16px; background:var(--accent-soft);
+                margin-left:auto; margin-right:auto; }
+  .uid { border:1px solid var(--hair); border-radius:999px; padding:5px 13px; font-size:11px;
+         color:var(--muted); font-family:ui-monospace,monospace; }
+  .avatar { width:26px; height:26px; border-radius:50%; display:grid; place-items:center;
+            background:linear-gradient(140deg,var(--brand),var(--brand-2));
+            font-size:10px; font-weight:700; color:#04121c; }
+
+
+
+  /* One height across the three columns — otherwise the chart header (big
+     price, two lines) sits taller than the book and rail and the tops stagger. */
+  .card-head { display:flex; align-items:center; justify-content:space-between; gap:12px;
+               padding:0 16px; min-height:62px; background:var(--head);
+               border-bottom:2px solid var(--edge); flex-wrap:wrap; }
+  .card-head h2 { margin:0; font-size:13px; letter-spacing:.05em; text-transform:uppercase;
+                  font-weight:700; }
+  .card-head .sub { color:var(--dim); font-size:11.5px; }
+  .card-body { padding:0; }
+
+  /* ---- instrument bar ---- */
+  .inst { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  .picker-wrap { position:relative; display:inline-flex; }
+  .picker-face { display:inline-flex; align-items:center; gap:9px; font-family:Georgia,serif;
+                 font-size:17px; color:var(--text); background:rgba(59,130,246,.10);
+                 border:1px solid var(--edge); border-radius:9px; padding:6px 12px 6px 14px;
+                 white-space:nowrap; transition:background .2s, border-color .2s; }
+  .picker-face svg { width:11px; height:11px; stroke:var(--brand-2); stroke-width:2.2; fill:none;
+                     stroke-linecap:round; stroke-linejoin:round; }
+  .picker-wrap:hover .picker-face { background:rgba(59,130,246,.18); border-color:var(--brand); }
+  .picker { position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer;
+            appearance:none; border:0; }
+  .picker:focus-visible + .picker-face { outline:2px solid var(--brand); outline-offset:2px; }
+  .picker option { background:var(--panel); color:var(--text); font-size:13px; }
+
+  .tfs { display:inline-flex; gap:2px; padding:3px; border:1px solid var(--hair);
+         border-radius:10px; background:rgba(255,255,255,.02); }
+  .tfs button { background:none; border:0; color:var(--muted); font:inherit; font-size:11.5px;
+                font-weight:600; padding:6px 12px; border-radius:7px; cursor:pointer; }
+  .tfs button:hover { color:var(--text); }
+  .tfs button[aria-pressed="true"] { background:var(--brand); color:#fff; }
+  .last { font-family:Georgia,serif; font-size:21px; line-height:1.1; font-variant-numeric:tabular-nums; }
+  .ohlc { display:flex; gap:13px; font-size:11px; color:var(--dim); flex-wrap:wrap;
+          font-variant-numeric:tabular-nums; }
+  .ohlc b { color:var(--muted); font-weight:600; }
+
+  .routing { display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+             padding:10px 18px; border-bottom:1px solid var(--hair);
+             background:rgba(255,255,255,.012); font-size:11.5px; color:var(--dim); }
+  .dot { width:6px; height:6px; border-radius:50%; background:var(--pos);
+         animation:pulse 1.6s ease-in-out infinite; }
+
+  /* ---- chart ---- */
+  .chart svg { width:100%; height:100%; display:block; cursor:crosshair;
+               shape-rendering:geometricPrecision; }
+
+  /* ---- fusion rail ---- */
+  .field { padding:14px 18px; border-bottom:1px solid var(--hair); }
+  .field:last-child { border-bottom:0; }
+  .field > .label { display:block; margin-bottom:8px; }
+  .inp, .sel { width:100%; background:rgba(255,255,255,.03); border:1px solid var(--hair);
+               color:var(--text); font:inherit; font-size:14px; padding:10px 12px;
+               border-radius:9px; font-variant-numeric:tabular-nums; }
+  .inp:focus, .sel:focus { outline:none; border-color:var(--brand); background:rgba(59,130,246,.07); }
+  .sel { appearance:none; cursor:pointer;
+         background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
+                          linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+         background-position:calc(100% - 17px) 53%, calc(100% - 12px) 53%;
+         background-size:5px 5px,5px 5px; background-repeat:no-repeat; }
+  .quick { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:8px; }
+  .quick button { background:rgba(255,255,255,.02); border:1px solid var(--hair); color:var(--muted);
+                  font:inherit; font-size:11.5px; padding:7px 0; border-radius:8px; cursor:pointer; }
+  .quick button:hover { color:var(--text); border-color:var(--edge); }
+  .quick button[aria-pressed="true"] { background:var(--brand); border-color:var(--brand); color:#fff; }
+
+  input[type=range] { width:100%; appearance:none; height:4px; border-radius:2px; margin-top:12px;
+                      background:linear-gradient(90deg,var(--brand) var(--fill,30%),
+                                 rgba(255,255,255,.09) var(--fill,30%)); cursor:pointer; }
+  input[type=range]::-webkit-slider-thumb { appearance:none; width:15px; height:15px; border-radius:50%;
+    background:#fff; border:3px solid var(--brand); box-shadow:0 0 12px -2px rgba(59,130,246,.9); }
+  input[type=range]::-moz-range-thumb { width:15px; height:15px; border-radius:50%; background:#fff;
+    border:3px solid var(--brand); }
+
+  .meta { display:flex; justify-content:space-between; margin-top:9px; font-size:11px; color:var(--dim); }
+  .meta b { color:var(--muted); font-weight:600; font-variant-numeric:tabular-nums; }
+
+  .risk { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+  .risk button { background:rgba(255,255,255,.02); border:1px solid var(--hair); color:var(--muted);
+                 font:inherit; font-size:12px; padding:9px 0; border-radius:9px; cursor:pointer;
+                 transition:background .2s, color .2s, border-color .2s; }
+  .risk button:hover { color:var(--text); }
+  .risk button[aria-pressed="true"] { background:var(--brand); border-color:var(--brand); color:#fff; }
+  .risk button[data-v="high"][aria-pressed="true"] { background:var(--warn); border-color:var(--warn);
+                                                     color:#1a1205; }
+
+  .run { width:100%; border:0; border-radius:11px; padding:15px; cursor:pointer;
+         font:inherit; font-size:14px; font-weight:600; color:#fff;
+         background:linear-gradient(135deg,#3b82f6,#6366f1);
+         box-shadow:0 0 30px -8px rgba(99,102,241,.9);
+         transition:filter .2s, transform .08s; }
+  .run:hover { filter:brightness(1.1); }
+  .run:active { transform:translateY(1px); }
+  .run[disabled] { filter:grayscale(.5) brightness(.7); cursor:default; }
+  .run-note { text-align:center; font-size:11px; color:var(--dim); margin-top:10px; }
+
+  /* ---- positions ---- */
+  .scroll { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; }
+  thead th { text-align:right; font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+             color:var(--muted); font-weight:700; padding:14px 16px; white-space:nowrap;
+             background:transparent; border-bottom:1px solid var(--hair); }
+  thead th:first-child, tbody td:first-child, .lt { text-align:left; }
+  tbody td { text-align:right; padding:12px 16px; border-top:1px solid var(--hair);
+             font-variant-numeric:tabular-nums; white-space:nowrap; font-size:13px; }
+  tbody tr:hover { background:rgba(255,255,255,.028); }
+  .tag { font-size:9.5px; letter-spacing:.07em; padding:3px 8px; border-radius:5px; }
+  .tag.long { background:rgba(52,211,153,.15); color:var(--pos); }
+  .tag.short { background:rgba(251,113,133,.15); color:var(--neg); }
+  .asset { display:flex; align-items:center; gap:11px; }
+  .coin { width:26px; height:26px; border-radius:50%; display:grid; place-items:center; flex:0 0 auto;
+          font-size:11px; font-weight:700; color:#071018; }
+  .asset b { font-weight:600; display:block; font-size:13px; line-height:1.25; }
+  .asset small { color:var(--dim); font-size:11px; }
+  .empty { padding:34px; text-align:center; color:var(--dim); font-size:13px; }
+  .mini { background:rgba(255,255,255,.02); border:1px solid var(--hair); color:var(--muted);
+          font:inherit; font-size:11px; padding:5px 11px; border-radius:7px; cursor:pointer; }
+  .mini:hover { color:var(--text); border-color:var(--edge); }
+  .mini.danger { border-color:rgba(251,113,133,.3); color:var(--neg); }
+  .mini.danger:hover { border-color:rgba(251,113,133,.7); }
+
+  /* ---- ambient + dither + edges ---- */
+  body::before {
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(1100px 520px at 15% -8%,  rgba(59,130,246,.13), transparent 62%),
+      radial-gradient(820px 420px at 88% 4%,    rgba(99,102,241,.09), transparent 60%),
+      radial-gradient(1200px 620px at 55% 112%, rgba(37,99,235,.07),  transparent 66%);
+  }
+  body::after {
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    opacity:.035; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size:140px 140px;
+  }
+  body.glow-off::before, body.glow-off::after { display:none; }
+  .page { position:relative; z-index:1; }
+  .topbar { background:rgba(7,14,28,.86); }
+
+  @supports not (backdrop-filter: blur(2px)) { .topbar, .nav { background:var(--bar); } }
+
+  .card-head { box-shadow: inset 0 1px 0 rgba(255,255,255,.05); }
+
+  @media (min-resolution: 2dppx) {
+    tbody td, thead th, .field, .routing { border-bottom-width:.5px; border-top-width:.5px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .dot { animation:none; } }
+
+  /* ---- sharp mode (matches index.html / portfolio.html) ------------------
+     Density and contrast, not squared corners. This is what the other two
+     pages boot into, so without it Trading renders a lighter, bluer surface
+     and reads as a different product. */
+  body.sharp {
+    --panel: #0a0f19; --panel-2: #080d15;
+    --hair: rgba(255,255,255,.055); --edge: rgba(96,165,250,.26); --head: #122140;
+    --text: #ffffff; --muted: #6f8098; --dim: #47566c;
+  }
+
+
+  body.sharp .work { gap:1px; }
+  body.sharp .card-head { padding:15px 15px; }
+  body.sharp .field { padding:12px 15px; }
+  body.sharp .routing { padding:9px 15px; }
+  body.sharp thead th { padding:13px 15px; font-size:10px; letter-spacing:.13em; font-weight:700; }
+  body.sharp tbody td { padding:10px 15px; font-size:12.5px; }
+  body.sharp .card-head h2 { font-size:14px; letter-spacing:.05em; font-weight:700; }
+  body.sharp .label { color:var(--muted); font-size:9.5px; letter-spacing:.14em; }
+  body.sharp::before { opacity:.45; }
+
+  /* --- serif kept for the figures you actually read --- */
+  body.sharp .last, body.sharp .picker-face { font-family:Georgia,"Times New Roman",serif; }
+
+  /* ---- chart toolbar ----------------------------------------------------- */
+  .toolbar { display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+             padding:8px 14px; border-bottom:1px solid var(--hair);
+             background:rgba(255,255,255,.012); }
+  .tool { display:inline-flex; align-items:center; gap:6px; background:none;
+          border:1px solid transparent; color:var(--muted); font:inherit; font-size:11.5px;
+          padding:6px 9px; border-radius:8px; cursor:pointer;
+          transition:background .18s, color .18s, border-color .18s; }
+  .tool:hover { color:var(--text); background:rgba(255,255,255,.05); }
+  .tool[aria-pressed="true"] { background:var(--brand); border-color:var(--brand); color:#fff; }
+  .tool:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
+  .tool svg { width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:1.7;
+              stroke-linecap:round; stroke-linejoin:round; }
+  .tool-sep { width:1px; height:20px; background:var(--hair); margin:0 4px; }
+  .tool-group { display:inline-flex; gap:2px; padding:2px; border:1px solid var(--hair);
+                border-radius:9px; background:rgba(255,255,255,.02); }
+  .tool-group .tool { padding:5px 9px; border-radius:6px; }
+
+  .menu-wrap { position:relative; }
+  .menu { position:absolute; top:calc(100% + 6px); left:0; z-index:20; min-width:210px;
+          background:rgba(11,20,36,.96); backdrop-filter:blur(18px);
+          -webkit-backdrop-filter:blur(18px);
+          border:1px solid var(--accent-edge); border-radius:11px; padding:6px;
+          box-shadow:0 24px 48px -24px rgba(0,0,0,.95); display:none; }
+  .menu.open { display:block; }
+  .menu-item { display:flex; align-items:center; justify-content:space-between; gap:12px;
+               width:100%; background:none; border:0; color:var(--muted); font:inherit;
+               font-size:12.5px; padding:9px 11px; border-radius:8px; cursor:pointer; text-align:left; }
+  .menu-item:hover { background:rgba(255,255,255,.05); color:var(--text); }
+  .menu-item .swatch { width:9px; height:2.5px; border-radius:2px; }
+  .menu-item .tick { opacity:0; color:var(--brand-2); font-size:13px; }
+  .menu-item[aria-pressed="true"] { color:var(--text); }
+  .menu-item[aria-pressed="true"] .tick { opacity:1; }
+  .menu-note { font-size:10.5px; color:var(--dim); padding:7px 11px 4px;
+               letter-spacing:.1em; text-transform:uppercase; }
+
+  .ind-legend { display:flex; gap:16px; flex-wrap:wrap; padding:9px 18px;
+                border-bottom:1px solid var(--hair); font-size:11.5px;
+                font-variant-numeric:tabular-nums; }
+  .ind-legend span b { font-weight:600; }
+  .ind-legend:empty { display:none; }
+
+  .chart.full { position:fixed; inset:0; z-index:60; background:var(--bg);
+                height:100vh; padding:14px 18px; }
+  .chart.full svg { height:calc(100vh - 28px); }
+
+  /* ---- three-column desk -------------------------------------------------
+     A 1fr chart on a 1680px page gets ~1000px of candles, which is more width
+     than the series has information. Giving that space to the book and the
+     rail packs more of the decision onto one screen. */
+
+  /* ---- 24h stats strip ---- */
+  .stats { display:flex; gap:0; flex-wrap:wrap; border-bottom:1px solid var(--hair); }
+  .stats div { padding:8px 16px; border-left:1px solid var(--hair); min-width:0; }
+  .stats div:first-child { border-left:0; }
+  .stats .k { font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); }
+  .stats .v { font-size:13px; margin-top:3px; font-variant-numeric:tabular-nums; font-weight:600; }
+
+  /* ---- order book ---- */
+  .book { font-variant-numeric:tabular-nums; }
+  .book-head { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; padding:9px 14px;
+               font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--dim);
+               border-bottom:1px solid var(--hair); }
+  .book-head span:nth-child(2), .book-head span:nth-child(3) { text-align:right; }
+  .lvl { position:relative; display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px;
+         padding:4px 14px; font-size:11.5px; cursor:pointer; }
+  .lvl:hover { background:rgba(255,255,255,.05); }
+  .lvl .depth { position:absolute; top:0; bottom:0; right:0; opacity:.14; }
+  .lvl span { position:relative; }
+  .lvl span:nth-child(2), .lvl span:nth-child(3) { text-align:right; color:var(--muted); }
+  .lvl.ask .px { color:var(--neg); } .lvl.ask .depth { background:var(--neg); }
+  .lvl.bid .px { color:var(--pos); } .lvl.bid .depth { background:var(--pos); }
+  .spread { display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+            padding:10px 14px; border-block:1px solid var(--hair);
+            background:rgba(255,255,255,.02); }
+  .spread b { font-family:Georgia,serif; font-size:17px; }
+  .spread small { color:var(--dim); font-size:11px; }
+
+
+  /* ---- fusion read on this pair ---- */
+  .verdict-row { display:flex; align-items:center; justify-content:space-between; gap:12px;
+                 padding:14px 18px; border-bottom:1px solid var(--hair); }
+  .verdict-big { font-family:Georgia,serif; font-size:24px; }
+  .conf { height:4px; border-radius:2px; background:rgba(255,255,255,.08); overflow:hidden;
+          margin-top:9px; }
+  .conf i { display:block; height:100%; border-radius:2px; transition:width .5s ease; }
+
+  /* ---- positions modal --------------------------------------------------- */
+  .more-row { display:flex; justify-content:center; padding:11px 15px;
+              border-top:1px solid var(--hair); }
+  .more-btn { background:rgba(59,130,246,.10); border:1px solid var(--edge); color:var(--brand-2);
+              font:inherit; font-size:12px; padding:7px 16px; border-radius:999px; cursor:pointer;
+              transition:background .2s, border-color .2s; }
+  .more-btn:hover { background:rgba(59,130,246,.2); border-color:var(--brand); }
+  .more-btn:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
+
+  .scrim { position:fixed; inset:0; background:rgba(3,7,15,.62); backdrop-filter:blur(2px);
+           opacity:0; pointer-events:none; transition:opacity .28s ease; z-index:44; }
+  .scrim.open { opacity:1; pointer-events:auto; }
+  .modal { position:fixed; top:50%; left:50%; transform:translate(-50%,-48%) scale(.98);
+           width:min(1080px, calc(100% - 40px)); max-height:min(82vh,900px);
+           background:rgba(11,20,36,.9); backdrop-filter:blur(22px) saturate(1.4);
+           -webkit-backdrop-filter:blur(22px) saturate(1.4);
+           border:1px solid var(--accent-edge); border-radius:16px; overflow:hidden;
+           display:flex; flex-direction:column; z-index:45; opacity:0; pointer-events:none;
+           transition:opacity .25s ease, transform .25s cubic-bezier(.22,.61,.36,1); }
+  .modal.open { opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1); }
+  .modal-head { display:flex; align-items:center; justify-content:space-between; gap:14px;
+                padding:17px 20px; background:var(--head); border-bottom:2px solid var(--edge); }
+  .modal-head h2 { margin:0; font-size:13px; letter-spacing:.05em; text-transform:uppercase;
+                   font-weight:700; }
+  .modal-body { overflow:auto; }
+  .modal-close { background:rgba(255,255,255,.04); border:1px solid var(--hair); color:var(--muted);
+                 font:inherit; width:30px; height:30px; border-radius:50%; cursor:pointer; line-height:1; }
+  .modal-close:hover { color:var(--text); border-color:var(--edge); }
+  @supports not (backdrop-filter: blur(2px)) { .modal { background:var(--panel); } }
+
+  /* ---- deck alignment ----------------------------------------------------
+     Matching header heights isn't enough: the second row only lines up if the
+     first row's CARDS are the same height. One shared height, and each card's
+     body flexes to fill whatever the chrome above it didn't use. */
+  /* Book columns flex inside their region — the card-era deck heights are
+     gone with the cards themselves. */
+  .book { display:flex; flex-direction:column; min-height:0; }
+  .book #asks, .book #bids { flex:1 1 auto; min-height:0; overflow:hidden; }
+
+  /* ---- expandable position detail --------------------------------------- */
+  tbody tr[data-pos] { cursor:pointer; }
+  tbody tr[data-pos].open { background:rgba(59,130,246,.07); }
+  .caret { display:inline-block; width:9px; margin-right:6px; color:var(--dim);
+           transition:transform .2s ease; }
+  tr.open .caret { transform:rotate(90deg); color:var(--brand-2); }
+
+  .pos-detail td { padding:0 !important; border-top:0 !important; }
+  .pd-inner { padding:16px 18px 18px; background:rgba(255,255,255,.015);
+              border-top:1px solid var(--hair); border-bottom:1px solid var(--edge); }
+  .pd-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(126px,1fr)); gap:14px 18px; }
+  .pd-grid .k { font-size:9.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--dim); }
+  .pd-grid .v { font-size:13.5px; margin-top:4px; font-weight:600;
+                font-variant-numeric:tabular-nums; }
+  .pd-acts { display:flex; gap:7px; flex-wrap:wrap; margin-top:16px; align-items:center; }
+  .act { background:rgba(255,255,255,.03); border:1px solid var(--hair); color:var(--muted);
+         font:inherit; font-size:11.5px; padding:8px 14px; border-radius:999px; cursor:pointer;
+         transition:color .18s, border-color .18s, background .18s; }
+  .act:hover { color:var(--text); border-color:var(--edge); background:rgba(255,255,255,.06); }
+  .act.warn { border-color:rgba(251,191,36,.35); color:var(--warn); }
+  .act.warn:hover { border-color:rgba(251,191,36,.75); }
+  .act.danger { border-color:rgba(251,113,133,.35); color:var(--neg); }
+  .act.danger:hover { border-color:rgba(251,113,133,.8); }
+  .tpsl-edit { display:flex; gap:7px; align-items:center; margin-left:auto; flex-wrap:wrap; }
+  .pc-grid input { width:70px; background:rgba(255,255,255,.03); border:1px solid var(--hair);
+                   color:var(--text); font:inherit; font-size:11px; padding:5px 7px;
+                   border-radius:7px; font-variant-numeric:tabular-nums; margin-right:4px; }
+  .pc-grid input:focus { outline:none; border-color:var(--brand); }
+
+  .tpsl-edit input { width:104px; background:rgba(255,255,255,.03); border:1px solid var(--hair);
+                     color:var(--text); font:inherit; font-size:11.5px; padding:7px 10px;
+                     border-radius:8px; font-variant-numeric:tabular-nums; }
+  .tpsl-edit input:focus { outline:none; border-color:var(--brand); }
+  .tpsl-edit .tp { color:var(--pos); } .tpsl-edit .sl { color:var(--neg); }
+
+  .liq-bar { grid-column:1 / -1; margin-top:2px; }
+  .liq-track { position:relative; height:4px; border-radius:2px; margin:8px 0 6px;
+               background:linear-gradient(90deg, rgba(251,113,133,.5), rgba(255,255,255,.08)); }
+  .liq-track i { position:absolute; top:-4px; width:2px; height:12px; border-radius:1px;
+                 transform:translateX(-50%); }
+
+  /* ---- book / trades tabs ------------------------------------------------
+     One panel, two views. They answer the same question — what is happening at
+     this price right now — so they belong in the same place, not stacked as two
+     cards competing for the column. */
+  .mkt-tabs { display:flex; gap:0; align-self:stretch; }
+  .mkt-tabs button { background:none; border:0; border-bottom:2px solid transparent;
+                     color:var(--muted); font:inherit; font-size:13px; font-weight:700;
+                     letter-spacing:.05em; text-transform:uppercase; padding:0 17px;
+                     cursor:pointer; transition:color .2s, border-color .2s; }
+  .mkt-tabs button:hover { color:var(--text); }
+  .mkt-tabs button[aria-pressed="true"] { color:#fff; border-bottom-color:var(--brand); }
+  .mkt-tabs button:focus-visible { outline:2px solid var(--brand); outline-offset:-4px; }
+
+  .tape-wrap { flex:1 1 auto; min-height:0; display:flex; flex-direction:column; }
+  .tape-head { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; padding:9px 14px;
+               font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--dim);
+               border-bottom:1px solid var(--hair); }
+  .tape-head span:nth-child(2), .tape-head span:nth-child(3) { text-align:right; }
+  .tape { flex:1 1 auto; min-height:0; overflow-y:auto; }
+  .tape::-webkit-scrollbar { width:9px; }
+  .tape::-webkit-scrollbar-thumb { background:rgba(96,165,250,.28); border-radius:5px; }
+  .tape::-webkit-scrollbar-track { background:transparent; }
+  .tape .row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; padding:4px 14px;
+               font-size:11.5px; font-variant-numeric:tabular-nums; }
+  .tape .row span:nth-child(1) { color:var(--dim); }
+  .tape .row span:nth-child(2) { text-align:right; }
+  .tape .row span:nth-child(3) { text-align:right; color:var(--muted); }
+  .tape .row.buy .p { color:var(--pos); } .tape .row.sell .p { color:var(--neg); }
+
+  /* ---- terminal layout ---------------------------------------------------
+     A trading desk is a fixed set of regions filling the viewport, not a
+     document you scroll. Everything below the nav sizes to the window and each
+     region scrolls internally. */
+  html, body { height:100%; }
+  body { overflow:hidden; }
+
+  /* The chrome is a grid row, not a magic offset. Guessing its height with
+     calc(100vh - 96px) is what pushed the dock over the work area. */
+  /* The work row gets a floor. Squeezing it to whatever is left over is what
+     buried the Fusion rail behind a scrollbar on a laptop. If the viewport
+     genuinely can't fit the floor plus the dock, the page scrolls — better
+     than silently crushing the controls. */
+  /* The window never scrolls. Each pane scrolls under the cursor, which is why
+     the work row can go back to taking whatever is left. */
+  .app { display:grid; height:100vh; overflow:hidden;
+         grid-template-rows:auto auto auto minmax(0,1fr) auto; }
+  /* The dock is a sized grid TRACK, not a sized element — an element height
+     can still be outgrown by content, a track cannot. */
+  /* A position card needs ~200px to show both rows of its grid; below that the
+     dock is showing you a cropped card, which is worse than a shorter chart. */
+  @media (max-height:900px) { .app { --dock-h:312px; } }
+  @media (max-height:800px) { .app { --dock-h:286px; } }
+  /* Collapsed: just the tab strip, so the work area gets the height back. */
+  .app.dock-collapsed { --dock-h:47px; }
+  .app.dock-collapsed .dock-body { display:none; }
+  /* Without min-width:0 a grid item is sized by its widest content, so the
+     10-column positions table was stretching every row past the viewport and
+     pushing the left edge off screen. */
+  .app > * { min-width:0; max-width:100vw; }
+
+  /* instrument strip */
+  .inst-bar { display:flex; align-items:center; gap:0; flex-wrap:wrap; min-width:0;
+              border-bottom:1px solid var(--hair); background:var(--head); }
+  .inst-lead { display:flex; align-items:center; gap:14px; padding:10px 16px; }
+  .inst-price { font-family:Georgia,serif; font-size:23px; line-height:1;
+                font-variant-numeric:tabular-nums; }
+  .inst-stat { padding:8px 16px; border-left:1px solid var(--hair); min-width:0; }
+  .inst-stat .k { font-size:9px; letter-spacing:.13em; text-transform:uppercase; color:var(--dim);
+                  white-space:nowrap; }
+  .inst-stat .v { font-size:12.5px; margin-top:3px; font-weight:600;
+                  font-variant-numeric:tabular-nums; white-space:nowrap; }
+
+  /* watchlist ticker */
+  .ticker { display:flex; gap:0; overflow-x:auto; border-bottom:1px solid var(--hair);
+            background:rgba(255,255,255,.012); scrollbar-width:none; }
+  .ticker::-webkit-scrollbar { display:none; }
+  .ticker button { display:flex; align-items:center; gap:8px; background:none; border:0;
+                   border-right:1px solid var(--hair); color:var(--muted); font:inherit;
+                   font-size:11.5px; padding:8px 15px; cursor:pointer; white-space:nowrap;
+                   font-variant-numeric:tabular-nums; }
+  .ticker button:hover { background:rgba(255,255,255,.04); color:var(--text); }
+  .ticker button[aria-pressed="true"] { background:rgba(59,130,246,.14); color:#fff; }
+  .ticker .sym { font-weight:600; }
+
+  /* work area fills the middle row */
+  /* Chart, market, dock and rail live in ONE grid. The rail spans both rows,
+     the way an exchange's order panel runs the full height beside the position
+     dock — that is what stops it being squeezed into whatever is left over. */
+  .work { display:grid; gap:1px; background:rgba(96,165,250,.34); min-height:0; overflow:hidden;
+          grid-template-columns:minmax(0,1fr);
+          grid-template-rows:minmax(0,1fr) var(--dock-h,344px); }
+  /* Same three-column shape from 1200 up — the side columns narrow rather than
+     one of them being dropped, because every one of them is load-bearing. */
+  /* 1200 was too high — a 1190px viewport fell through to the stacked layout
+     and pushed the whole Fusion column off screen. */
+  @media (min-width:1040px) {
+    .work { grid-template-columns:minmax(0,1fr) 250px 320px; }
+    .r-chart  { grid-column:1; grid-row:1; }
+    .r-market { grid-column:2; grid-row:1; }
+    .r-dock   { grid-column:1 / span 2; grid-row:2; }
+    .r-rail   { grid-column:3; grid-row:1 / span 2; }
+  }
+  @media (min-width:1400px) {
+    .work { grid-template-columns:minmax(0,1fr) 292px 372px; }
+    .r-chart  { grid-column:1; grid-row:1; }
+    .r-market { grid-column:2; grid-row:1; }
+    .r-dock   { grid-column:1 / span 2; grid-row:2; }
+    .r-rail   { grid-column:3; grid-row:1 / span 2; }
+  }
+  @media (min-width:1680px) {
+    .work { grid-template-columns:minmax(0,1fr) 320px 408px; }
+    /* Book ends where the chart ends. The dock runs beneath both of them, up
+       to the Fusion column. Only Fusion spans the full height. */
+    .r-chart  { grid-column:1; grid-row:1; }
+    .r-market { grid-column:2; grid-row:1; }
+    .r-dock   { grid-column:1 / span 2; grid-row:2; }
+    .r-rail   { grid-column:3; grid-row:1 / span 2; }
+  }
+
+  .region { background:var(--bg); min-height:0; min-width:0; display:flex;
+            flex-direction:column; overflow:hidden; }
+  .region > * { flex:0 0 auto; }
+  .region > .chart, .region > .book, .region > .tape-wrap { flex:1 1 auto; min-height:0; }
+  /* The book's own body scrolls if the level count still overflows. */
+  .book { overflow:hidden; }
+  .chart { min-height:180px; }
+  .chart svg { width:100%; height:100%; display:block; }
+  /* The rail is taller than its row by design — it has to scroll, and its
+     children must not be flex:0 0 auto or they refuse to overflow cleanly. */
+  .region.scrolls { overflow-y:auto; overflow-x:hidden; }
+  .region.scrolls > * { flex:0 0 auto; }
+  .region.scrolls::-webkit-scrollbar { width:9px; }
+  .region.scrolls::-webkit-scrollbar-thumb { background:rgba(96,165,250,.28); border-radius:5px; }
+  .region.scrolls::-webkit-scrollbar-track { background:transparent; }
+
+  /* bottom dock */
+  .dock { position:relative; z-index:5; min-width:0; border-top:1px solid var(--edge);
+          background:var(--panel-2); display:flex; flex-direction:column;
+          height:100%; min-height:0; overflow:hidden; }
+  /* Matches the other panel headers: same height, same weight, same 2px rule
+     underneath. It was reading as a strip rather than a header. */
+  .dock-tabs { display:flex; align-items:center; gap:0; min-width:0; min-height:44px;
+               border-bottom:2px solid var(--edge); background:var(--head); overflow-x:auto; }
+  .dock-tabs button { background:none; border:0; border-bottom:2px solid transparent;
+                      color:var(--muted); font:inherit; font-size:12.5px; font-weight:700;
+                      letter-spacing:.03em; padding:9px 14px 7px; cursor:pointer;
+                      white-space:nowrap; }
+  .dock-tabs button:hover { color:var(--text); }
+  .dock-tabs button[aria-pressed="true"] { color:#fff; border-bottom-color:var(--brand); }
+  .dock-actions { margin-left:auto; display:flex; align-items:center; gap:10px; padding:0 16px; }
+  .dock-body { flex:1 1 auto; min-height:0; min-width:0; overflow:auto; }
+  .dock-body table { min-width:940px; }
+  .dock-empty { padding:40px; text-align:center; color:var(--dim); font-size:13px; }
+
+
+  /* ---- rounding -----------------------------------------------------------
+   * The shell stays square: a terminal is panes meeting at seams, and rounded
+   * corners there would leave gaps the seam colour shows through. Controls
+   * round, because they are objects you press.
+   */
+  .app, .work, .region, .dock, .inst-bar { border-radius:0; }
+  .tool, .tfs button, .seg button, .quick button, .risk button,
+  .mini, .act, .chip, .btn { border-radius:8px; }
+  .run { border-radius:11px; }
+  .picker-face, .inp, .sel { border-radius:9px; }
+  .modal { border-radius:14px; }
+
+  /* ---- status bar --------------------------------------------------------
+     The bottom rail answers "is what I'm looking at real?" — feed health,
+     latency, clock. On a page where an engine trades for you, a stale feed is
+     the failure you most need to notice.
+   */
+  .statusbar { display:flex; align-items:center; gap:0; border-top:1px solid var(--edge);
+               background:var(--bar); font-size:11px; color:var(--dim); min-width:0; }
+  .st { display:inline-flex; align-items:center; gap:7px; padding:7px 14px;
+        border-right:1px solid var(--hair); white-space:nowrap; }
+  .st:last-child { border-right:0; }
+  .st b { color:var(--muted); font-weight:600; font-variant-numeric:tabular-nums; }
+  .st .led { width:6px; height:6px; border-radius:50%; background:var(--pos);
+             box-shadow:0 0 8px -1px var(--pos); }
+  .st .led.warn { background:var(--warn); box-shadow:0 0 8px -1px var(--warn); }
+  .st .led.bad  { background:var(--neg);  box-shadow:0 0 8px -1px var(--neg);
+                  animation:pulse 1.2s ease-in-out infinite; }
+  .st.ok b { color:var(--pos); }
+  .st.push { margin-left:auto; }
+  .bars { display:inline-flex; align-items:flex-end; gap:2px; height:11px; }
+  .bars i { width:3px; border-radius:1px; background:var(--dim); }
+  .bars i:nth-child(1){height:4px} .bars i:nth-child(2){height:7px} .bars i:nth-child(3){height:11px}
+  .bars.s3 i { background:var(--pos); }
+  .bars.s2 i:nth-child(-n+2) { background:var(--warn); }
+  .bars.s1 i:nth-child(1) { background:var(--neg); }
+
+  /* ---- fusion rail: fits without scrolling -------------------------------
+     Every control on this panel is part of one decision, so hiding half of it
+     behind a scrollbar breaks the decision in two. Pair the short fields and
+     tighten the spacing until the whole thing fits the row. */
+  .rail { display:flex; flex-direction:column; min-height:0; }
+
+
+  .rail .inp, .rail .sel { padding:8px 10px; font-size:13px; }
+  .rail .quick { margin-top:0; gap:5px; }
+  .rail .quick button { padding:6px 0; font-size:11px; }
+  .rail input[type=range] { margin-top:10px; }
+  .rail .meta { margin-top:7px; font-size:10.5px; }
+  .rail .risk button { padding:7px 0; font-size:11.5px; }
+  .rail .run { padding:12px; font-size:13.5px; }
+  .rail .run-note { font-size:10.5px; margin-top:7px; }
+
+  /* The run action stays put at the bottom of the rail. */
+  /* Pinned: the action stays put while the parameters scroll above it. */
+
+  /* ---- compact chrome ----------------------------------------------------
+     Four stacked bars (topbar, nav, instrument, ticker) were eating 202px of a
+     718px viewport before a single candle drew. Merging the nav into the top
+     bar and the watchlist into the instrument row halves that. */
+  .topbar { padding:7px 14px; gap:10px; row-gap:6px; }
+
+  .inst-lead { padding:7px 14px; }
+  .inst-price { font-size:20px; }
+  .inst-stat { padding:6px 13px; }
+  .inst-stat .v { font-size:12px; margin-top:2px; }
+
+  /* watchlist rides the instrument row instead of taking its own */
+  .ticker { border-bottom:0; border-left:1px solid var(--hair); background:transparent;
+            max-width:100%; }
+  .ticker button { padding:6px 12px; font-size:11px; }
+
+  /* ---- scroll affordance --------------------------------------------------
+   * A pane that scrolls has to look like it does. These are scroll shadows:
+   * the "local" layers scroll with the content and cover the "scroll" layers
+   * at the extremes, so the glow appears only when there is more to see, with
+   * no JS listening to scroll events.
+   */
+  .pane-scroll {
+    overflow-y:auto; overscroll-behavior:contain;
+    background:
+      linear-gradient(var(--pane-bg, var(--bg)) 30%, rgba(5,11,22,0)) top / 100% 24px no-repeat local,
+      linear-gradient(rgba(5,11,22,0), var(--pane-bg, var(--bg)) 70%) bottom / 100% 24px no-repeat local,
+      radial-gradient(farthest-side at 50% 0,   rgba(96,165,250,.35), rgba(96,165,250,0)) top / 100% 11px no-repeat scroll,
+      radial-gradient(farthest-side at 50% 100%,rgba(96,165,250,.35), rgba(96,165,250,0)) bottom / 100% 11px no-repeat scroll;
+  }
+  .pane-scroll::-webkit-scrollbar { width:10px; }
+  .pane-scroll::-webkit-scrollbar-thumb { background:rgba(96,165,250,.5); border-radius:5px;
+                                          border:2px solid var(--bg); }
+  .pane-scroll::-webkit-scrollbar-thumb:hover { background:rgba(96,165,250,.8); }
+  .pane-scroll::-webkit-scrollbar-track { background:rgba(255,255,255,.03); }
+  .pane-scroll { scrollbar-width:thin; scrollbar-color:rgba(96,165,250,.5) rgba(255,255,255,.03); }
+  /* ---- drag-resize the dock ---- */
+  .dock-grip { height:5px; cursor:row-resize; background:transparent; flex:0 0 auto;
+               margin-top:-3px; position:relative; z-index:6; }
+  .dock-grip:hover, .dock-grip.dragging { background:rgba(96,165,250,.5); }
+
+  /* ---- position cards ----------------------------------------------------
+     A ten-column table forces every value into the same narrow column and
+     needs horizontal scroll. Bitunix uses a card per position: identity on one
+     line, the numbers in a labelled grid, actions underneath. Reads better and
+     fits the dock without scrolling sideways. */
+  /* The card is a recessed well: near-black fill on a lifted dock surface.
+     A card lighter than its background reads as a raised chip, which fights
+     the dense-terminal look — recessed is sharper and lets the numbers sit
+     on true black. */
+  .pos-list { padding:10px 12px; display:flex; flex-direction:column; gap:9px; }
+  .pos-card { border-radius:11px; padding:11px 13px; }
+  .pos-card.long  { border-left:3px solid var(--pos);
+                    box-shadow: inset 12px 0 22px -18px var(--pos), var(--well); }
+  .pos-card.short { border-left:3px solid var(--neg);
+                    box-shadow: inset 12px 0 22px -18px var(--neg), var(--well); }
+
+  .pc-top { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:9px; }
+  .pc-top .sym { font-size:14px; font-weight:700; letter-spacing:.01em; }
+  .pc-badge { font-size:10px; letter-spacing:.05em; padding:3px 8px; border-radius:6px;
+              border:1px solid var(--hair); color:var(--muted); }
+  .pc-badge.long  { background:rgba(52,211,153,.16); color:var(--pos); border-color:transparent; }
+  .pc-badge.short { background:rgba(251,113,133,.16); color:var(--neg); border-color:transparent; }
+  .pc-actions { margin-left:auto; display:flex; gap:6px; flex-wrap:wrap; }
+
+  /* Four across, two down — the same shape as the exchange, so the second row
+     (entry, liq, margin rate, realized) is always on screen. */
+  .pc-grid { display:grid; gap:10px 22px; grid-template-columns:repeat(5, minmax(0,1fr)); }
+  @media (max-width:1280px) { .pc-grid { grid-template-columns:repeat(3, minmax(0,1fr)); } }
+  .pc-grid .k { font-size:9.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--dim);
+                white-space:nowrap; }
+  .pc-grid .v { font-size:13px; font-weight:600; margin-top:3px; color:#fff;
+                font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .pc-grid .v small { display:block; font-weight:400; font-size:11px; color:var(--dim);
+                      margin-top:2px; }
+  /* The editor row is a row, not a caption — its own class so it isn't caught
+     by the generic caption rule above. */
+  .pc-grid .v small.tpsl { display:flex; align-items:center; gap:6px; margin-top:6px;
+                           flex-wrap:wrap; }
+
+  /* ---- fusion rail, rebuilt ----------------------------------------------
+     Header and action are fixed; only the parameters scroll between them. The
+     read sits at the top as a card because it is a conclusion, not a field. */
+  .rail { display:flex; flex-direction:column; min-height:0; background:var(--panel-2); }
+  /* Title over subtitle, sized to match the tab rows beside it. */
+  .rail-head { flex:0 0 auto; min-height:62px; display:flex; flex-direction:column;
+               justify-content:center; gap:4px; padding:10px 16px; background:var(--head);
+               border-bottom:2px solid var(--edge); }
+  .rail-head h2 { margin:0; font-size:13px; letter-spacing:.05em; text-transform:uppercase;
+                  font-weight:700; }
+  .rail-head .sub { color:var(--dim); font-size:11.5px; line-height:1.3; }
+  .rail-body { flex:1 1 auto; min-height:0; padding:12px; }
+  .rail-foot { flex:0 0 auto; padding:12px; border-top:1px solid var(--edge);
+               background:rgba(255,255,255,.02); }
+
+  .read-card { border:1px solid var(--edge); border-radius:11px; padding:12px 13px;
+               background:linear-gradient(160deg, rgba(59,130,246,.10), transparent 70%); }
+  .read-top { display:flex; align-items:baseline; justify-content:space-between; }
+  .read-conf { font-size:15px; font-weight:700; }
+  .read-card .verdict-big { font-family:Georgia,serif; font-size:26px; line-height:1.1;
+                            margin-top:3px; }
+  .read-card .conf { height:4px; border-radius:2px; background:rgba(255,255,255,.09);
+                     overflow:hidden; margin-top:9px; }
+  .read-card .conf i { display:block; height:100%; border-radius:2px; transition:width .5s ease; }
+  .read-note { font-size:10.5px; color:var(--dim); margin-top:8px; }
+
+  .sec { margin-top:14px; padding-top:12px; border-top:1px solid var(--hair); }
+  .sec-title { display:block; font-size:9.5px; letter-spacing:.15em; text-transform:uppercase;
+               color:var(--brand-2); font-weight:700; margin-bottom:9px; }
+  .sec .k { display:block; font-size:9.5px; letter-spacing:.13em; text-transform:uppercase;
+            color:var(--dim); margin-bottom:5px; }
+  .sec label { display:block; }
+  .sec .inp, .sec .sel { width:100%; }
+  .sec label.full { margin-top:9px; }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+  .ro { border:1px solid var(--edge); border-radius:9px; padding:8px 10px; font-size:13px;
+        color:var(--brand-2); background:rgba(59,130,246,.08); text-align:center; }
+  .lev-head { display:flex; align-items:baseline; justify-content:space-between; margin-top:13px; }
+  .lev-head .k { margin-bottom:0; }
+  .lev-head b { font-size:14px; }
+  .sec .quick { margin-top:8px; }
+  .sec .risk { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+
+  /* ---- book pressure ------------------------------------------------------
+     Cumulative bid vs ask depth across the visible book. It answers "which
+     side is stacked" faster than reading twenty rows of sizes. */
+  /* One thick bar with the readings inside it — a 5px sliver plus a separate
+     label row was two things saying one thing. */
+  .ratio { flex:0 0 auto; padding:8px 10px 10px; border-top:1px solid var(--hair);
+           background:rgba(255,255,255,.015); }
+  .ratio-bar { display:flex; height:24px; border-radius:6px; overflow:hidden;
+               background:rgba(255,255,255,.06); font-size:11.5px;
+               font-variant-numeric:tabular-nums; }
+  .ratio-bar i { display:flex; align-items:center; height:100%; min-width:0;
+                 transition:width .4s ease; font-style:normal; overflow:hidden; }
+  .ratio-bar i > span { padding:0 9px; white-space:nowrap; }
+  .ratio-bar .b { background:rgba(52,211,153,.26); color:var(--pos);
+                  justify-content:flex-start; }
+  .ratio-bar .s { background:rgba(251,113,133,.26); color:var(--neg);
+                  justify-content:flex-end; }
+  .ratio-bar b { font-weight:700; }
+
+  /* ---- nav row -----------------------------------------------------------
+     Merging this into the top bar was meant to save a row, but at real widths
+     it wrapped and cost the same height with worse grouping. Account controls
+     on one row, navigation on its own. */
+  .nav { display:flex; gap:4px; padding:6px 14px; background:var(--bar);
+         border-bottom:1px solid var(--hair); overflow-x:auto; scrollbar-width:none; }
+  .nav::-webkit-scrollbar { display:none; }
+  .nav a { display:inline-flex; align-items:center; gap:8px; color:var(--muted);
+           text-decoration:none; font-size:13.5px; padding:8px 13px; border-radius:9px;
+           border:1px solid transparent; white-space:nowrap;
+           transition:background .25s, box-shadow .35s, color .25s; }
+  .nav a svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.6;
+               stroke-linecap:round; stroke-linejoin:round; opacity:.8; flex:0 0 auto; }
+  .nav a:hover { color:var(--text); background:rgba(255,255,255,.05); }
+  .nav a.on { color:#fff; background:rgba(59,130,246,.16); border-color:rgba(59,130,246,.45);
+              box-shadow:0 0 22px -9px rgba(59,130,246,.9); }
+  .nav a.on svg { color:var(--brand-2); opacity:1; }
+  .nav a.soon { opacity:.5; cursor:not-allowed; }
+  .nav a.soon:hover { background:none; color:var(--muted); }
+
+  /* top bar keeps one line: account controls only */
+  .topbar { flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; }
+  .topbar::-webkit-scrollbar { display:none; }
+  .topbar .uid { margin-left:auto; }
+</style>
+<link rel="stylesheet" href="mx1.css" />
+
+
+<!-- ============================================================== chrome -->
+<div class="app">
+<div class="topbar">
+  <div class="brand"><b>M<i>X</i>1</b><span>mx1trade.com</span></div>
+
+  <div class="seg"><button aria-pressed="true">CEX</button><button aria-pressed="false">DEX</button></div>
+  <button class="chip" id="aiAuto" aria-pressed="true">AI AUTO <span class="toggle on"></span></button>
+  <div class="chip online">&#9679; FUSION ONLINE</div>
+  <button class="chip kill">&#9211; KILL SWITCH</button>
+  <div class="pill-price"><span class="label">CEX &middot; USDT</span>
+    <b class="num" id="barEquity">$0.00</b></div>
+  <div class="uid">UID okx_856274432502104602</div>
+  <div class="avatar">MT</div>
+  <span style="color:var(--muted);font-size:13px">MX1 Trade</span>
+</div>
+
+
+
+
+<nav class="nav">
+  <a href="index.html"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2.5" y="2.5" width="5.5" height="5.5" rx="1"/><rect x="10" y="2.5" width="5.5" height="5.5" rx="1"/><rect x="2.5" y="10" width="5.5" height="5.5" rx="1"/><rect x="10" y="10" width="5.5" height="5.5" rx="1"/></svg>Overview</a>
+  <a href="trading.html" class="on"><svg viewBox="0 0 18 18" aria-hidden="true"><polyline points="2 12.5 6.3 8.2 9.8 11 15.5 4.5"/><polyline points="11.6 4.5 15.5 4.5 15.5 8.4"/></svg>Trading</a>
+  <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="6.6" cy="6" r="2.7"/><path d="M2 15.2c0-2.6 2.1-4.2 4.6-4.2s4.6 1.6 4.6 4.2"/><path d="M12.1 3.7a2.7 2.7 0 0 1 0 5.2"/><path d="M13.2 11.2c1.9.5 2.9 1.9 2.9 4"/></svg>Community</a>
+  <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="3" y="6.2" width="12" height="8" rx="2.6"/><circle cx="6.9" cy="10.2" r=".95" fill="currentColor" stroke="none"/><circle cx="11.1" cy="10.2" r=".95" fill="currentColor" stroke="none"/><path d="M9 6.2V3.8"/><circle cx="9" cy="2.9" r="1.1"/></svg>AI Assistant</a>
+  <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M15.2 10.4A2.6 2.6 0 0 1 12.6 13H6.2l-3.4 2.7V4.9A2.6 2.6 0 0 1 5.4 2.3h7.2a2.6 2.6 0 0 1 2.6 2.6z"/></svg>Chat</a>
+  <a href="portfolio.html"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2" y="5.4" width="14" height="9.8" rx="2.2"/><path d="M6.4 5.4V4a1.6 1.6 0 0 1 1.6-1.6h2A1.6 1.6 0 0 1 11.6 4v1.4"/><path d="M2 9.6h14"/></svg>Portfolio</a>
+  <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="2.5"/><path d="M9 1.7v1.7M9 14.6v1.7M2.7 9H1M17 9h-1.7M4.6 4.6 3.4 3.4M14.6 14.6l-1.2-1.2M4.6 13.4l-1.2 1.2M14.6 3.4l-1.2 1.2"/></svg>Settings</a>
+</nav>
+
+  <!-- ---------------------------------------------------- instrument bar -->
+  <div class="inst-bar">
+    <div class="inst-lead">
+      <span class="picker-wrap">
+        <select id="pairPick" class="picker" aria-label="Trading pair"></select>
+        <span class="picker-face" aria-hidden="true">
+          <span id="pickerLabel">BTC/USDT</span>
+          <svg viewBox="0 0 12 12"><polyline points="2.5 4.5 6 8 9.5 4.5"/></svg>
+        </span>
+      </span>
+      <div>
+        <div class="inst-price num" id="lastPx">&mdash;</div>
+        <div class="num" id="lastChg" style="font-size:11.5px;margin-top:3px">&mdash;</div>
+      </div>
+    </div>
+    <div class="inst-stat"><div class="k">24h change</div><div class="v" id="s24chg">&mdash;</div></div>
+    <div class="inst-stat"><div class="k">24h high</div><div class="v" id="s24hi">&mdash;</div></div>
+    <div class="inst-stat"><div class="k">24h low</div><div class="v" id="s24lo">&mdash;</div></div>
+    <div class="inst-stat"><div class="k">24h volume</div><div class="v" id="s24vol">&mdash;</div></div>
+    <div class="inst-stat"><div class="k">Funding / countdown</div>
+      <div class="v"><span id="s24fund">&mdash;</span>
+        <span style="color:var(--dim)"> / </span><span id="fundClock">&mdash;</span></div></div>
+    <div class="ticker" id="ticker" style="flex:1 1 auto"></div>
+    <div class="inst-stat" style="border-left:1px solid var(--hair)">
+      <span class="chip">OKX Account</span></div>
+  </div>
+
+
+
+  <!-- ------------------------------------------------------- work area -->
+  <div class="work">
+
+    <!-- chart -->
+    <div class="region r-chart">
+      <div class="routing">
+        <span class="dot"></span> Auto-routing
+        <span>Fusion auto-selects execution wallet &middot; spot &rarr; platform wallet
+          &middot; perp/swap &rarr; external wallet</span>
+      </div>
+
+      <div class="toolbar">
+        <div class="tool-group" id="ctype">
+          <button class="tool" data-type="candle" aria-pressed="true" title="Candlesticks">
+            <svg viewBox="0 0 16 16"><path d="M4.5 2.5v11M2.8 5h3.4v6H2.8z"/>
+              <path d="M11.5 1.5v13M9.8 4h3.4v7H9.8z"/></svg>
+          </button>
+          <button class="tool" data-type="line" aria-pressed="false" title="Line">
+            <svg viewBox="0 0 16 16"><polyline points="1.5 11.5 5.5 6.5 9 9.5 14.5 3"/></svg>
+          </button>
+          <button class="tool" data-type="area" aria-pressed="false" title="Area">
+            <svg viewBox="0 0 16 16"><path d="M1.5 11.5 5.5 6.5 9 9.5 14.5 3v9.5h-13z"/></svg>
+          </button>
+        </div>
+        <span class="tool-sep"></span>
+        <div class="tfs" id="tfs">
+          <button data-tf="1m"  aria-pressed="false">1m</button>
+          <button data-tf="5m"  aria-pressed="false">5m</button>
+          <button data-tf="15m" aria-pressed="false">15m</button>
+          <button data-tf="1h"  aria-pressed="true">1h</button>
+          <button data-tf="4h"  aria-pressed="false">4h</button>
+          <button data-tf="1d"  aria-pressed="false">1d</button>
+        </div>
+        <span class="tool-sep"></span>
+        <div class="menu-wrap">
+          <button class="tool" id="indBtn" aria-expanded="false">
+            <svg viewBox="0 0 16 16"><path d="M1.5 13.5h13"/><path d="M3.5 11V6.5"/>
+              <path d="M7 11V3"/><path d="M10.5 11V8"/><path d="M14 11V5"/></svg>
+            Indicators
+          </button>
+          <div class="menu" id="indMenu">
+            <div class="menu-note">Overlays</div>
+            <button class="menu-item" data-ind="ma20" aria-pressed="false">
+              <span><i class="swatch" style="background:#fbbf24;display:inline-block;margin-right:8px"></i>MA 20</span>
+              <span class="tick">&#10003;</span></button>
+            <button class="menu-item" data-ind="ema9" aria-pressed="false">
+              <span><i class="swatch" style="background:#60a5fa;display:inline-block;margin-right:8px"></i>EMA 9</span>
+              <span class="tick">&#10003;</span></button>
+            <button class="menu-item" data-ind="ema26" aria-pressed="false">
+              <span><i class="swatch" style="background:#a78bfa;display:inline-block;margin-right:8px"></i>EMA 26</span>
+              <span class="tick">&#10003;</span></button>
+            <button class="menu-item" data-ind="bb" aria-pressed="false">
+              <span><i class="swatch" style="background:#34d399;display:inline-block;margin-right:8px"></i>Bollinger 20, 2</span>
+              <span class="tick">&#10003;</span></button>
+            <div class="menu-note">Panels</div>
+            <button class="menu-item" data-ind="vol" aria-pressed="true">
+              <span>Volume</span><span class="tick">&#10003;</span></button>
+          </div>
+        </div>
+        <span class="tool-sep"></span>
+        <div class="tool-group" id="cscale">
+          <button class="tool" data-scale="linear" aria-pressed="true">Lin</button>
+          <button class="tool" data-scale="log" aria-pressed="false">Log</button>
+        </div>
+        <span class="tool-sep"></span>
+        <button class="tool" id="snap" title="Download chart as SVG">
+          <svg viewBox="0 0 16 16"><path d="M2.5 5.5h2l1-1.5h5l1 1.5h2v7h-11z"/>
+            <circle cx="8" cy="9" r="2.2"/></svg>
+        </button>
+        <button class="tool" id="fullBtn" title="Fullscreen">
+          <svg viewBox="0 0 16 16"><polyline points="2.5 6 2.5 2.5 6 2.5"/>
+            <polyline points="10 2.5 13.5 2.5 13.5 6"/><polyline points="13.5 10 13.5 13.5 10 13.5"/>
+            <polyline points="6 13.5 2.5 13.5 2.5 10"/></svg>
+        </button>
+      </div>
+
+      <div class="ind-legend" id="indLegend"></div>
+      <div class="ohlc" id="ohlc" style="padding:8px 16px;border-bottom:1px solid var(--hair)"></div>
+
+      <div class="chart">
+        <svg id="chart" role="img" aria-label="Price chart">
+          <g id="cgrid"></g><g id="cvol"></g><g id="candles"></g><g id="cind"></g>
+          <g id="clast"></g><g id="caxis"></g>
+          <g id="ccross" style="display:none"></g>
+          <rect id="chit" fill="transparent" x="0" y="0" width="100%" height="100%"></rect>
+        </svg>
+      </div>
+    </div>
+
+    <!-- market: book + trades -->
+    <div class="region r-market">
+      <div class="card-head" style="padding-block:0;gap:0;border-bottom:1px solid var(--hair)">
+        <div class="mkt-tabs" id="mktTabs">
+          <button data-view="book" aria-pressed="true">Orderbook</button>
+          <button data-view="tape" aria-pressed="false">Trades</button>
+        </div>
+      </div>
+      <div class="book" id="viewBook" style="flex:1 1 auto;min-height:0">
+        <div class="book-head"><span>Price</span><span>Size</span><span>Total</span></div>
+        <div id="asks"></div>
+        <div class="spread">
+          <b class="num" id="spreadMid">&mdash;</b>
+          <small>spread <b class="num" id="spreadVal">&mdash;</b></small>
+        </div>
+        <div id="bids"></div>
+        <div class="ratio">
+          <div class="ratio-bar">
+            <i class="b" id="ratioB"><span><b>B</b> <span class="num" id="ratioBv">&mdash;</span></span></i>
+            <i class="s" id="ratioS"><span><span class="num" id="ratioSv">&mdash;</span> <b>S</b></span></i>
+          </div>
+        </div>
+      </div>
+      <div class="tape-wrap" id="viewTape" hidden>
+        <div class="tape-head"><span>Time</span><span>Price</span><span>Size</span></div>
+        <div class="tape pane-scroll" id="tape"></div>
+      </div>
+    </div>
+
+    <!-- fusion rail -->
+    <div class="region rail r-rail">
+      <div class="rail-head">
+        <h2>Fusion Configuration</h2>
+        <span class="sub">Tune the analysis parameters, then run a Fusion cycle</span>
+      </div>
+
+      <div class="rail-body pane-scroll">
+
+        <!-- the engine's current read, stated before you tune anything -->
+        <div class="read-card" id="readCard">
+          <div class="read-top">
+            <span class="label">Fusion read</span>
+            <span class="read-conf num" id="fuseConf">&mdash;</span>
+          </div>
+          <div class="verdict-big" id="fuseVerdict">&mdash;</div>
+          <div class="conf"><i id="fuseBar" style="width:0%"></i></div>
+          <div class="read-note" id="fuseNote">on BTC/USDT &middot; 1h</div>
+        </div>
+
+        <div class="sec">
+          <span class="sec-title">Analysis</span>
+          <div class="row2">
+            <label><span class="k">Pair</span>
+              <div class="ro" id="cfgPair">BTC/USDT</div></label>
+            <label><span class="k">Timeframe</span>
+              <select class="sel" id="cfgTf">
+                <option>1m</option><option>5m</option><option>15m</option>
+                <option selected>1h</option><option>4h</option><option>1d</option>
+              </select></label>
+          </div>
+          <label class="full"><span class="k">Days to analyse</span>
+            <input class="inp" id="cfgDays" type="number" min="1" max="90" value="7" /></label>
+        </div>
+
+        <div class="sec">
+          <span class="sec-title">Size</span>
+          <label class="full"><span class="k">Trade amount (USDT)</span>
+            <input class="inp num" id="cfgAmt" type="number" min="50" step="10" value="100" /></label>
+          <div class="quick" id="cfgQuick">
+            <button data-p="25">25%</button><button data-p="50">50%</button>
+            <button data-p="75">75%</button><button data-p="100">Max</button>
+          </div>
+          <input type="range" id="cfgAmtRange" min="50" max="485" value="100" />
+          <div class="meta"><span>Min <b>$50</b></span>
+            <span>Available <b class="num" id="cfgAvail">$485.09</b></span></div>
+        </div>
+
+        <div class="sec">
+          <span class="sec-title">Risk</span>
+          <span class="k">Tolerance</span>
+          <div class="risk" id="cfgRisk">
+            <button data-v="low" aria-pressed="false">Low</button>
+            <button data-v="med" aria-pressed="true">Med</button>
+            <button data-v="high" aria-pressed="false">High</button>
+          </div>
+          <div class="lev-head"><span class="k">Max leverage</span>
+            <b class="num" id="cfgLevOut">5&times;</b></div>
+          <input type="range" id="cfgLev" min="1" max="50" value="5" />
+          <div class="meta"><span>Conservative</span><span>Aggressive</span></div>
+        </div>
+      </div>
+
+      <div class="rail-foot">
+        <button class="run" id="runFusion">Run Fusion Cycle</button>
+        <div class="run-note" id="runNote">Analyses 7 days of 1h data on BTC/USDT</div>
+      </div>
+    </div>
+
+      <div class="dock r-dock">
+      <div class="dock-grip" id="dockGrip" title="Drag to resize"></div>
+      <div class="dock-tabs" id="dockTabs">
+        <button data-dock="positions" aria-pressed="true">Positions (<span id="dockPosN">0</span>)</button>
+        <button data-dock="orders" aria-pressed="false">Open Orders (0)</button>
+        <button data-dock="history" aria-pressed="false">Order History</button>
+        <button data-dock="assets" aria-pressed="false">Assets</button>
+        <div class="dock-actions">
+          <button class="mini" id="dockToggle" aria-expanded="true"
+                  title="Collapse panel">&#9662;</button>
+          <span class="sub num" id="posSub">&mdash;</span>
+          <button class="mini" id="posMore">View all</button>
+          <button class="mini danger" id="closeAll">Close all</button>
+        </div>
+      </div>
+      <div class="dock-body pane-scroll">
+        <div id="dockPositions"><div class="pos-list" id="posBody"></div></div>
+        <div id="dockOrders" hidden><div class="dock-empty">No open orders.</div></div>
+        <div id="dockHistory" hidden><div class="dock-empty">
+          Order history lives on the <a href="portfolio.html" style="color:var(--brand-2)">Portfolio</a> page.</div></div>
+        <div id="dockAssets" hidden><div class="dock-empty">
+          Asset balances live on the <a href="index.html" style="color:var(--brand-2)">Overview</a> page.</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ------------------------------------------------------ status bar -->
+  <div class="statusbar">
+    <span class="st ok" id="stNet">
+      <span class="bars s3" id="stBars"><i></i><i></i><i></i></span>
+      <b>Stable network</b>
+    </span>
+    <span class="st"><span class="led" id="stFeedLed"></span>
+      Market feed <b id="stFeed">live</b></span>
+    <span class="st">Latency <b id="stPing">&mdash;</b></span>
+    <span class="st">Last tick <b id="stTick">&mdash;</b></span>
+    <span class="st">Engine <b id="stEngine">Fusion v3</b></span>
+    <span class="st">Venue <b>OKX &middot; CEX</b></span>
+    <span class="st push">Positions <b id="stPos">0</b></span>
+    <span class="st">Exposure <b class="num" id="stExp">$0.00</b></span>
+    <span class="st">Equity <b class="num" id="stEq">$0.00</b></span>
+    <span class="st" id="stClock">&mdash;</span>
+  </div>
+</div>
+
+<div class="scrim" id="scrim"></div>
+<div class="modal" id="posModal" role="dialog" aria-modal="true" aria-labelledby="posModalTitle">
+  <div class="modal-head">
+    <h2 id="posModalTitle">Open Positions</h2>
+    <div style="display:flex;align-items:center;gap:14px">
+      <span class="sub num" id="posModalSub"></span>
+      <button class="modal-close" id="posModalClose" aria-label="Close">&times;</button>
+    </div>
+  </div>
+  <div class="modal-body">
+    <table>
+      <thead><tr><th>Symbol</th><th>Side</th><th>Size</th><th>Entry</th><th>Mark</th>
+        <th>TP</th><th>SL</th><th>Notional</th><th>PnL</th><th>PnL %</th><th>Actions</th></tr></thead>
+      <tbody id="posBodyAll"></tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+/* ------------------------------------------------------------------ config */
+const CONFIG = {
+  density: "sharp",          // "sharp" | "soft" — Shift+D toggles live
+  glow: "state",             // "state" | "all" | "off"
+  wsUrl: "",                 // wss://api.mx1trade.com/stream — blank runs demo
+  candles: 120,
+  positionsPreview: 4,       // rows shown inline; the rest live in the modal
+  available: 485.09,
+};
+
+const PAIRS = {
+  "BTC/USDT": { px: 76896.43, tick: 0.01, coin:"#f7931a" },
+  "ETH/USDT": { px: 3121.40,  tick: 0.01, coin:"#8a9ff7" },
+  "SOL/USDT": { px: 148.16,   tick: 0.01, coin:"#9945ff" },
+  "BNB/USDT": { px: 695.52,   tick: 0.01, coin:"#f3ba2f" },
+};
+
+/* Last price for every pair, so the watchlist and off-chart positions stay
+   live instead of frozen at their seed value. */
+const PX_NOW = {};
+Object.keys(PAIRS).forEach(k => PX_NOW[k] = PAIRS[k].px);
+
+const TF_MS = { "1m":60e3, "5m":300e3, "15m":900e3, "1h":3600e3, "4h":14400e3, "1d":86400e3 };
+
+const S = {
+  pair: "BTC/USDT",
+  tf: "1h",
+  candles: [],           // { t, o, h, l, c, v }
+  positions: new Map(),
+  equity: 466.48,
+  running: false,
+  ping: 38,
+  funding: 0.000082,
+  fundingAt: Date.now() + 2.4 * 3600e3,
+  risk: "med",
+  lev: 5,
+  type: "candle",
+  scale: "linear",
+  ind: { ma20:false, ema9:false, ema26:false, bb:false, vol:true },
+  amount: 100,
+};
+
+const $ = id => document.getElementById(id);
+const money = (v, signed) => (signed && v > 0 ? "+" : v < 0 ? "\u2212" : "") + "$" +
+  Math.abs(v).toLocaleString(undefined, { minimumFractionDigits:2, maximumFractionDigits:2 });
+const cls = v => v >= 0 ? "up" : "down";
+const px = v => v.toLocaleString(undefined,
+  { minimumFractionDigits: v >= 1000 ? 2 : v >= 1 ? 2 : 4,
+    maximumFractionDigits: v >= 1000 ? 2 : v >= 1 ? 2 : 4 });
+
+function applyDensity() {
+  document.body.classList.toggle("sharp", CONFIG.density === "sharp");
+  document.body.classList.toggle("glow-off", CONFIG.glow === "off");
+}
+applyDensity();
+
+addEventListener("keydown", e => {
+  if (e.shiftKey && (e.key === "D" || e.key === "d")) {
+    CONFIG.density = CONFIG.density === "sharp" ? "soft" : "sharp";
+    applyDensity(); drawChart();
+  }
+});
+
+/* ---------------------------------------------------------------- tickers */
+const reduce = matchMedia("(prefers-reduced-motion: reduce)").matches;
+function ticker(el, { flash = true, fmt = money } = {}) {
+  let cur = 0, target = 0, raf = null, last = 0, prev = 0;
+  const paint = () => { el.textContent = fmt(cur); };
+  const step = now => {
+    const dt = Math.min(now - last, 64); last = now;
+    cur += (target - cur) * (1 - Math.exp(-dt / 110));
+    if (Math.abs(target - cur) < .0005) cur = target;
+    paint(); raf = cur === target ? null : requestAnimationFrame(step);
+  };
+  return v => {
+    if (v === target) return;
+    if (flash && v !== prev) {
+      const c = v > prev ? "flash-up" : "flash-down";
+      el.classList.add(c); setTimeout(() => el.classList.remove(c), 420);
+    }
+    prev = v; target = v;
+    if (reduce) { cur = v; return paint(); }
+    if (!raf) { last = performance.now(); raf = requestAnimationFrame(step); }
+  };
+}
+const T = {
+  bar:  ticker($("barEquity"), { flash:false }),
+  last: ticker($("lastPx"), { fmt: px }),
+};
+
+/* ------------------------------------------------------------ candle data */
+let rndState = 42;
+const rnd = () => (rndState = (rndState * 1103515245 + 12345) % 2147483648) / 2147483648;
+
+function seedCandles() {
+  const step = TF_MS[S.tf];
+  const now = Math.floor(Date.now() / step) * step;
+  const base = PAIRS[S.pair].px;
+
+  /* Walk backwards from the current price so the newest candle closes at the
+     live mark — a chart whose last close disagrees with the header is worse
+     than no chart. */
+  const out = [];
+  let c = base;
+  for (let i = 0; i < CONFIG.candles; i++) {
+    const drift = (rnd() - 0.5) * base * 0.006;
+    const o = c - drift;
+    const h = Math.max(o, c) + rnd() * base * 0.0025;
+    const l = Math.min(o, c) - rnd() * base * 0.0025;
+    out.unshift({ t: now - i * step, o, h, l, c, v: 80 + rnd() * 420 });
+    c = o;
+  }
+  S.candles = out;
+}
+
+function tickPrice() {
+  const k = S.candles[S.candles.length - 1];
+  if (!k) return;
+  const drift = (rnd() - 0.5) * k.c * 0.0009;
+  k.c = Math.max(k.l * 0.98, k.c + drift);
+  k.h = Math.max(k.h, k.c);
+  k.l = Math.min(k.l, k.c);
+  k.v += rnd() * 6;
+
+  /* Roll into a new candle when the period boundary passes. */
+  const step = TF_MS[S.tf];
+  const bucket = Math.floor(Date.now() / step) * step;
+  if (bucket > k.t) {
+    S.candles.push({ t: bucket, o: k.c, h: k.c, l: k.c, c: k.c, v: 20 + rnd() * 60 });
+    if (S.candles.length > CONFIG.candles) S.candles.shift();
+  }
+
+  LAST_TICK = Date.now();
+  S.ping = Math.max(11, S.ping + (rnd() - 0.5) * 9);
+  PX_NOW[S.pair] = k.c;
+  Object.keys(PX_NOW).forEach(name => {
+    if (name !== S.pair) PX_NOW[name] *= 1 + (rnd() - 0.5) * 0.0007;
+  });
+
+  S.positions.forEach(p => {
+    if (p.pair === S.pair) { p.markPx = k.c; return; }
+    /* Off-chart pairs follow their own last price, or their PnL would freeze
+       the moment you switch away from them. */
+    p.markPx = PX_NOW[p.pair] ?? p.markPx;
+  });
+  drawChart(); renderHeader(); renderPositions();
+  renderBook(); render24h(); renderFusionRead(); renderTicker();
+  if (rnd() > 0.35) pushTape();
+}
+
+
+/* ---- indicators -------------------------------------------------------------
+ * Computed from closes on every draw. At 120 candles that's trivial; if the
+ * series grows, cache these against the candle array instead.
+ */
+function sma(vals, n) {
+  const out = new Array(vals.length).fill(null);
+  let sum = 0;
+  for (let i = 0; i < vals.length; i++) {
+    sum += vals[i];
+    if (i >= n) sum -= vals[i - n];
+    if (i >= n - 1) out[i] = sum / n;
+  }
+  return out;
+}
+function ema(vals, n) {
+  const out = new Array(vals.length).fill(null);
+  const k = 2 / (n + 1);
+  let prev = null;
+  vals.forEach((v, i) => {
+    prev = prev === null ? v : v * k + prev * (1 - k);
+    if (i >= n - 1) out[i] = prev;
+  });
+  return out;
+}
+function bollinger(vals, n = 20, mult = 2) {
+  const mid = sma(vals, n);
+  const up = [], lo = [];
+  for (let i = 0; i < vals.length; i++) {
+    if (mid[i] === null) { up.push(null); lo.push(null); continue; }
+    let sq = 0;
+    for (let j = i - n + 1; j <= i; j++) sq += (vals[j] - mid[i]) ** 2;
+    const sd = Math.sqrt(sq / n);
+    up.push(mid[i] + mult * sd);
+    lo.push(mid[i] - mult * sd);
+  }
+  return { mid, up, lo };
+}
+
+const IND_COLOR = { ma20:"#fbbf24", ema9:"#60a5fa", ema26:"#a78bfa", bb:"#34d399" };
+
+/* ------------------------------------------------------------------ chart */
+const NS = "http://www.w3.org/2000/svg";
+const el = (tag, attrs, text) => {
+  const n = document.createElementNS(NS, tag);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (text !== undefined) n.textContent = text;
+  return n;
+};
+const clear = n => { while (n.firstChild) n.removeChild(n.firstChild); };
+const hhmm = ts => new Date(ts).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" });
+const dayLbl = ts => new Date(ts).toLocaleDateString(undefined, { month:"short", day:"numeric" });
+
+function niceStep(raw) {
+  const mag = Math.pow(10, Math.floor(Math.log10(raw)));
+  const n = raw / mag;
+  return (n <= 1 ? 1 : n <= 2 ? 2 : n <= 2.5 ? 2.5 : n <= 5 ? 5 : 10) * mag;
+}
+
+let GEO = null;
+
+function drawChart() {
+  const d = S.candles;
+  if (d.length < 2) return;
+  const svg = $("chart"), box = svg.getBoundingClientRect();
+  const W = box.width || 1000, H = Math.round(box.height) || 300;
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+
+  const padR = 78, padB = 24, padT = 10;
+  const volH = 54;
+  const plotW = W - padR, plotH = H - padB - padT - volH;
+
+  const volH2 = S.ind.vol ? volH : 0;
+  const plotH2 = H - padB - padT - volH2;
+
+  const hi = Math.max(...d.map(k => k.h)), lo = Math.min(...d.map(k => k.l));
+  const pad = (hi - lo) * 0.06;
+  const top = hi + pad, bot = Math.max(lo - pad, S.scale === "log" ? lo * 0.5 : -Infinity);
+  const span = (top - bot) || 1;
+
+  /* Log scale compresses the upside so equal % moves take equal vertical space
+     — the honest view when a series has travelled a long way. */
+  const lg = v => Math.log(Math.max(v, 1e-9));
+  const yOf = S.scale === "log"
+    ? v => padT + (1 - (lg(v) - lg(bot)) / (lg(top) - lg(bot) || 1)) * plotH2
+    : v => padT + (1 - (v - bot) / span) * plotH2;
+  const bw = Math.max(1.5, (plotW / d.length) * 0.62);
+  const xOf = i => (i + 0.5) * (plotW / d.length);
+  GEO = { d, xOf, yOf, W, H, plotW, padB, bw };
+
+  /* grid + price axis */
+  const g = $("cgrid"); clear(g);
+  const step = niceStep(span / 5);
+  for (let v = Math.ceil(bot/step)*step; v <= top; v += step) {
+    const y = yOf(v);
+    g.appendChild(el("line", { x1:0, x2:plotW, y1:y, y2:y, stroke:"rgba(255,255,255,.045)",
+      "stroke-width":1, "vector-effect":"non-scaling-stroke" }));
+    g.appendChild(el("text", { x:plotW + 9, y:y + 3.5, fill:"var(--dim)", "font-size":10.5,
+      "font-variant-numeric":"tabular-nums" }, px(v)));
+  }
+
+  /* volume */
+  const vmax = Math.max(...d.map(k => k.v)) || 1;
+  const vg = $("cvol"); clear(vg);
+  if (S.ind.vol) d.forEach((k, i) => {
+    const h = (k.v / vmax) * (volH - 10);
+    vg.appendChild(el("rect", { x:xOf(i) - bw/2, y:H - padB - h, width:bw, height:h,
+      fill: k.c >= k.o ? "rgba(52,211,153,.22)" : "rgba(251,113,133,.22)" }));
+  });
+
+  /* candles */
+  const cg = $("candles"); clear(cg);
+  if (S.type === "candle") {
+    d.forEach((k, i) => {
+      const up = k.c >= k.o;
+      const col = up ? "var(--pos)" : "var(--neg)";
+      const x = xOf(i);
+      cg.appendChild(el("line", { x1:x, x2:x, y1:yOf(k.h), y2:yOf(k.l), stroke:col,
+        "stroke-width":1, "vector-effect":"non-scaling-stroke" }));
+      const y1 = yOf(Math.max(k.o, k.c)), y2 = yOf(Math.min(k.o, k.c));
+      cg.appendChild(el("rect", { x:x - bw/2, y:y1, width:bw, height:Math.max(1, y2 - y1),
+        fill:col, opacity: up ? .9 : .95 }));
+    });
+  } else {
+    let path = "";
+    d.forEach((k, i) => path += (i ? "L" : "M") + xOf(i).toFixed(1) + "," + yOf(k.c).toFixed(2) + " ");
+    const rising = d[d.length-1].c >= d[0].c;
+    const tone = rising ? "#34d399" : "#fb7185";
+    if (S.type === "area") {
+      cg.appendChild(el("defs", {})).innerHTML =
+        `<linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
+           <stop offset="0%" stop-color="${tone}" stop-opacity=".28"/>
+           <stop offset="100%" stop-color="${tone}" stop-opacity="0"/></linearGradient>`;
+      cg.appendChild(el("path", { d: path + `L${plotW},${padT + plotH2} L0,${padT + plotH2} Z`,
+        fill:"url(#areaFill)" }));
+    }
+    cg.appendChild(el("path", { d:path, fill:"none", stroke:tone, "stroke-width":1.6,
+      "vector-effect":"non-scaling-stroke", "stroke-linejoin":"round", "stroke-linecap":"round" }));
+  }
+
+  /* ---- indicator overlays ---- */
+  const ig = $("cind"); clear(ig);
+  const closes = d.map(k => k.c);
+  const legend = [];
+  const plot = (series, color, width = 1.3, dash) => {
+    let p2 = "", started = false;
+    series.forEach((v, i) => {
+      if (v === null) return;
+      p2 += (started ? "L" : "M") + xOf(i).toFixed(1) + "," + yOf(v).toFixed(2) + " ";
+      started = true;
+    });
+    if (!p2) return;
+    const attrs = { d:p2, fill:"none", stroke:color, "stroke-width":width,
+                    "vector-effect":"non-scaling-stroke", "stroke-linejoin":"round" };
+    if (dash) attrs["stroke-dasharray"] = dash;
+    ig.appendChild(el("path", attrs));
+  };
+
+  if (S.ind.ma20)  { const v = sma(closes, 20); plot(v, IND_COLOR.ma20);
+                     legend.push(["MA 20", IND_COLOR.ma20, v[v.length-1]]); }
+  if (S.ind.ema9)  { const v = ema(closes, 9);  plot(v, IND_COLOR.ema9);
+                     legend.push(["EMA 9", IND_COLOR.ema9, v[v.length-1]]); }
+  if (S.ind.ema26) { const v = ema(closes, 26); plot(v, IND_COLOR.ema26);
+                     legend.push(["EMA 26", IND_COLOR.ema26, v[v.length-1]]); }
+  if (S.ind.bb) {
+    const b2 = bollinger(closes);
+    plot(b2.up, IND_COLOR.bb, 1, "3 4");
+    plot(b2.lo, IND_COLOR.bb, 1, "3 4");
+    plot(b2.mid, IND_COLOR.bb, 1);
+    legend.push(["BB 20,2", IND_COLOR.bb, b2.mid[b2.mid.length-1]]);
+  }
+
+  $("indLegend").innerHTML = legend.map(([n, c2, v]) =>
+    `<span style="color:var(--dim)"><i style="display:inline-block;width:9px;height:2.5px;
+      border-radius:2px;background:${c2};margin-right:7px;vertical-align:middle"></i>${n}
+      <b style="color:${c2}">${v === null || v === undefined ? "\u2014" : px(v)}</b></span>`).join("");
+
+  /* last price line + pill */
+  const last = d[d.length - 1];
+  const ly = yOf(last.c), lup = last.c >= last.o;
+  const L = $("clast"); clear(L);
+  L.appendChild(el("line", { x1:0, x2:plotW, y1:ly, y2:ly,
+    stroke: lup ? "var(--pos)" : "var(--neg)", "stroke-width":1, "stroke-dasharray":"3 4",
+    opacity:.65, "vector-effect":"non-scaling-stroke" }));
+  L.appendChild(el("rect", { x:plotW + 3, y:ly - 10, width:padR - 7, height:20, rx:4,
+    fill: lup ? "var(--pos)" : "var(--neg)" }));
+  L.appendChild(el("text", { x:plotW + (padR - 7)/2 + 3, y:ly + 4, "text-anchor":"middle",
+    "font-size":10.5, "font-weight":"600", fill:"#08111d",
+    "font-variant-numeric":"tabular-nums" }, px(last.c)));
+
+  /* position markers: entry, TP, SL for anything open on this pair */
+  S.positions.forEach(p => {
+    if (p.pair !== S.pair) return;
+    [[p.entry, "rgba(255,255,255,.5)", "ENTRY"],
+     [p.tp, "var(--pos)", "TP"], [p.sl, "var(--neg)", "SL"]].forEach(([v, col, lbl]) => {
+      if (!v || v > top || v < bot) return;
+      const y = yOf(v);
+      L.appendChild(el("line", { x1:0, x2:plotW, y1:y, y2:y, stroke:col, "stroke-width":1,
+        "stroke-dasharray":"2 5", "vector-effect":"non-scaling-stroke", opacity:.8 }));
+      L.appendChild(el("text", { x:9, y:y - 6, fill:col, "font-size":9,
+        "letter-spacing":".08em", "paint-order":"stroke",
+        stroke:"var(--panel)", "stroke-width":3, "stroke-linejoin":"round" },
+        lbl + " " + px(v)));
+    });
+  });
+
+  /* time axis */
+  const ax = $("caxis"); clear(ax);
+  const ticks = Math.max(2, Math.min(8, Math.floor(plotW / 120)));
+  const long = TF_MS[S.tf] >= 14400e3;
+  let seen = null;
+  for (let k = 0; k <= ticks; k++) {
+    const i = Math.round((k/ticks) * (d.length - 1));
+    const txt = long ? dayLbl(d[i].t) : hhmm(d[i].t);
+    if (txt === seen) continue;
+    seen = txt;
+    const half = txt.length * 2.9 + 4;
+    ax.appendChild(el("text", { x:Math.min(Math.max(xOf(i), half), plotW - half), y:H - 7,
+      fill:"var(--dim)", "font-size":10, "text-anchor":"middle" }, txt));
+  }
+}
+addEventListener("resize", drawChart);
+
+/* The chart measures its own box. On first paint that box is still collapsing
+   into its flex row, so the initial draw used a height the container no longer
+   has — candles at the top, dead space below. Redraw whenever it resizes. */
+if (window.ResizeObserver) {
+  const chartBox = document.querySelector(".chart");
+  if (chartBox) new ResizeObserver(() => drawChart()).observe(chartBox);
+}
+
+/* crosshair */
+(function crosshair() {
+  const svg = $("chart"), c = $("ccross");
+  const hide = () => { c.style.display = "none"; renderOhlc(); };
+  svg.addEventListener("mouseleave", hide);
+  svg.addEventListener("mousemove", e => {
+    if (!GEO) return;
+    const r = svg.getBoundingClientRect();
+    const mx = (e.clientX - r.left) * (GEO.W / r.width);
+    if (mx > GEO.plotW) return hide();
+    const i = Math.max(0, Math.min(GEO.d.length - 1,
+      Math.round(mx / (GEO.plotW / GEO.d.length) - 0.5)));
+    const k = GEO.d[i], x = GEO.xOf(i);
+    clear(c);
+    c.appendChild(el("line", { x1:x, x2:x, y1:0, y2:GEO.H - GEO.padB,
+      stroke:"rgba(255,255,255,.18)", "stroke-width":1, "vector-effect":"non-scaling-stroke" }));
+    c.style.display = "";
+    renderOhlc(k);
+  });
+})();
+
+
+/* ---- market depth ----------------------------------------------------------
+ * Synthesised around the live mark for the demo. On the real feed these come
+ * from the books channel; the render is the same either way.
+ */
+const TAPE = [];
+
+function renderBook() {
+  const mid = S.candles[S.candles.length - 1]?.c;
+  if (!mid) return;
+
+  const tickSize = mid > 10000 ? 0.5 : mid > 100 ? 0.01 : 0.0001;
+  /* Fit the level count to the space the deck actually left, so the book
+     neither overflows nor leaves a gap above the spread. */
+  const avail = ($("asks")?.clientHeight || 190);
+  const levels = Math.max(4, Math.min(16, Math.floor(avail / 21)));
+  const mk = (i, side) => {
+    const p = mid + (side === "ask" ? 1 : -1) * tickSize * (i + 1) * (1 + rnd() * 2);
+    const size = 0.4 + rnd() * 6;
+    return { p, size };
+  };
+
+  const asks = [], bids = [];
+  let at = 0, bt = 0;
+  for (let i = 0; i < levels; i++) {
+    const a = mk(i, "ask"); at += a.size; a.total = at; asks.push(a);
+    const b = mk(i, "bid"); bt += b.size; b.total = bt; bids.push(b);
+  }
+  const max = Math.max(at, bt) || 1;
+
+  const row = (l, side) => `<div class="lvl ${side}" data-px="${l.p}">
+      <span class="depth" style="width:${(l.total / max * 100).toFixed(1)}%"></span>
+      <span class="px">${px(l.p)}</span>
+      <span>${l.size.toFixed(3)}</span>
+      <span>${l.total.toFixed(2)}</span>
+    </div>`;
+
+  /* Asks descend toward the spread so the book reads outward from mid. */
+  $("asks").innerHTML = asks.slice().reverse().map(l => row(l, "ask")).join("");
+  $("bids").innerHTML = bids.map(l => row(l, "bid")).join("");
+
+  /* Pressure from cumulative depth, not the top of book — a single large top
+     order would otherwise swing the reading. */
+  const bPct = (bt / (at + bt)) * 100;
+  $("ratioB").style.width = bPct.toFixed(2) + "%";
+  $("ratioS").style.width = (100 - bPct).toFixed(2) + "%";
+  $("ratioBv").textContent = bPct.toFixed(2) + "%";
+  $("ratioSv").textContent = (100 - bPct).toFixed(2) + "%";
+
+  const spread = asks[0].p - bids[0].p;
+  $("spreadMid").textContent = px(mid);
+  $("spreadMid").className = "num " + (S.candles[S.candles.length-1].c >=
+    S.candles[S.candles.length-1].o ? "up" : "down");
+  $("spreadVal").textContent = px(spread) + " (" + ((spread / mid) * 100).toFixed(3) + "%)";
+}
+
+/* Clicking a level drops it into the trade amount — the one interaction a book
+   actually needs on a page that doesn't take manual limit orders. */
+document.addEventListener("click", e => {
+  const l = e.target.closest(".lvl");
+  if (!l) return;
+  const p = Number(l.dataset.px);
+  if (!p) return;
+  $("cfgAmt").value = Math.max(50, Math.min(CONFIG.available, S.amount)).toFixed(0);
+  $("cfgAmt").focus();
+});
+
+function pushTape() {
+  const k = S.candles[S.candles.length - 1];
+  if (!k) return;
+  const buy = rnd() > 0.5;
+  TAPE.unshift({
+    p: k.c * (1 + (rnd() - 0.5) * 0.0004),
+    size: (0.05 + rnd() * 2.4),
+    t: Date.now(), buy,
+  });
+  if (TAPE.length > 40) TAPE.pop();
+
+  $("tape").innerHTML = TAPE.map(t => `<div class="row ${t.buy ? "buy" : "sell"}">
+      <span>${new Date(t.t).toLocaleTimeString([], { hour12:false })}</span>
+      <span class="p">${px(t.p)}</span><span>${t.size.toFixed(3)}</span>
+    </div>`).join("");
+}
+
+
+
+/* ---- status bar ------------------------------------------------------------
+ * Feed health is derived from how long it has been since a tick, not from a
+ * flag someone set — a "connected" badge that never checks is the one that
+ * lies to you at the worst moment.
+ */
+let LAST_TICK = Date.now();
+
+function renderStatus() {
+  const led = $("stFeedLed");
+  if (!led) return;                     // status bar not in the DOM yet
+  const age = Date.now() - LAST_TICK;
+  const state = age < 3000 ? "live" : age < 12000 ? "delayed" : "stalled";
+
+  led.className = "led" + (state === "delayed" ? " warn" : state === "stalled" ? " bad" : "");
+  $("stFeed").textContent = state;
+  $("stFeed").style.color = state === "live" ? "var(--pos)"
+    : state === "delayed" ? "var(--warn)" : "var(--neg)";
+
+  /* Signal strength follows the same measurement rather than being decorative. */
+  const bars = $("stBars");
+  bars.className = "bars " + (state === "live" ? "s3" : state === "delayed" ? "s2" : "s1");
+  const netLabel = $("stNet").querySelector("b");
+  if (netLabel) netLabel.textContent =
+    state === "live" ? "Stable network" : state === "delayed" ? "Slow network" : "Feed lost";
+  $("stNet").className = "st" + (state === "live" ? " ok" : "");
+
+  $("stPing").textContent = S.ping.toFixed(0) + " ms";
+  $("stTick").textContent = age < 1500 ? "just now" : Math.round(age / 1000) + "s ago";
+
+  let upl = 0, gross = 0;
+  S.positions.forEach(p => { upl += uplOf(p); gross += p.size * p.markPx; });
+  $("stPos").textContent = S.positions.size;
+  $("stExp").textContent = money(gross);
+  $("stEq").textContent = money(S.equity + upl);
+  $("stEq").className = "num " + cls(upl);
+
+  $("stClock").textContent = new Date().toLocaleTimeString([], { hour12:false }) +
+    "  " + Intl.DateTimeFormat().resolvedOptions().timeZone;
+}
+setInterval(renderStatus, 1000);
+
+/* ---- watchlist ticker ------------------------------------------------------ */
+function renderTicker() {
+  $("ticker").innerHTML = Object.keys(PAIRS).map(name => {
+    const mk = PX_NOW[name] ?? PAIRS[name].px;
+    const base = PAIRS[name].px;
+    const pc = base ? ((mk - base) / base) * 100 : 0;
+    return `<button data-pair="${name}" aria-pressed="${name === S.pair}">
+      <span class="sym">${name.split("/")[0]}</span>
+      <span>${px(mk)}</span>
+      <span class="${cls(pc)}">${pc >= 0 ? "+" : "\u2212"}${Math.abs(pc).toFixed(2)}%</span>
+    </button>`;
+  }).join("");
+}
+$("ticker").addEventListener("click", e => {
+  const b = e.target.closest("button[data-pair]");
+  if (!b) return;
+  selectPair(b.dataset.pair);
+});
+
+function selectPair(name) {
+  S.pair = name;
+  $("pairPick").value = name;
+  $("pickerLabel").textContent = name;
+  $("cfgPair").textContent = name;
+  seedCandles();
+  TAPE.length = 0;
+  drawChart(); renderHeader(); renderPositions(); updateRunNote();
+  renderBook(); render24h(); renderFusionRead(); renderTicker();
+  for (let i = 0; i < 18; i++) pushTape();
+}
+
+/* ---- drag to resize the dock --------------------------------------------
+ * Pane sizing is a preference, not a layout constant — let it be dragged
+ * rather than guessing a height that suits every screen.
+ */
+(function dockResize() {
+  const grip = $("dockGrip"), app = document.querySelector(".app");
+  if (!grip || !app) return;
+  let startY = 0, startH = 0, dragging = false;
+
+  grip.addEventListener("pointerdown", e => {
+    dragging = true; startY = e.clientY;
+    startH = parseInt(getComputedStyle(app).getPropertyValue("--dock-h")) || 232;
+    grip.classList.add("dragging");
+    grip.setPointerCapture(e.pointerId);
+  });
+  grip.addEventListener("pointermove", e => {
+    if (!dragging) return;
+    const h = Math.max(47, Math.min(window.innerHeight * 0.6, startH - (e.clientY - startY)));
+    app.style.setProperty("--dock-h", h + "px");
+    app.classList.toggle("dock-collapsed", h <= 50);
+  });
+  const stop = e => {
+    if (!dragging) return;
+    dragging = false; grip.classList.remove("dragging");
+    try { grip.releasePointerCapture(e.pointerId); } catch {}
+    drawChart();
+  };
+  grip.addEventListener("pointerup", stop);
+  grip.addEventListener("pointercancel", stop);
+})();
+
+/* ---- dock collapse ---- */
+(function syncDockToggle() {
+  const app = document.querySelector(".app");
+  const btn = $("dockToggle");
+  if (!app || !btn) return;
+  const open = !app.classList.contains("dock-collapsed");
+  btn.innerHTML = open ? "&#9662;" : "&#9652;";
+  btn.setAttribute("aria-expanded", open);
+  btn.title = open ? "Collapse panel" : "Expand panel";
+})();
+
+$("dockToggle").addEventListener("click", () => {
+  const app = document.querySelector(".app");
+  const open = !app.classList.toggle("dock-collapsed");
+  $("dockToggle").innerHTML = open ? "&#9662;" : "&#9652;";
+  $("dockToggle").setAttribute("aria-expanded", open);
+  $("dockToggle").title = open ? "Collapse panel" : "Expand panel";
+  requestAnimationFrame(drawChart);
+});
+
+/* ---- dock tabs ---- */
+$("dockTabs").addEventListener("click", e => {
+  const b = e.target.closest("button[data-dock]");
+  if (!b) return;
+  [...$("dockTabs").querySelectorAll("button[data-dock]")]
+    .forEach(x => x.setAttribute("aria-pressed", x === b));
+  const v = b.dataset.dock;
+  $("dockPositions").hidden = v !== "positions";
+  $("dockOrders").hidden    = v !== "orders";
+  $("dockHistory").hidden   = v !== "history";
+  $("dockAssets").hidden    = v !== "assets";
+});
+
+/* ---- book / trades view switch ---- */
+$("mktTabs").addEventListener("click", e => {
+  const b = e.target.closest("button[data-view]");
+  if (!b) return;
+  const view = b.dataset.view;
+  [...$("mktTabs").children].forEach(x => x.setAttribute("aria-pressed", x === b));
+  $("viewBook").hidden = view !== "book";
+  $("viewTape").hidden = view !== "tape";
+  /* The book sizes its level count off measured height, so it has to redraw
+     when it comes back into view. */
+  if (view === "book") renderBook();
+});
+
+/* ---- 24h stats ---- */
+function render24h() {
+  const d = S.candles;
+  if (!d.length) return;
+  const span = d.slice(-24);
+  const hi = Math.max(...span.map(k => k.h)), lo = Math.min(...span.map(k => k.l));
+  const vol = span.reduce((a, k) => a + k.v, 0);
+  const last = d[d.length - 1].c, first = span[0].o;
+  const chg = last - first, pc = first ? (chg / first) * 100 : 0;
+
+  $("s24chg").textContent = (chg >= 0 ? "+" : "\u2212") + Math.abs(pc).toFixed(2) + "%";
+  $("s24chg").className = "v " + cls(chg);
+  $("s24hi").textContent = px(hi);
+  $("s24lo").textContent = px(lo);
+  $("s24vol").textContent = Math.round(vol).toLocaleString();
+  /* Funding is coloured by cost to a long, which is what the sign means. */
+  $("s24fund").textContent = (S.funding >= 0 ? "+" : "\u2212") +
+    Math.abs(S.funding * 100).toFixed(4) + "%";
+  $("s24fund").className = S.funding >= 0 ? "down" : "up";
+}
+
+function fundClock() {
+  const sec = Math.max(0, Math.floor((S.fundingAt - Date.now()) / 1000));
+  const pad = n => String(n).padStart(2, "0");
+  return pad(Math.floor(sec/3600)) + ":" + pad(Math.floor(sec%3600/60)) + ":" + pad(sec%60);
+}
+
+/* ---- fusion read on the selected pair ---- */
+function renderFusionRead() {
+  const d = S.candles;
+  if (d.length < 30) return;
+  const closes = d.map(k => k.c);
+  const fast = ema(closes, 9), slow = ema(closes, 26), mid = sma(closes, 20);
+  const i = closes.length - 1;
+
+  /* A transparent, reproducible score rather than a black box: trend, momentum
+     and position in the recent range, equally weighted. */
+  const trend = fast[i] && slow[i] ? (fast[i] - slow[i]) / slow[i] : 0;
+  const mom = mid[i] ? (closes[i] - mid[i]) / mid[i] : 0;
+  const win = closes.slice(-30);
+  const hi = Math.max(...win), lo = Math.min(...win);
+  const posn = hi > lo ? ((closes[i] - lo) / (hi - lo)) * 2 - 1 : 0;
+
+  const score = Math.max(-1, Math.min(1, trend * 26 + mom * 16 + posn * 0.35));
+  const label = score > 0.5 ? "STRONG BUY" : score > 0.15 ? "BUY"
+              : score < -0.5 ? "STRONG SELL" : score < -0.15 ? "SELL" : "NEUTRAL";
+  const tone = score > 0.15 ? "var(--pos)" : score < -0.15 ? "var(--neg)" : "var(--warn)";
+  const conf = Math.round(Math.abs(score) * 100);
+
+  $("fuseVerdict").textContent = label;
+  $("fuseVerdict").style.color = tone;
+  $("fuseConf").textContent = conf + "%";
+  $("fuseConf").style.color = tone;
+  $("fuseBar").style.width = conf + "%";
+  $("fuseBar").style.background = tone;
+}
+
+/* -------------------------------------------------------------- rendering */
+function renderOhlc(k) {
+  const d = k || S.candles[S.candles.length - 1];
+  if (!d) return;
+  const chg = d.c - d.o, pc = d.o ? (chg / d.o) * 100 : 0;
+  $("ohlc").innerHTML =
+    `<span>${new Date(d.t).toLocaleString(undefined,{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})}</span>
+     <span>O <b>${px(d.o)}</b></span><span>H <b>${px(d.h)}</b></span>
+     <span>L <b>${px(d.l)}</b></span><span>C <b>${px(d.c)}</b></span>
+     <span class="${cls(chg)}">${chg >= 0 ? "+" : "\u2212"}${px(Math.abs(chg))}
+       (${chg >= 0 ? "+" : "\u2212"}${Math.abs(pc).toFixed(2)}%)</span>
+     <span>Vol <b>${Math.round(d.v)}</b></span>`;
+}
+
+function renderHeader() {
+  const d = S.candles;
+  if (!d.length) return;
+  const last = d[d.length - 1].c, first = d[0].o;
+  T.last(last);
+  const chg = last - first, pc = first ? (chg / first) * 100 : 0;
+  $("lastChg").textContent = (chg >= 0 ? "+" : "\u2212") + px(Math.abs(chg)) +
+    "  (" + (chg >= 0 ? "+" : "\u2212") + Math.abs(pc).toFixed(2) + "%)";
+  $("lastChg").className = "num " + cls(chg);
+  $("lastPx").className = "last num " + cls(chg);
+
+  let upl = 0;
+  S.positions.forEach(p => upl += uplOf(p));
+  T.bar(S.equity + upl);
+  renderOhlc();
+}
+
+function uplOf(p) {
+  return (p.markPx - p.entry) * p.size * (p.side === "short" ? -1 : 1);
+}
+
+const EXPANDED = new Set();
+
+/* Liquidation derived from leverage — the venue sends the real number in
+   production, which is why it's labelled an estimate. */
+function liqOf(p) {
+  const dir = p.side === "long" ? -1 : 1;
+  return p.entry * (1 + dir * (1 / p.lev) * 0.97);
+}
+
+function posCard(p) {
+  const u = uplOf(p);
+  const notional = p.size * p.markPx;
+  const margin = (p.size * p.entry) / p.lev;
+  const ret = (p.size * p.entry) ? (u / (p.size * p.entry)) * 100 * p.lev : 0;
+  const liq = liqOf(p);
+  const mgnRate = margin ? Math.min(100, (Math.abs(Math.min(u, 0)) / margin) * 100) : 0;
+  const c = PAIRS[p.pair] || {};
+
+  return `<div class="pos-card ${p.side}" data-pos="${p.id}">
+    <div class="pc-top">
+      <div class="coin" style="background:${c.coin || "#60a5fa"}">${p.pair[0]}</div>
+      <span class="sym">${p.pair}</span>
+      <span class="pc-badge ${p.side}">${p.side === "long" ? "Long" : "Short"}</span>
+      <span class="pc-badge">${p.mgnMode || "Cross"}</span>
+      <span class="pc-badge">${p.lev}&times;</span>
+      <span class="pc-badge">${p.mode}</span>
+      <span class="pc-actions">
+        <button class="mini danger" data-close="${p.id}">Close</button>
+        <button class="mini danger" data-flash="${p.id}">Flash close</button>
+        <button class="mini" data-reverse="${p.id}">Reverse</button>
+        <button class="mini" data-add="${p.id}">Add ${money(S.amount)}</button>
+      </span>
+    </div>
+
+    <div class="pc-grid">
+      <div><div class="k">Size</div>
+        <div class="v">${p.size}<small>&asymp; ${money(notional)}</small></div></div>
+      <div><div class="k">Mark price</div><div class="v">${px(p.markPx)}</div></div>
+      <div><div class="k">Margin</div>
+        <div class="v">${money(margin)}</div></div>
+      <div><div class="k">Unrealized PnL</div>
+        <div class="v ${cls(u)}">${money(u, true)}
+          <small class="${cls(ret)}">${ret >= 0 ? "+" : "\u2212"}${Math.abs(ret).toFixed(2)}%</small></div></div>
+
+      <div><div class="k">Entry price</div><div class="v">${px(p.entry)}</div></div>
+      <div><div class="k">Est. liq. price</div>
+        <div class="v" style="color:var(--warn)">${px(liq)}</div></div>
+      <div><div class="k">Margin rate</div>
+        <div class="v ${mgnRate > 60 ? "down" : ""}">${mgnRate.toFixed(2)}%</div></div>
+      <div><div class="k">Realized PnL</div>
+        <div class="v ${cls(p.realized || 0)}">${money(p.realized || 0, true)}</div></div>
+
+      <div style="grid-column:span 2"><div class="k">Position TP / SL</div>
+        <div class="v"><span class="up">${p.tp ? px(p.tp) : "\u2014"}</span>
+          <span style="color:var(--dim)"> / </span>
+          <span class="down">${p.sl ? px(p.sl) : "\u2014"}</span>
+          <small class="tpsl">
+            <input class="tp num" data-tp="${p.id}" value="${p.tp ? p.tp.toFixed(2) : ""}"
+                   placeholder="TP" aria-label="Take profit" />
+            <input class="sl num" data-sl="${p.id}" value="${p.sl ? p.sl.toFixed(2) : ""}"
+                   placeholder="SL" aria-label="Stop loss" />
+            <button class="mini" data-savetpsl="${p.id}">Save</button>
+          </small></div></div>
+    </div>
+  </div>`;
+}
+
+function renderPositions() {
+  const rows = [...S.positions.values()];
+  let upl = 0; rows.forEach(p => upl += uplOf(p));
+
+  $("posSub").innerHTML = rows.length
+    ? `${rows.length} open &middot; <span class="${cls(upl)}">${money(upl, true)}</span>`
+    : "No open positions";
+  $("closeAll").disabled = !rows.length;
+  $("dockPosN").textContent = rows.length;
+
+  const ranked = rows.slice().sort((a, b) => Math.abs(uplOf(b)) - Math.abs(uplOf(a)));
+  $("posBody").innerHTML = ranked.length
+    ? ranked.map(posCard).join("")
+    : '<div class="dock-empty">No open positions.</div>';
+
+  /* The modal keeps the wide table for scanning many at once. */
+  const all = $("posBodyAll");
+  if (all) {
+    all.innerHTML = ranked.length ? ranked.map(p => {
+      const u = uplOf(p);
+      const ret = (p.size * p.entry) ? (u / (p.size * p.entry)) * 100 * p.lev : 0;
+      return `<tr>
+        <td class="lt">${p.pair}</td>
+        <td><span class="tag ${p.side}">${p.side.toUpperCase()}</span></td>
+        <td>${p.size}</td><td>${px(p.entry)}</td><td>${px(p.markPx)}</td>
+        <td class="up">${p.tp ? px(p.tp) : "\u2014"}</td>
+        <td class="down">${p.sl ? px(p.sl) : "\u2014"}</td>
+        <td>${money(p.size * p.markPx)}</td>
+        <td class="${cls(u)}">${money(u, true)}</td>
+        <td class="${cls(ret)}">${ret >= 0 ? "+" : "\u2212"}${Math.abs(ret).toFixed(2)}%</td>
+        <td><button class="mini danger" data-close="${p.id}">Close</button></td>
+      </tr>`;
+    }).join("") : '<tr><td colspan="11" class="empty">No open positions.</td></tr>';
+    $("posModalSub").innerHTML =
+      `${rows.length} open &middot; <span class="${cls(upl)}">${money(upl, true)}</span>`;
+  }
+}
+
+/* ---- position row actions -------------------------------------------------- */
+function bindPosTable(tbodyId, full) {
+  const body = $(tbodyId);
+
+  body.addEventListener("click", e => {
+    /* Buttons act; anything else on the row toggles the detail. */
+    const btn = e.target.closest("[data-close],[data-flash],[data-reverse],[data-add],[data-savetpsl]");
+    if (btn) { handleAction(btn); return; }
+    if (e.target.closest("input")) return;
+
+    /* Cards show everything, so there is nothing left to expand. */
+  });
+}
+
+function handleAction(btn) {
+  const d = btn.dataset;
+  const id = d.close || d.flash || d.reverse || d.add || d.savetpsl;
+  const p = S.positions.get(id);
+  if (!p) return;
+
+  if (d.close || d.flash) {
+    /* Both realise at mark here. On a live venue flash close skips the
+       confirmation and takes whatever the book gives. */
+    S.equity += uplOf(p);
+    S.positions.delete(id);
+    EXPANDED.delete(id);
+  }
+
+  if (d.reverse) {
+    S.equity += uplOf(p);
+    const side = p.side === "long" ? "short" : "long";
+    const dir = side === "long" ? 1 : -1;
+    p.side = side;
+    p.entry = p.markPx;
+    p.realized = (p.realized || 0) + uplOf(p);
+    p.tp = p.markPx * (1 + dir * 0.02);
+    p.sl = p.markPx * (1 - dir * 0.011);
+  }
+
+  if (d.add) {
+    /* Adding re-prices the average entry — otherwise the position would show a
+       cost basis it never had. */
+    const extra = S.amount / p.markPx;
+    const total = p.size + extra;
+    p.entry = (p.entry * p.size + p.markPx * extra) / total;
+    p.size = Number(total.toFixed(6));
+  }
+
+  if (d.savetpsl) {
+    const tp = parseFloat(document.querySelector(`[data-tp="${id}"]`)?.value);
+    const sl = parseFloat(document.querySelector(`[data-sl="${id}"]`)?.value);
+    p.tp = isFinite(tp) ? tp : null;
+    p.sl = isFinite(sl) ? sl : null;
+  }
+
+  renderPositions(); renderHeader(); drawChart();
+}
+
+bindPosTable("posBody", false);
+bindPosTable("posBodyAll", true);
+
+/* ---- modal ---- */
+function openPositions() {
+  $("scrim").classList.add("open");
+  $("posModal").classList.add("open");
+  $("posModalClose").focus();
+}
+function closePositions() {
+  $("scrim").classList.remove("open");
+  $("posModal").classList.remove("open");
+}
+$("posMore").addEventListener("click", openPositions);
+$("posModalClose").addEventListener("click", closePositions);
+$("scrim").addEventListener("click", closePositions);
+addEventListener("keydown", e => {
+  if (e.key === "Escape" && $("posModal").classList.contains("open")) closePositions();
+});
+
+
+$("closeAll").addEventListener("click", () => {
+  S.positions.forEach(p => S.equity += uplOf(p));
+  S.positions.clear();
+  renderPositions(); renderHeader(); drawChart();
+});
+
+/* ------------------------------------------------------------ pair / tf */
+function buildPicker() {
+  const sel = $("pairPick");
+  sel.innerHTML = Object.keys(PAIRS).map(p =>
+    `<option value="${p}"${p === S.pair ? " selected" : ""}>${p}</option>`).join("");
+}
+$("pairPick").addEventListener("change", e => selectPair(e.target.value));
+
+$("tfs").addEventListener("click", e => {
+  const b = e.target.closest("button[data-tf]");
+  if (!b) return;
+  S.tf = b.dataset.tf;
+  [...$("tfs").children].forEach(x => x.setAttribute("aria-pressed", x === b));
+  $("cfgTf").value = S.tf;
+  seedCandles(); drawChart(); renderHeader(); updateRunNote();
+});
+
+/* ------------------------------------------------------------ fusion cfg */
+function setRange(input, min, max) {
+  const fill = ((input.value - min) / (max - min)) * 100;
+  input.style.setProperty("--fill", fill + "%");
+}
+
+$("cfgAmt").addEventListener("input", e => {
+  S.amount = Number(e.target.value) || 0;
+  $("cfgAmtRange").value = Math.min(CONFIG.available, Math.max(50, S.amount));
+  setRange($("cfgAmtRange"), 50, CONFIG.available);
+  [...$("cfgQuick").children].forEach(x => x.setAttribute("aria-pressed", "false"));
+});
+$("cfgAmtRange").addEventListener("input", e => {
+  S.amount = Number(e.target.value);
+  $("cfgAmt").value = S.amount.toFixed(0);
+  setRange(e.target, 50, CONFIG.available);
+});
+$("cfgQuick").addEventListener("click", e => {
+  const b = e.target.closest("button[data-p]");
+  if (!b) return;
+  S.amount = Math.max(50, (CONFIG.available * Number(b.dataset.p)) / 100);
+  $("cfgAmt").value = S.amount.toFixed(0);
+  $("cfgAmtRange").value = S.amount;
+  setRange($("cfgAmtRange"), 50, CONFIG.available);
+  [...$("cfgQuick").children].forEach(x => x.setAttribute("aria-pressed", x === b));
+});
+
+$("cfgRisk").addEventListener("click", e => {
+  const b = e.target.closest("button[data-v]");
+  if (!b) return;
+  S.risk = b.dataset.v;
+  [...$("cfgRisk").children].forEach(x => x.setAttribute("aria-pressed", x === b));
+  updateRunNote();
+});
+
+$("cfgLev").addEventListener("input", e => {
+  S.lev = Number(e.target.value);
+  $("cfgLevOut").textContent = S.lev + "\u00d7";
+  /* Leverage is the one control here that can end the account, so it shows its
+     own warning rather than waiting for the risk panel to catch up. */
+  $("cfgLevOut").className = "num " + (S.lev > 20 ? "down" : S.lev > 10 ? "" : "up");
+  setRange(e.target, 1, 50);
+  updateRunNote();
+});
+
+$("cfgTf").addEventListener("change", e => {
+  S.tf = e.target.value;
+  [...$("tfs").children].forEach(x => x.setAttribute("aria-pressed", x.dataset.tf === S.tf));
+  seedCandles(); drawChart(); renderHeader(); updateRunNote();
+});
+$("cfgDays").addEventListener("input", updateRunNote);
+
+function updateRunNote() {
+  const note = $("fuseNote");
+  if (note) note.textContent = "on " + S.pair + " \u00b7 " + S.tf;
+  const days = $("cfgDays").value || 7;
+  $("runNote").innerHTML = `Analyses ${days} days of ${S.tf} data on ${S.pair}
+    &middot; ${S.lev}&times; max &middot; ${S.risk} risk`;
+}
+
+/* ---- run a cycle ---- */
+$("runFusion").addEventListener("click", () => {
+  if (S.running) return;
+  S.running = true;
+  const btn = $("runFusion");
+  btn.disabled = true;
+  btn.textContent = "Running Fusion\u2026";
+
+  setTimeout(() => {
+    const last = S.candles[S.candles.length - 1].c;
+    const side = Math.random() > 0.45 ? "long" : "short";
+    const dir = side === "long" ? 1 : -1;
+    const spread = S.risk === "low" ? 0.012 : S.risk === "med" ? 0.02 : 0.035;
+    const id = "p" + Date.now();
+
+    S.positions.set(id, {
+      id, pair: S.pair, side, lev: S.lev, mode: S.risk,
+      size: Number((S.amount / last).toFixed(6)),
+      entry: last, markPx: last,
+      tp: last * (1 + dir * spread),
+      sl: last * (1 - dir * spread * 0.55),
+    });
+
+    btn.disabled = false;
+    btn.textContent = "Run Fusion Cycle";
+    S.running = false;
+    renderPositions(); renderHeader(); drawChart();
+  }, 1400);
+});
+
+
+/* ---- toolbar --------------------------------------------------------------- */
+$("ctype").addEventListener("click", e => {
+  const b = e.target.closest("button[data-type]");
+  if (!b) return;
+  S.type = b.dataset.type;
+  [...$("ctype").children].forEach(x => x.setAttribute("aria-pressed", x === b));
+  drawChart();
+});
+
+$("cscale").addEventListener("click", e => {
+  const b = e.target.closest("button[data-scale]");
+  if (!b) return;
+  S.scale = b.dataset.scale;
+  [...$("cscale").children].forEach(x => x.setAttribute("aria-pressed", x === b));
+  drawChart();
+});
+
+$("indBtn").addEventListener("click", e => {
+  e.stopPropagation();
+  const m = $("indMenu"), open = !m.classList.contains("open");
+  m.classList.toggle("open", open);
+  $("indBtn").setAttribute("aria-expanded", open);
+});
+$("indMenu").addEventListener("click", e => {
+  const b = e.target.closest("[data-ind]");
+  if (!b) return;
+  const k = b.dataset.ind;
+  S.ind[k] = !S.ind[k];
+  b.setAttribute("aria-pressed", S.ind[k]);
+  /* Keep the button lit while anything is on, so an active overlay is visible
+     without opening the menu. */
+  $("indBtn").setAttribute("aria-pressed",
+    Object.entries(S.ind).some(([kk, v]) => kk !== "vol" && v));
+  drawChart();
+});
+document.addEventListener("click", () => {
+  $("indMenu").classList.remove("open");
+  $("indBtn").setAttribute("aria-expanded", "false");
+});
+
+/* Snapshot: clone the SVG and inline the resolved colours, since CSS custom
+   properties don't survive outside the document. */
+$("snap").addEventListener("click", () => {
+  const src = $("chart");
+  const clone = src.cloneNode(true);
+  const cs = getComputedStyle(document.body);
+  const vars = ["--pos","--neg","--dim","--muted","--text","--brand","--brand-2","--bg","--panel"];
+  const map = {};
+  vars.forEach(v => map[`var(${v})`] = cs.getPropertyValue(v).trim());
+  clone.querySelectorAll("*").forEach(n => {
+    ["fill","stroke"].forEach(a => {
+      const val = n.getAttribute(a);
+      if (val && map[val]) n.setAttribute(a, map[val]);
+    });
+  });
+  clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+  clone.style.background = cs.getPropertyValue("--panel").trim();
+
+  const blob = new Blob([new XMLSerializer().serializeToString(clone)],
+                        { type: "image/svg+xml;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `mx1-${S.pair.replace("/","-")}-${S.tf}-${new Date().toISOString().slice(0,10)}.svg`;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+
+$("fullBtn").addEventListener("click", () => {
+  const c = document.querySelector(".chart");
+  c.classList.toggle("full");
+  $("fullBtn").setAttribute("aria-pressed", c.classList.contains("full"));
+  requestAnimationFrame(drawChart);
+});
+addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    const c = document.querySelector(".chart");
+    if (c.classList.contains("full")) {
+      c.classList.remove("full");
+      $("fullBtn").setAttribute("aria-pressed", "false");
+      requestAnimationFrame(drawChart);
+    }
+  }
+});
+
+/* ---- AI AUTO switch ---- */
+$("aiAuto").addEventListener("click", () => {
+  const b = $("aiAuto");
+  const on = b.getAttribute("aria-pressed") !== "true";
+  b.setAttribute("aria-pressed", on);
+  b.querySelector(".toggle").classList.toggle("on", on);
+});
+document.querySelectorAll(".nav a.soon").forEach(a =>
+  a.addEventListener("click", e => e.preventDefault()));
+
+/* ------------------------------------------------------------------ boot */
+buildPicker();
+$("cfgAvail").textContent = money(CONFIG.available);
+$("cfgAmtRange").max = CONFIG.available;
+setRange($("cfgAmtRange"), 50, CONFIG.available);
+setRange($("cfgLev"), 1, 50);
+seedCandles();
+drawChart(); renderHeader(); renderPositions(); updateRunNote();
+renderBook(); render24h(); renderFusionRead(); renderTicker(); renderStatus();
+for (let i = 0; i < 18; i++) pushTape();
+/* Seed a few positions so the table, the chart overlays and the modal have
+   something to show on first load. */
+[ ["BTC/USDT","long", 10,"med", 0.0016, 76210,  0.021, 0.011],
+  ["ETH/USDT","short", 5,"low",  0.62,   3138,   0.018, 0.010],
+  ["SOL/USDT","long", 20,"high", 3.9,    146.2,  0.040, 0.022],
+  ["BNB/USDT","long",  3,"med",  0.14,   691.4,  0.015, 0.009],
+  ["BTC/USDT","short", 5,"low",  0.0009, 77420,  0.014, 0.008],
+  ["ETH/USDT","long", 10,"med",  0.41,   3102,   0.026, 0.013],
+].forEach(([pair, side, lev, mode, size, entry, tpP, slP], i) => {
+  const dir = side === "long" ? 1 : -1;
+  const id = "seed" + i;
+  S.positions.set(id, { id, pair, side, lev, mode, size, entry,
+    markPx: PAIRS[pair].px,
+    tp: entry * (1 + dir * tpP),
+    sl: entry * (1 - dir * slP) });
+});
+renderPositions(); renderHeader(); drawChart();
+
+setInterval(tickPrice, 700);
+setInterval(() => { const el2 = $("fundClock"); if (el2) el2.textContent = fundClock(); }, 1000);
+</script>
