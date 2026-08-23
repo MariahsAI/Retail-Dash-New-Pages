@@ -465,6 +465,106 @@
     .topbar, .nav { background: var(--bar); }
     .drawer { background: var(--panel); }
   }
+
+  /* ---- positions modal --------------------------------------------------- */
+  .more-row { display:flex; justify-content:center; padding:11px 15px;
+              border-top:1px solid var(--hair); }
+  .more-btn { background:rgba(59,130,246,.10); border:1px solid var(--edge); color:var(--brand-2);
+              font:inherit; font-size:12px; padding:7px 16px; border-radius:999px; cursor:pointer;
+              transition:background .2s ease, border-color .2s ease; }
+  .more-btn:hover { background:rgba(59,130,246,.2); border-color:var(--brand); }
+  .more-btn:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
+
+  .modal { position:fixed; top:50%; left:50%; transform:translate(-50%,-48%) scale(.98);
+           width:min(1040px, calc(100% - 40px)); max-height:min(82vh, 900px);
+           background:rgba(11,20,36,.9); backdrop-filter:blur(22px) saturate(1.4);
+           -webkit-backdrop-filter:blur(22px) saturate(1.4);
+           border:1px solid var(--accent-edge); border-radius:16px; overflow:hidden;
+           display:flex; flex-direction:column; z-index:45;
+           opacity:0; pointer-events:none;
+           transition:opacity .25s ease, transform .25s cubic-bezier(.22,.61,.36,1); }
+  .modal.open { opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1); }
+  .modal-head { display:flex; align-items:center; justify-content:space-between; gap:14px;
+                padding:14px 20px; background:var(--head); border-bottom:1px solid var(--edge); }
+  .modal-head h2 { margin:0; font-family:Georgia,serif; font-weight:400; font-size:17px; }
+  .modal-body { overflow:auto; }
+  @supports not (backdrop-filter: blur(2px)) { .modal { background:var(--panel); } }
+  @media (prefers-reduced-motion: reduce) { .modal { transition:none; } }
+
+  /* ---- positions modal --------------------------------------------------- */
+  .more-row { display:flex; justify-content:center; padding:11px 15px;
+              border-top:1px solid var(--hair); }
+  .more-btn { background:rgba(59,130,246,.10); border:1px solid var(--edge); color:var(--brand-2);
+              font:inherit; font-size:12px; padding:7px 16px; border-radius:999px; cursor:pointer;
+              transition:background .2s ease, border-color .2s ease; }
+  .more-btn:hover { background:rgba(59,130,246,.2); border-color:var(--brand); }
+  .more-btn:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
+
+  .scrim { position:fixed; inset:0; background:rgba(3,7,15,.62); backdrop-filter:blur(2px);
+           opacity:0; pointer-events:none; transition:opacity .28s ease; z-index:44; }
+  .scrim.open { opacity:1; pointer-events:auto; }
+
+  .modal { position:fixed; top:50%; left:50%; transform:translate(-50%,-48%) scale(.98);
+           width:min(1040px, calc(100% - 40px)); max-height:min(82vh, 900px);
+           background:rgba(11,20,36,.9); backdrop-filter:blur(22px) saturate(1.4);
+           -webkit-backdrop-filter:blur(22px) saturate(1.4);
+           border:1px solid var(--accent-edge); border-radius:16px; overflow:hidden;
+           display:flex; flex-direction:column; z-index:45;
+           opacity:0; pointer-events:none;
+           transition:opacity .25s ease, transform .25s cubic-bezier(.22,.61,.36,1); }
+  .modal.open { opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1); }
+  .modal-head { display:flex; align-items:center; justify-content:space-between; gap:14px;
+                padding:14px 20px; background:var(--head); border-bottom:1px solid var(--edge); }
+  .modal-head h2 { margin:0; font-family:Georgia,serif; font-weight:400; font-size:17px; }
+  .modal-body { overflow:auto; }
+  .modal-close { background:rgba(255,255,255,.04); border:1px solid var(--hair); color:var(--muted);
+                 font:inherit; width:30px; height:30px; border-radius:50%; cursor:pointer; line-height:1; }
+  .modal-close:hover { color:var(--text); border-color:var(--edge); }
+  @supports not (backdrop-filter: blur(2px)) { .modal { background:var(--panel); } }
+  @media (prefers-reduced-motion: reduce) { .modal { transition:none; } }
+
+  /* ---- position detail drawer ------------------------------------------- */
+  tbody tr[data-pos] { cursor:pointer; }
+  tbody tr[data-pos]:hover { background:rgba(255,255,255,.022); }
+  tbody tr[data-pos]:focus-visible { outline:2px solid var(--brand); outline-offset:-2px; }
+
+  .pdrawer { position:fixed; top:0; right:0; height:100%; width:min(500px,100%);
+             background:rgba(11,20,36,.9); backdrop-filter:blur(22px) saturate(1.4);
+             -webkit-backdrop-filter:blur(22px) saturate(1.4);
+             border-left:1px solid var(--accent-edge); border-radius:16px 0 0 16px;
+             transform:translateX(100%); transition:transform .32s cubic-bezier(.22,.61,.36,1);
+             z-index:47; display:flex; flex-direction:column; overflow:hidden;
+             box-shadow:-24px 0 60px -30px rgba(0,0,0,.9); }
+  .pdrawer.open { transform:translateX(0); }
+  .pd-head { padding:18px 22px 20px; border-bottom:1px solid var(--edge); background:var(--head); }
+  .pd-top { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
+  .pd-head h3 { margin:0; font-family:Georgia,serif; font-weight:400; font-size:19px; }
+  .pd-sub { color:var(--dim); font-size:11.5px; margin-top:5px; display:flex; gap:8px;
+            align-items:center; flex-wrap:wrap; }
+  .pd-hero { font-family:Georgia,serif; font-size:34px; line-height:1.05; margin-top:14px;
+             font-variant-numeric:tabular-nums; }
+  .pd-hero small { display:block; font-family:"Inter",sans-serif; font-size:12.5px;
+                   color:var(--muted); margin-top:5px; }
+  .pd-body { flex:1 1 auto; padding:20px 22px 28px; overflow-y:auto; }
+
+  /* Where price sits between entry and liquidation — the only spatial question
+     that matters while a leveraged position is open. */
+  .lifeline { position:relative; height:4px; border-radius:2px; margin:30px 0 8px;
+              background:linear-gradient(90deg, rgba(251,113,133,.55), rgba(255,255,255,.10)); }
+  .lifeline .pin { position:absolute; top:-5px; width:2px; height:14px; border-radius:1px;
+                   transform:translateX(-50%); }
+  .lifeline .cap { position:absolute; font-size:10px; white-space:nowrap;
+                   transform:translateX(-50%); font-variant-numeric:tabular-nums; }
+  .lifeline .cap.up { top:-24px; } .lifeline .cap.dn { top:12px; }
+
+  /* ---- drawer body rows (used by the position detail drawer) ---- */
+  .dr-sec { margin-top:24px; }
+  .dr-sec > .label { display:block; margin-bottom:4px; }
+  .frow { display:flex; justify-content:space-between; align-items:baseline; gap:14px;
+          padding:11px 0; border-bottom:1px solid var(--hair); font-size:13px; }
+  .frow:last-child { border-bottom:0; }
+  .frow span { color:var(--dim); }
+  .frow b { font-weight:600; font-variant-numeric:tabular-nums; }
 </style>
 
 <div class="topbar">
@@ -641,6 +741,9 @@
             <tbody id="posBody"></tbody>
           </table>
         </div>
+        <div class="more-row" id="posMoreRow" hidden>
+          <button class="more-btn" id="posMore">View all positions</button>
+        </div>
       </section>
 
       <section class="card">
@@ -651,6 +754,9 @@
               <th class="lt">Allocation</th><th>24h change</th><th>Avg cost</th><th>PnL</th></tr></thead>
             <tbody id="balBody"></tbody>
           </table>
+        </div>
+        <div class="more-row" id="balMoreRow" hidden>
+          <button class="more-btn" id="balMore">View all assets</button>
         </div>
       </section>
     </div>
@@ -671,6 +777,59 @@
   </div>
 </div>
 
+
+<div class="scrim" id="scrim"></div>
+
+
+<aside class="pdrawer" id="posDrawer" role="dialog" aria-modal="true" aria-labelledby="pdTitle" aria-hidden="true">
+  <div class="pd-head">
+    <div class="pd-top">
+      <div>
+        <h3 id="pdTitle">&mdash;</h3>
+        <div class="pd-sub" id="pdSub"></div>
+      </div>
+      <button class="modal-close" id="pdClose" aria-label="Close">&times;</button>
+    </div>
+    <div class="pd-hero" id="pdHero"></div>
+  </div>
+  <div class="pd-body" id="pdBody"></div>
+</aside>
+
+
+<div class="modal" id="balModal" role="dialog" aria-modal="true" aria-labelledby="balModalTitle">
+  <div class="modal-head">
+    <h2 id="balModalTitle">Asset Balances</h2>
+    <div style="display:flex;align-items:center;gap:14px">
+      <span class="sub num" id="balModalSub"></span>
+      <button class="modal-close" id="balModalClose" aria-label="Close">&times;</button>
+    </div>
+  </div>
+  <div class="modal-body">
+    <table>
+      <thead><tr><th>Asset</th><th>Network</th><th>Balance</th><th>USD value</th>
+        <th class="lt">Allocation</th><th>24h change</th><th>Avg cost</th><th>PnL</th></tr></thead>
+      <tbody id="balBodyAll"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="modal" id="posModal" role="dialog" aria-modal="true" aria-labelledby="posModalTitle">
+  <div class="modal-head">
+    <h2 id="posModalTitle">Open Positions</h2>
+    <div style="display:flex;align-items:center;gap:14px">
+      <span class="sub num" id="posModalSub"></span>
+      <button class="modal-close" id="posModalClose" aria-label="Close">&times;</button>
+    </div>
+  </div>
+  <div class="modal-body">
+    <table>
+      <thead><tr><th>Instrument</th><th>Side</th><th>Size</th><th>Avg entry</th>
+        <th>Mark</th><th>Liq. price</th><th>Unrealized PnL</th><th>Return</th></tr></thead>
+      <tbody id="posBodyAll"></tbody>
+    </table>
+  </div>
+</div>
+
 <script>
 /* ------------------------------------------------------------------ config */
 const CONFIG = {
@@ -679,6 +838,8 @@ const CONFIG = {
   tapeSeconds: 300,
   signalStaleAfter: 15 * 60,
   dailyLossLimit: 12.00,
+  positionsPreview: 2,           // rows shown inline; the rest live in the modal
+  balancesPreview: 3,            // same idea for asset balances
   glow: "state",                 // "state" = glow only when something needs you | "all" | "off"
   density: "sharp",              // "sharp" = tight, high-contrast, small radii | "soft"
 };
@@ -956,67 +1117,343 @@ function coinMark(instId) {
   return `<div class="coin" style="background:${c.bg}">${c.sym || b[0]}</div>`;
 }
 
+function positionRow(p) {
+  const upl = uplOf(p);
+  const notional = Math.abs(p.pos)*(p.ctVal||1)*p.avgPx;
+  const ret = notional ? upl/notional*100 : 0;
+  const side = isShort(p) ? "short" : "long";
+  const kind = p.instId.includes("SWAP") ? "Perpetual swap" : "Spot";
+  return { upl, ret, side, kind, notional };
+}
+
 function renderPositions() {
-  const b = $("posBody");
   const rows = [...S.positions.values()].filter(passesFilter);
+
+  /* Preview shows the positions with the most at stake, not the first two the
+     exchange happened to return — a $0.02 mover shouldn't crowd out a $40 one. */
+  const ranked = rows.slice().sort((a, b) => Math.abs(uplOf(b)) - Math.abs(uplOf(a)));
+  const limit = CONFIG.positionsPreview || 2;
+  const preview = ranked.slice(0, limit);
 
   const label = $("posCountLabel");
   if (label) label.textContent = rows.length === S.positions.size
     ? S.positions.size + (S.positions.size === 1 ? " position" : " positions")
     : rows.length + " of " + S.positions.size;
 
-  if (!rows.length) {
-    b.innerHTML = '<tr><td colspan="7" class="empty">' +
-      (S.positions.size ? "No positions match this filter" : "No open positions") + "</td></tr>";
-    return;
-  }
-  b.innerHTML = rows.map(p => {
-    const upl = uplOf(p);
-    const notional = Math.abs(p.pos)*(p.ctVal||1)*p.avgPx;
-    const ret = notional ? upl/notional*100 : 0;
-    const side = isShort(p) ? "short" : "long";
-    const kind = p.instId.includes("SWAP") ? "Perpetual swap" : "Spot";
-    return `<tr>
+  const empty = '<tr><td colspan="7" class="empty">' +
+    (S.positions.size ? "No positions match this filter" : "No open positions") + "</td></tr>";
+
+  $("posBody").innerHTML = preview.length ? preview.map(p => {
+    const r = positionRow(p);
+    return `<tr data-pos="${p.instId}:${p.posSide}" tabindex="0" role="button"
+      aria-label="${p.instId} ${r.side}, ${money(r.upl, true)}">
       <td class="lt"><div class="asset">${coinMark(p.instId)}
-        <div><b>${p.instId}</b><small>${kind}</small></div></div></td>
-      <td><span class="tag ${side}">${side.toUpperCase()}</span></td>
+        <div><b>${p.instId}</b><small>${r.kind}</small></div></div></td>
+      <td><span class="tag ${r.side}">${r.side.toUpperCase()}</span></td>
       <td>${Math.abs(p.pos)}</td>
       <td>${p.avgPx.toLocaleString(undefined,{maximumFractionDigits:2})}</td>
       <td>${p.markPx.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
-      <td class="${cls(upl)}">${money(upl, true)}</td>
-      <td class="${cls(ret)}">${ret>=0?"+":"\u2212"}${Math.abs(ret).toFixed(2)}%</td>
+      <td class="${cls(r.upl)}">${money(r.upl, true)}</td>
+      <td class="${cls(r.ret)}">${r.ret>=0?"+":"\u2212"}${Math.abs(r.ret).toFixed(2)}%</td>
     </tr>`;
-  }).join("");
+  }).join("") : empty;
+
+  /* The button appears only when it has something to reveal. */
+  const hidden = rows.length - preview.length;
+  const more = $("posMoreRow");
+  if (more) {
+    more.hidden = hidden <= 0;
+    $("posMore").textContent = "View all " + rows.length + " positions" +
+      (hidden > 0 ? "  (+" + hidden + " more)" : "");
+  }
+
+  renderPositionsAll(ranked, empty);
 }
+
+/* Full list, in the modal. Adds the liquidation column the preview omits. */
+function renderPositionsAll(ranked, empty) {
+  const body = $("posBodyAll");
+  if (!body) return;
+  body.innerHTML = ranked.length ? ranked.map(p => {
+    const r = positionRow(p);
+    return `<tr data-pos="${p.instId}:${p.posSide}" tabindex="0" role="button"
+      aria-label="${p.instId} ${r.side}, ${money(r.upl, true)}">
+      <td class="lt"><div class="asset">${coinMark(p.instId)}
+        <div><b>${p.instId}</b><small>${r.kind}</small></div></div></td>
+      <td><span class="tag ${r.side}">${r.side.toUpperCase()}</span></td>
+      <td>${Math.abs(p.pos)}</td>
+      <td>${p.avgPx.toLocaleString(undefined,{maximumFractionDigits:2})}</td>
+      <td>${p.markPx.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</td>
+      <td>${p.liqPx ? p.liqPx.toLocaleString(undefined,{maximumFractionDigits:2}) : "\u2014"}</td>
+      <td class="${cls(r.upl)}">${money(r.upl, true)}</td>
+      <td class="${cls(r.ret)}">${r.ret>=0?"+":"\u2212"}${Math.abs(r.ret).toFixed(2)}%</td>
+    </tr>`;
+  }).join("") : empty.replace('colspan="7"', 'colspan="8"');
+
+  const total = ranked.reduce((s, p) => s + uplOf(p), 0);
+  const sub = $("posModalSub");
+  if (sub) {
+    sub.textContent = ranked.length + " open \u00b7 " + money(total, true);
+    sub.className = "sub num " + cls(total);
+  }
+}
+
+
+/* ---- position detail -------------------------------------------------------
+ * A live position asks a different question than a closed trade: not "how did
+ * this go" but "where am I, and how much room is left". So this leads with
+ * distance to liquidation rather than a realized number.
+ */
+let pdKey = null;
+
+function heldSince(ts) {
+  const m = Math.round((Date.now() - ts) / 60000);
+  if (m < 60) return m + "m";
+  if (m < 1440) return Math.floor(m/60) + "h " + (m % 60) + "m";
+  return Math.floor(m/1440) + "d " + Math.floor((m % 1440)/60) + "h";
+}
+function fundIn(ts) {
+  const sec = Math.max(0, Math.floor((ts - Date.now())/1000));
+  const pad = n => String(n).padStart(2, "0");
+  return pad(Math.floor(sec/3600)) + ":" + pad(Math.floor(sec%3600/60));
+}
+
+function openPosition(key) {
+  if (!S.positions.has(key)) return;
+  pdKey = key;
+  paintPosition();
+  $("scrim").classList.add("open");
+  $("posDrawer").classList.add("open");
+  $("posDrawer").setAttribute("aria-hidden", "false");
+  $("pdClose").focus();
+}
+function closePosition() {
+  pdKey = null;
+  $("posDrawer").classList.remove("open");
+  $("posDrawer").setAttribute("aria-hidden", "true");
+  if (!$("posModal").classList.contains("open")) $("scrim").classList.remove("open");
+}
+
+function paintPosition() {
+  const p = pdKey && S.positions.get(pdKey);
+  if (!p) return;
+  const r = positionRow(p);
+  const px = v => v.toLocaleString(undefined, { maximumFractionDigits: 2 });
+  const good = r.upl >= 0;
+  const tone = good ? "var(--pos)" : "var(--neg)";
+  const notionalNow = Math.abs(p.pos) * (p.ctVal || 1) * p.markPx;
+
+  $("pdTitle").textContent = p.instId;
+  $("pdSub").innerHTML = `<span class="tag ${r.side}">${r.side.toUpperCase()}</span>
+    ${r.kind} &middot; ${(p.mode || "auto") === "auto" ? "Fusion auto" : "Manual"}
+    &middot; ${(p.venue || "cex").toUpperCase()}`;
+  $("pdHero").className = "pd-hero " + cls(r.upl);
+  $("pdHero").innerHTML = money(r.upl, true) +
+    `<small>${r.ret >= 0 ? "+" : "\u2212"}${Math.abs(r.ret).toFixed(2)}% on ${money(r.notional)} at entry</small>`;
+
+  /* Entry, mark and liquidation on one axis. */
+  let lifeline = "";
+  if (p.liqPx) {
+    const lo = Math.min(p.liqPx, p.entryLo ?? Math.min(p.avgPx, p.markPx));
+    const hi = Math.max(p.avgPx, p.markPx, p.liqPx);
+    const span = (hi - lo) || 1;
+    const at = v => Math.max(2, Math.min(98, ((v - lo) / span) * 100));
+    const dist = Math.abs(p.markPx - p.liqPx) / p.markPx * 100;
+
+    /* Captions are centre-anchored, so near either end they overhang the track.
+       Clamp each one by its own half-width. */
+    const capAt = (v, text) => {
+      const half = (text.length * 5.6) / 2;
+      const pctHalf = (half / 440) * 100;          // drawer track ≈ 440px
+      return Math.max(pctHalf, Math.min(100 - pctHalf, at(v)));
+    };
+    const cLiq = "Liq " + px(p.liqPx);
+    const cEnt = "Entry " + px(p.avgPx);
+    const cMrk = "Mark " + px(p.markPx);
+
+    /* Entry and mark converge when a position is near flat; drop the entry
+       caption rather than stacking two labels on one point. */
+    const overlap = Math.abs(at(p.avgPx) - at(p.markPx)) < 12;
+
+    lifeline = `
+      <div class="dr-sec">
+        <span class="label">Distance to liquidation</span>
+        <div class="lifeline">
+          <span class="pin" style="left:${at(p.liqPx)}%;background:var(--neg)"></span>
+          <span class="pin" style="left:${at(p.avgPx)}%;background:rgba(255,255,255,.55)"></span>
+          <span class="pin" style="left:${at(p.markPx)}%;background:${tone};height:18px;top:-7px;width:3px"></span>
+          <span class="cap dn" style="left:${capAt(p.liqPx, cLiq)}%;color:var(--neg)">${cLiq}</span>
+          ${overlap ? "" : `<span class="cap up" style="left:${capAt(p.avgPx, cEnt)}%;color:var(--muted)">${cEnt}</span>`}
+          <span class="cap ${overlap ? "up" : "up"}" style="left:${capAt(p.markPx, cMrk)}%;color:${tone}">${cMrk}</span>
+        </div>
+        <div class="frow" style="border:0;padding-top:18px">
+          <span>Room before liquidation</span>
+          <b class="${dist < 5 ? "down" : dist < 15 ? "" : "up"}">${dist.toFixed(2)}%</b>
+        </div>
+      </div>`;
+  }
+
+  /* Targets, if the engine set them. Distance matters more than the raw level —
+     "1.8% away" is actionable, "151.2" needs mental arithmetic. */
+  const away = v => {
+    const d = ((v - p.markPx) / p.markPx) * 100;
+    return (d >= 0 ? "+" : "\u2212") + Math.abs(d).toFixed(2) + "%";
+  };
+  const targets = (p.tpPx || p.slPx) ? `
+    <div class="dr-sec">
+      <span class="label">Targets</span>
+      ${p.tpPx ? `<div class="frow"><span>Take profit</span>
+        <b class="up">${px(p.tpPx)} <span style="color:var(--dim);font-weight:400">${away(p.tpPx)}</span></b></div>` : ""}
+      ${p.slPx ? `<div class="frow"><span>Stop loss</span>
+        <b class="down">${px(p.slPx)} <span style="color:var(--dim);font-weight:400">${away(p.slPx)}</span></b></div>` : ""}
+      ${p.tpPx && p.slPx ? `<div class="frow"><span>Risk / reward</span><b>${
+        (Math.abs(p.tpPx - p.avgPx) / (Math.abs(p.avgPx - p.slPx) || 1)).toFixed(2)}\u00d7</b></div>` : ""}
+    </div>` : "";
+
+  const held = p.openedAt ? heldSince(p.openedAt) : null;
+  const fund = S.funding.get(p.instId);
+
+  $("pdBody").innerHTML = lifeline + targets + `
+    <div class="dr-sec">
+      <span class="label">Position</span>
+      <div class="frow"><span>Size</span><b>${Math.abs(p.pos)}</b></div>
+      <div class="frow"><span>Average entry</span><b>${px(p.avgPx)}</b></div>
+      <div class="frow"><span>Mark</span><b>${p.markPx.toLocaleString(undefined,
+        { minimumFractionDigits:2, maximumFractionDigits:2 })}</b></div>
+      <div class="frow"><span>Leverage</span><b>${p.lever ? p.lever + "\u00d7" : "\u2014"}${
+        p.mgnMode ? ` <span style="color:var(--dim);font-weight:400">${p.mgnMode}</span>` : ""}</b></div>
+      <div class="frow"><span>Notional now</span><b>${money(notionalNow)}</b></div>
+      <div class="frow"><span>Margin</span><b>${p.margin ? money(p.margin)
+        : (p.lever ? money(notionalNow / p.lever) : "\u2014")}</b></div>
+      <div class="frow"><span>Unrealized PnL</span><b class="${cls(r.upl)}">${money(r.upl, true)}</b></div>
+      <div class="frow"><span>Share of equity</span><b>${S.equity
+        ? (notionalNow / S.equity).toFixed(2) + "\u00d7" : "\u2014"}</b></div>
+    </div>
+
+    <div class="dr-sec">
+      <span class="label">Timing</span>
+      <div class="frow"><span>Opened</span><b>${p.openedAt
+        ? new Date(p.openedAt).toLocaleString(undefined,
+            { month:"short", day:"numeric", hour:"2-digit", minute:"2-digit" })
+        : "\u2014"}</b></div>
+      <div class="frow"><span>Held</span><b>${held || "\u2014"}</b></div>
+      ${fund ? `<div class="frow"><span>Next funding</span><b>${fundIn(fund.nextTs)}
+        <span style="color:var(--dim);font-weight:400">${(fund.rate>=0?"+":"\u2212") +
+        (Math.abs(fund.rate)*100).toFixed(4)}%</span></b></div>` : ""}
+    </div>`;
+}
+
+/* Repaint on every mark tick so the drawer is live, not a snapshot. */
+const _recompute = recompute;
+recompute = function () { _recompute(); if (pdKey) paintPosition(); };
+
+function bindPositionRows(el) {
+  el.addEventListener("click", e => {
+    const row = e.target.closest("tr[data-pos]");
+    if (row) openPosition(row.dataset.pos);
+  });
+  el.addEventListener("keydown", e => {
+    if (e.key !== "Enter" && e.key !== " ") return;
+    const row = e.target.closest("tr[data-pos]");
+    if (!row) return;
+    e.preventDefault();
+    openPosition(row.dataset.pos);
+  });
+}
+bindPositionRows($("posBody"));
+bindPositionRows($("posBodyAll"));
+
+$("pdClose").addEventListener("click", closePosition);
+addEventListener("keydown", e => {
+  if (e.key === "Escape" && pdKey) { e.stopPropagation(); closePosition(); }
+});
+
+/* ---- modal ---- */
+function openPositions() {
+  $("scrim").classList.add("open");
+  $("posModal").classList.add("open");
+  $("posModalClose").focus();
+}
+function closePositions() {
+  $("scrim").classList.remove("open");
+  $("posModal").classList.remove("open");
+}
+$("posMore").addEventListener("click", openPositions);
+$("posModalClose").addEventListener("click", closePositions);
+$("scrim").addEventListener("click", () => {
+  if (pdKey) closePosition();
+  else if ($("balModal").classList.contains("open")) closeBalances();
+  else closePositions();
+});
+addEventListener("keydown", e => {
+  if (e.key === "Escape" && $("posModal").classList.contains("open")) closePositions();
+});
 
 /* -------------------------------------------------------- asset balances */
-function renderBalances() {
-  const b = $("balBody");
-  const rows = [...S.balances.values()];
-  if (!rows.length) {
-    b.innerHTML = '<tr><td colspan="8" class="empty">No balances</td></tr>'; return;
-  }
-  const total = rows.reduce((s, r) => s + r.usd, 0);
-
-  b.innerHTML = rows.sort((x, y) => y.usd - x.usd).map(r => {
-    const c = COIN[r.ccy] || { bg:"#60a5fa" };
-    const alloc = total ? (r.usd/total)*100 : 0;
-    const dash = '<td>\u2014</td>';
-    return `<tr>
-      <td class="lt"><div class="asset">
-        <div class="coin" style="background:${c.bg}">${c.sym || r.ccy[0]}</div>
-        <div><b>${r.ccy}</b><small>${c.name || r.ccy}</small></div></div></td>
-      <td class="lt"><span class="tag cex">${r.network || "CEX"}</span></td>
-      <td>${r.bal.toLocaleString(undefined,{maximumFractionDigits:6})}</td>
-      <td>${money(r.usd)}</td>
-      <td class="alloc"><div class="bar"><i style="width:${alloc.toFixed(2)}%"></i></div>
-        <small>${alloc.toFixed(2)}%</small></td>
-      ${r.chg24h !== undefined ? `<td class="${cls(r.chg24h)}">${(r.chg24h>=0?"+":"\u2212")+Math.abs(r.chg24h).toFixed(2)}%</td>` : dash}
-      ${r.avgCost ? `<td>${r.avgCost.toLocaleString(undefined,{maximumFractionDigits:2})}</td>` : dash}
-      ${r.pnl !== undefined ? `<td class="${cls(r.pnl)}">${money(r.pnl, true)}</td>` : dash}
-    </tr>`;
-  }).join("");
+function balanceRow(r, total) {
+  const c = COIN[r.ccy] || { bg:"#60a5fa" };
+  const alloc = total ? (r.usd/total)*100 : 0;
+  const net = r.network || "CEX";
+  const dash = '<td>\u2014</td>';
+  return `<td class="lt"><div class="asset">
+      <div class="coin" style="background:${c.bg}">${c.sym || r.ccy[0]}</div>
+      <div><b>${r.ccy}</b><small>${c.name || r.ccy}</small></div></div></td>
+    <td class="lt"><span class="tag cex">${net}</span></td>
+    <td>${r.bal.toLocaleString(undefined,{maximumFractionDigits:6})}</td>
+    <td>${money(r.usd)}</td>
+    <td class="alloc"><div class="bar"><i style="width:${alloc.toFixed(2)}%"></i></div>
+      <small>${alloc.toFixed(2)}%</small></td>
+    ${r.chg24h !== undefined ? `<td class="${cls(r.chg24h)}">${(r.chg24h>=0?"+":"\u2212")+Math.abs(r.chg24h).toFixed(2)}%</td>` : dash}
+    ${r.avgCost ? `<td>${r.avgCost.toLocaleString(undefined,{maximumFractionDigits:2})}</td>` : dash}
+    ${r.pnl !== undefined ? `<td class="${cls(r.pnl)}">${money(r.pnl, true)}</td>` : dash}`;
 }
+
+function renderBalances() {
+  const rows = [...S.balances.values()].sort((x, y) => y.usd - x.usd);
+  const total = rows.reduce((s, r) => s + r.usd, 0);
+  const empty = '<tr><td colspan="8" class="empty">No balances</td></tr>';
+
+  /* Preview leads with the largest holdings. Zero rows are real information —
+     you hold nothing — but they don't belong in a three-row summary. */
+  const limit = CONFIG.balancesPreview || 3;
+  const held = rows.filter(r => r.usd > 0);
+  const preview = (held.length ? held : rows).slice(0, limit);
+
+  $("balBody").innerHTML = preview.length
+    ? preview.map(r => `<tr>${balanceRow(r, total)}</tr>`).join("")
+    : empty;
+
+  const hidden = rows.length - preview.length;
+  const more = $("balMoreRow");
+  if (more) {
+    more.hidden = hidden <= 0;
+    $("balMore").textContent = "View all " + rows.length + " assets" +
+      (hidden > 0 ? "  (+" + hidden + " more)" : "");
+  }
+
+  const all = $("balBodyAll");
+  if (all) {
+    all.innerHTML = rows.length ? rows.map(r => `<tr>${balanceRow(r, total)}</tr>`).join("") : empty;
+    const sub = $("balModalSub");
+    if (sub) sub.textContent = held.length + " held \u00b7 " + money(total);
+  }
+}
+
+/* ---- balances modal ---- */
+function openBalances() {
+  $("scrim").classList.add("open");
+  $("balModal").classList.add("open");
+  $("balModalClose").focus();
+}
+function closeBalances() {
+  $("balModal").classList.remove("open");
+  if (!$("posModal").classList.contains("open") && !pdKey) $("scrim").classList.remove("open");
+}
+$("balMore").addEventListener("click", openBalances);
+$("balModalClose").addEventListener("click", closeBalances);
+addEventListener("keydown", e => {
+  if (e.key === "Escape" && $("balModal").classList.contains("open")) closeBalances();
+});
 
 /* --------------------------------------------------------------- signals */
 const VERDICT = { "STRONG BUY":"buy","BUY":"buy","STRONG SELL":"sell","SELL":"sell","HOLD":"hold","NEUTRAL":"hold" };
@@ -1399,7 +1836,10 @@ function connect() {
         m.data.forEach(p => S.positions.set(p.instId+":"+p.posSide, {
           instId:p.instId, posSide:p.posSide, pos:num(p.pos), avgPx:num(p.avgPx),
           ctVal:num(p.ctVal)||1, markPx:num(p.markPx), liqPx:num(p.liqPx)||null,
-          mode:p.mode, venue:p.venue }));
+          mode:p.mode, venue:p.venue, lever:num(p.lever)||null, mgnMode:p.mgnMode,
+          margin:num(p.margin)||null, tpPx:num(p.tpTriggerPx ?? p.tpPx)||null,
+          slPx:num(p.slTriggerPx ?? p.slPx)||null,
+          openedAt:Number(p.cTime ?? p.openedAt)||null }));
         recompute();
       }
       if (m.type==="mark") {
@@ -1451,13 +1891,23 @@ function demo() {
   S.dexHoldings.set("ETH",  { qty: 0.0182, instId: "ETH-USDT-SWAP" });
   S.dexHoldings.set("USDC", { qty: 12.40 });
 
-  const marks = { "BTC-USDT-SWAP":64200, "ETH-USDT-SWAP":3120, "BNB-USDT":584.2 };
+  const marks = { "BTC-USDT-SWAP":64200, "ETH-USDT-SWAP":3120, "BNB-USDT":584.2, "SOL-USDT-SWAP":147.9 };
   for (const id in marks) S.marks.set(id, marks[id]);
-  S.positions.set("BTC-USDT-SWAP:long",  { instId:"BTC-USDT-SWAP", posSide:"long",  pos:1, avgPx:64230, ctVal:0.001, markPx:64200, liqPx:58120, mode:"auto", venue:"cex" });
-  S.positions.set("ETH-USDT-SWAP:short", { instId:"ETH-USDT-SWAP", posSide:"short", pos:2, avgPx:3118,  ctVal:0.01,  markPx:3120,  liqPx:3402, mode:"manual", venue:"cex" });
-  [ { ccy:"USDT", bal:341.09, usd:341.09, network:"CEX" },
+  S.positions.set("BTC-USDT-SWAP:long",  { instId:"BTC-USDT-SWAP", posSide:"long",  pos:1, avgPx:64230, ctVal:0.001, markPx:64200, liqPx:58120, mode:"auto", venue:"cex",
+    lever:10, mgnMode:"cross", margin:6.42, tpPx:66150, slPx:63200, openedAt:Date.now()-2.4*3600e3 });
+  S.positions.set("ETH-USDT-SWAP:short", { instId:"ETH-USDT-SWAP", posSide:"short", pos:2, avgPx:3118,  ctVal:0.01,  markPx:3120,  liqPx:3402, mode:"manual", venue:"cex",
+    lever:5, mgnMode:"isolated", margin:12.47, tpPx:3040, slPx:3186, openedAt:Date.now()-19.5*3600e3 });
+  S.positions.set("SOL-USDT-SWAP:long",  { instId:"SOL-USDT-SWAP", posSide:"long",  pos:4, avgPx:148.2, ctVal:1,     markPx:147.9, liqPx:121.4, mode:"auto",   venue:"cex",
+    lever:5, mgnMode:"cross", margin:118.56, tpPx:156.4, slPx:143.9, openedAt:Date.now()-41*3600e3 });
+  S.positions.set("BNB-USDT:long",       { instId:"BNB-USDT",      posSide:"long",  pos:6, avgPx:584.0, ctVal:0.01,  markPx:582.1, liqPx:null,  mode:"auto",   venue:"cex",
+    lever:1, mgnMode:"spot", openedAt:Date.now()-6.2*3600e3 });
+  [ { ccy:"USDT", bal:341.09,   usd:341.09, network:"CEX" },
+    { ccy:"BNB",  bal:0.027209, usd:15.86,  network:"CEX", chg24h: 1.42, avgCost:672.10, pnl:-0.36 },
+    { ccy:"ETH",  bal:0.0182,   usd:56.79,  network:"DEX", chg24h:-0.61, avgCost:3102.4, pnl: 0.28 },
+    { ccy:"USDC", bal:12.40,    usd:12.40,  network:"DEX" },
     { ccy:"BTC",  bal:0, usd:0, network:"CEX" },
-    { ccy:"BNB",  bal:0, usd:0, network:"CEX" },
+    { ccy:"SOL",  bal:0, usd:0, network:"CEX" },
+    { ccy:"DOGE", bal:0, usd:0, network:"CEX" },
   ].forEach(b => S.balances.set(b.ccy, b));
 
   S.funding.set("BTC-USDT-SWAP", { rate: 0.000082, nextTs: Date.now()+2.4*3600e3 });
