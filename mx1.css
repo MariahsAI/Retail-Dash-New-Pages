@@ -75,13 +75,32 @@ body, body.sharp { background: var(--bg); }
    .stripwrap, Portfolio uses .panel / .balcard / .rollup / .scroller, Trading
    uses .pos-card. All of them are the same object, so all of them are listed.
    The body.sharp copy exists to out-specify each page's own sharp rules. */
+/* Background only — box-shadow is set separately below, because the hero
+   surfaces carry a blue bloom that must not be flattened. */
 .card, .stripwrap, .panel, .balcard, .rollup, .scroller, .pos-card,
 body.sharp .card, body.sharp .stripwrap, body.sharp .panel,
 body.sharp .balcard, body.sharp .rollup, body.sharp .scroller,
 body.sharp .pos-card {
   background: var(--card);
-  border-color: rgba(255,255,255,.07);
+}
+
+/* Ordinary cards get the flat recessed shadow. The hero surfaces are NOT in
+   this list: .stripwrap, .panel and .balcard.total each define a blue bloom
+   on their own page, and overwriting box-shadow here erased it — which is
+   what removed the blue around Total equity and the performance card. */
+.card, .balcard:not(.total), .rollup, .scroller, .pos-card,
+body.sharp .card, body.sharp .balcard:not(.total), body.sharp .rollup,
+body.sharp .scroller, body.sharp .pos-card {
   box-shadow: var(--well);
+}
+
+/* Borders are deliberately NOT set above. The hero surfaces — the equity strip
+   on Overview, the performance panel on Portfolio — carry a blue accent edge
+   that marks them as primary. Flattening every border to a neutral hairline
+   erased that distinction, so each page keeps its own border colour. */
+.stripwrap, .panel, .balcard.total,
+body.sharp .stripwrap, body.sharp .panel, body.sharp .balcard.total {
+  border: 1px solid var(--accent-edge);
 }
 
 /* Header bands stay lifted so they read as the card's lid, not more card. */
