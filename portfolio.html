@@ -28,6 +28,8 @@
     /* ---- Semantic. Sign only. ---- */
     --pos: #34d399;
     --neg: #fb7185;
+
+    --hero: #0d1730;   /* hero surfaces — navy, so they read blue */
   }
 
   * { box-sizing: border-box; }
@@ -90,7 +92,9 @@
   .page-head h1 { font-family: Georgia, serif; font-size: 27px; margin: 0 0 5px; font-weight: 400; }
   .page-head p { margin: 0; color: var(--dim); font-size: 13px; }
 
-  .panel { background: var(--panel); border: 1px solid var(--accent-edge); border-radius: 14px;
+  /* Hero surface: navy fill rather than the ordinary card plane, so the panel
+     reads blue on its own instead of relying on the bloom to tint it. */
+  .panel { background: var(--hero); border: 1px solid var(--accent-edge); border-radius: 14px;
            padding: 18px 20px; margin-top: 16px; }
 
   /* ----------------------------------------------------- headline stats */
@@ -228,7 +232,7 @@
   .balcard .pill { display:inline-block; margin-top:12px; padding:4px 11px; border-radius:999px;
                    font-size:11px; border:1px solid var(--hair); color:var(--muted);
                    background:rgba(255,255,255,.02); }
-  .balcard.total { border-color:var(--accent-edge);
+  .balcard.total { background:var(--hero); border-color:var(--accent-edge);
                    box-shadow: inset 60px -45px 120px -75px rgba(59,130,246,.34); }
 
   .asset { display:flex; align-items:center; gap:11px; }
@@ -358,8 +362,11 @@
   /* ---- sharp mode (see index.html for the reasoning) ---- */
   body.sharp {
     --panel: #0a0f19; --panel-2: #080d15;
-    --hair: rgba(255,255,255,.055); --edge: rgba(255,255,255,.09); --head: #122140;
+    --hair: rgba(255,255,255,.055); --edge: rgba(96,165,250,.26); --head: #122140;
     --text: #ffffff; --muted: #6f8098; --dim: #47566c;
+    /* Restated because body.sharp out-specifies :root — a token defined only
+       there silently does nothing on a page that boots into sharp. */
+    --hero: #0d1730;
   }
   /* Corners stay soft — density and contrast do the sharpening. */
   body.sharp .panel, body.sharp .scroller, body.sharp .balcard,
@@ -368,9 +375,10 @@
   body.sharp .segset, body.sharp .tabs, body.sharp .seg { border-radius: 10px; }
   body.sharp .tab, body.sharp .segset button, body.sharp .seg button { border-radius: 7px; }
 
-  body.sharp .panel, body.sharp .scroller, body.sharp .balcard, body.sharp .rollup {
-    box-shadow: inset 0 1px 0 rgba(255,255,255,.05);
-  }
+  /* This block used to also set box-shadow, which at (0,2,0) specificity beat
+     the full edge-definition stack at the end of the file — so sharp mode
+     silently lost its separation ring and the panels read as floating rather
+     than framed. The stack lives in one place now. */
 
   body.sharp .page { padding: 14px 18px 34px; }
   body.sharp .panel { padding: 14px 16px; margin-top: 10px; }
@@ -415,10 +423,9 @@
   body.glow-off::after { display:none; }
 
   /* 2. True hairlines. A 1px border becomes 2 device px at 2dppx and reads
-     heavy; 0.5px lands on one. */
+     heavy; 0.5px lands on one. Outer borders stay 1px — at .5px against a
+     low-alpha edge colour the panels stop reading as panels. */
   @media (min-resolution: 2dppx) {
-    .card, .stripwrap, .panel, .scroller, .balcard, .rollup, .feed, table,
-    .segset, .tabs, .seg, .chip, .uid, .drawer { border-width: .5px; }
     .frow, .sig, .feed-row, tbody td, thead th, .cell, .sub-cell,
     .card-head, .filterbar, .substrip { border-bottom-width:.5px; border-top-width:.5px; }
   }
@@ -471,7 +478,6 @@
   .live-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--pos);
               margin-right:5px; vertical-align:middle; animation:pulse 1.6s ease-in-out infinite; }
   .live-dot.off { background:var(--dim); animation:none; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
   @media (prefers-reduced-motion: reduce) { .live-dot { animation:none; } }
   .flash-up { color: var(--pos) !important; }
   .flash-down { color: var(--neg) !important; }
@@ -567,8 +573,12 @@
     box-shadow: inset 0 1px 0 rgba(255, 255, 255, .05);
   }
 
-  /* Alert states keep priority: they override the resting edge entirely. */
-  .card.attn-warn, .cell.attn-warn, .card.attn-neg, .cell.attn-neg { border-color: currentColor; }
+  /* Alert states keep priority, but tinted per state. currentColor resolves to
+     --text, which is #ffffff under body.sharp — that painted a hard white rule
+     down the left of every flagged cell, reading as a rendering fault rather
+     than a warning. */
+  .card.attn-warn, .cell.attn-warn { border-color: rgba(251, 191, 36, .50); }
+  .card.attn-neg,  .cell.attn-neg  { border-color: rgba(251, 113, 133, .55); }
 
   /* Hairlines inside a panel stay hairlines — sharpening the outside only. */
   tbody tr:hover { background: rgba(255, 255, 255, .028); }
@@ -580,6 +590,7 @@
       0 0 0 1px rgba(2,6,14,.85),
       0 20px 44px -30px rgba(0,0,0,.95); }
 </style>
+<link rel="stylesheet" href="mx1.css" />
 
 <!-- ============================================================== chrome -->
 <div class="topbar">
@@ -596,10 +607,10 @@
 
 <nav class="nav">
   <a href="index.html"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2.5" y="2.5" width="5.5" height="5.5" rx="1"/><rect x="10" y="2.5" width="5.5" height="5.5" rx="1"/><rect x="2.5" y="10" width="5.5" height="5.5" rx="1"/><rect x="10" y="10" width="5.5" height="5.5" rx="1"/></svg>Overview</a>
-  <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><polyline points="2 12.5 6.3 8.2 9.8 11 15.5 4.5"/><polyline points="11.6 4.5 15.5 4.5 15.5 8.4"/></svg>Trading</a>
+  <a href="trading.html"><svg viewBox="0 0 18 18" aria-hidden="true"><polyline points="2 12.5 6.3 8.2 9.8 11 15.5 4.5"/><polyline points="11.6 4.5 15.5 4.5 15.5 8.4"/></svg>Trading</a>
   <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="6.6" cy="6" r="2.7"/><path d="M2 15.2c0-2.6 2.1-4.2 4.6-4.2s4.6 1.6 4.6 4.2"/><path d="M12.1 3.7a2.7 2.7 0 0 1 0 5.2"/><path d="M13.2 11.2c1.9.5 2.9 1.9 2.9 4"/></svg>Community</a>
   <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="3" y="6.2" width="12" height="8" rx="2.6"/><circle cx="6.9" cy="10.2" r=".95" fill="currentColor" stroke="none"/><circle cx="11.1" cy="10.2" r=".95" fill="currentColor" stroke="none"/><path d="M9 6.2V3.8"/><circle cx="9" cy="2.9" r="1.1"/></svg>AI Assistant</a>
-  <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M15.2 10.4A2.6 2.6 0 0 1 12.6 13H6.2l-3.4 2.7V4.9A2.6 2.6 0 0 1 5.4 2.3h7.2a2.6 2.6 0 0 1 2.6 2.6z"/></svg>Chat</a>
+  <a href="chat.html"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M15.2 10.4A2.6 2.6 0 0 1 12.6 13H6.2l-3.4 2.7V4.9A2.6 2.6 0 0 1 5.4 2.3h7.2a2.6 2.6 0 0 1 2.6 2.6z"/></svg>Chat</a>
   <a href="portfolio.html" class="on"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2" y="5.4" width="14" height="9.8" rx="2.2"/><path d="M6.4 5.4V4a1.6 1.6 0 0 1 1.6-1.6h2A1.6 1.6 0 0 1 11.6 4v1.4"/><path d="M2 9.6h14"/></svg>Portfolio</a>
   <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="2.5"/><path d="M9 1.7v1.7M9 14.6v1.7M2.7 9H1M17 9h-1.7M4.6 4.6 3.4 3.4M14.6 14.6l-1.2-1.2M4.6 13.4l-1.2 1.2M14.6 3.4l-1.2 1.2"/></svg>Settings</a>
 </nav>
@@ -946,8 +957,6 @@ async function load() {
   connectLive();
 }
 
-
-
 /* ---- live composition ------------------------------------------------------
  * The KPI strip and the equity curve are deliberately static: they describe a
  * finished period, and a win rate that twitches is a win rate you can't trust.
@@ -1079,7 +1088,6 @@ const COIN = {
 
 let BALANCES = [];
 
-
 /* ---- category rollup ------------------------------------------------------
  * Grouping is the whole point here — the asset table already gives per-asset
  * allocation, but it can't tell you how much of the book is stables. One
@@ -1172,7 +1180,6 @@ function renderBalances() {
     </tr>`;
   }).join("");
 }
-
 
 /* Sparkline on the total card — the same series the big curve draws, at a
    glanceable size, so the card carries trend and not just a level. */
@@ -1419,7 +1426,7 @@ function drawCurve() {
       stroke:"rgba(167,139,250,.45)", "stroke-width":1, "stroke-dasharray":"2 3",
       "vector-effect":"non-scaling-stroke" }));
     m.appendChild(el("text", { x:x, y:padT + 9, fill:"#a78bfa", "font-size":9.5,
-      "text-anchor":"middle" }, (p.cash > 0 ? "+" : "\u2212") + money(Math.abs(p.cash)).replace("$","$")));
+      "text-anchor":"middle" }, (p.cash > 0 ? "+" : "\u2212") + money(Math.abs(p.cash))));
   });
 
   /* ---- date axis ---- */
@@ -1577,8 +1584,6 @@ function renderLog() {
     <td colspan="4"></td>
   </tr>` : "";
 }
-
-
 
 /* ---- statements ------------------------------------------------------------
  * CSV is generated in the browser: no backend, works offline, and the file is
@@ -1789,7 +1794,6 @@ $("toolbar").addEventListener("click", e => {
   page = 1;
   renderLog();
 });
-
 
 /* ---- trade drawer ---------------------------------------------------------
  * Opens in place rather than navigating: you're usually scanning the log and
