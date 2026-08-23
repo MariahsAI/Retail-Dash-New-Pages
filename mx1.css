@@ -92,10 +92,19 @@ body.sharp .card-head, body.sharp thead th { background: var(--head); }
 /* ---- inner wells ---------------------------------------------------------
    Sub-panels sit ON a card, so they lift rather than recess — otherwise the
    nesting collapses into one flat black. */
-.stat, .kpi, .kpicell, .balance-row, .read-card, .pd-inner, .cell, .tl-body,
+/* .cell is NOT in this list. On Portfolio and Trading it means a sub-panel
+   sitting on a card, where a white lift is right. On Overview it means the
+   equity strip cell — and a 2.2% white film there washes the navy out, drops
+   the contrast between cells and turns the amber alert wash muddy. Same class
+   name, two different objects: trap 2 from the header above. */
+.stat, .kpi, .kpicell, .balance-row, .read-card, .pd-inner, .tl-body,
 body.sharp .stat, body.sharp .kpi, body.sharp .kpicell {
   background: rgba(255,255,255,.022);
 }
+
+/* Where a lift IS wanted on a card sub-panel called .cell, scope it to the
+   page that means it that way rather than reaching for the bare class. */
+.pd-inner .cell, .card .cell { background: rgba(255,255,255,.022); }
 
 /* ---- seams ---------------------------------------------------------------
    Dividers carry a trace of the same blue. At neutral white they vanish
