@@ -132,17 +132,23 @@
                padding:13px 18px; background:var(--head); border-bottom:1px solid var(--edge); }
   .card-head h2 { font-family:Georgia,serif; font-weight:400; font-size:16px; margin:0; }
 
-  /* Reads as the card title until you hover it — a form control here would
-     look like a filter rather than the heading it replaces. */
-  .picker { font-family:Georgia,serif; font-size:16px; color:var(--text); background:transparent;
-            border:1px solid transparent; border-radius:8px; padding:3px 26px 3px 8px; margin-left:-8px;
-            cursor:pointer; appearance:none; max-width:230px;
-            background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
-                             linear-gradient(135deg,var(--muted) 50%,transparent 50%);
-            background-position:calc(100% - 13px) 52%, calc(100% - 8px) 52%;
-            background-size:5px 5px, 5px 5px; background-repeat:no-repeat; }
-  .picker:hover { border-color:var(--edge); background-color:rgba(59,130,246,.08); }
-  .picker:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
+  /* A control has to look like one at rest. The old version styled itself as
+     plain text until hover, and the chevron sat ~200px from the word because a
+     native select sizes to its widest option. Now: a visible pill sized to the
+     current value, with the real select laid invisibly on top so the native
+     menu (and keyboard, and mobile picker) still does the work. */
+  .picker-wrap { position:relative; display:inline-flex; }
+  .picker-face { display:inline-flex; align-items:center; gap:9px;
+                 font-family:Georgia,serif; font-size:16px; color:var(--text);
+                 background:rgba(59,130,246,.10); border:1px solid var(--edge);
+                 border-radius:9px; padding:5px 11px 5px 13px; white-space:nowrap;
+                 transition:background .2s ease, border-color .2s ease; }
+  .picker-face svg { width:11px; height:11px; stroke:var(--brand-2); stroke-width:2.2;
+                     fill:none; stroke-linecap:round; stroke-linejoin:round; flex:0 0 auto; }
+  .picker-wrap:hover .picker-face { background:rgba(59,130,246,.18); border-color:var(--brand); }
+  .picker { position:absolute; inset:0; width:100%; height:100%;
+            opacity:0; cursor:pointer; appearance:none; border:0; }
+  .picker:focus-visible + .picker-face { outline:2px solid var(--brand); outline-offset:2px; }
   .picker option { background:var(--panel); color:var(--text); font-family:inherit; font-size:13px; }
   .card-head .sub { color:var(--dim); font-size:11.5px; }
   .card-body { padding:16px 18px; }
@@ -311,8 +317,10 @@
       radial-gradient(1200px 620px at 55% 112%, rgba(37,99,235,.07),  transparent 66%);
   }
   body.glow-off::before { display:none; }
-  .topbar, .nav, .page, .drawer, .scrim { position:relative; z-index:1; }
-  .drawer { z-index:41; } .scrim { z-index:40; }
+  /* Lift page content above the ambient layer. The drawer and scrim are
+     already position:fixed — do NOT include them here, or this rule wins on
+     source order and drops the drawer into normal flow at the end of the page. */
+  .topbar, .nav, .page { position:relative; z-index:1; }
 </style>
 
 <div class="topbar">
@@ -415,7 +423,13 @@
       <section class="card">
         <div class="card-head">
           <div style="display:flex;align-items:center;gap:12px;min-width:0">
-            <select id="pairPick" class="picker" aria-label="Chart series"></select>
+            <span class="picker-wrap">
+              <select id="pairPick" class="picker" aria-label="Chart series"></select>
+              <span class="picker-face" aria-hidden="true">
+                <span id="pickerLabel">Equity</span>
+                <svg viewBox="0 0 12 12"><polyline points="2.5 4.5 6 8 9.5 4.5"/></svg>
+              </span>
+            </span>
             <span class="sub num" id="chartMeta"></span>
           </div>
           <div class="tabs" id="tabs">
@@ -969,10 +983,17 @@ function refreshPicker() {
 
   if (![...sel.options].some(o => o.value === S.chartKey)) S.chartKey = "EQUITY";
   sel.value = S.chartKey;
+  syncPickerFace();
+}
+
+function syncPickerFace() {
+  const l = $("pickerLabel");
+  if (l) l.textContent = S.chartKey === "EQUITY" ? "Equity" : S.chartKey;
 }
 
 $("pairPick").addEventListener("change", e => {
   S.chartKey = e.target.value;
+  syncPickerFace();
   const live = S.tf === "LIVE";
   $("tape").hidden = !live; $("ph").hidden = live;
   drawTape(); updateChartMeta();
