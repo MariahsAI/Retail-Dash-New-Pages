@@ -1,0 +1,169 @@
+/* ============================================================================
+   MX1 — shared surface system
+   ----------------------------------------------------------------------------
+   Loaded AFTER each page's own <style>, so it wins on source order and becomes
+   the single place ordinary surfaces are defined.
+
+   Three planes of depth:
+
+     --bg       the page, furthest back
+     --surface  the plane a card sits on
+     --card     the card itself, recessed INTO that plane
+     --hero     hero surfaces — navy, so they read blue
+
+   Ordinary cards are DARKER than what they sit on. A lighter card reads as a
+   raised chip you could pick up; a darker one reads as a well cut into the
+   surface — sharper at this density, and it puts tabular figures on near-black
+   where they resolve crispest.
+
+   HERO SURFACES ARE DELIBERATELY EXCLUDED from the background/border rules
+   below: .stripwrap (Overview equity strip), .panel (Portfolio performance and
+   equity curve) and .balcard.total keep their navy fill, their blue accent
+   border and their own page-defined bloom. Adding them here would flatten the
+   one thing on each page that is meant to sit forward.
+
+   Two cascade traps this file has to work around:
+     1. All pages boot into density "sharp", which redefines --panel etc. under
+        body.sharp. That out-specifies :root, so every token override here is
+        restated under body.sharp or it silently does nothing.
+     2. The pages name the same object differently — Overview uses .card,
+        Portfolio uses .balcard / .rollup / .scroller, Trading uses .pos-card.
+        A rule targeting .card alone misses two pages.
+   ========================================================================== */
+
+:root {
+  /* ---- planes ---- */
+  --bg:      #050b16;
+  --surface: #0c1320;
+  --card:    #0a0f19;
+  --bar:     #070e1c;
+  --hero:    #0d1730;
+
+  /* ---- edges: one blue, three depths ---- */
+  --ring-primary: rgba(96,165,250,.42);   /* hero surfaces          */
+  --ring-card:    rgba(96,165,250,.26);   /* ordinary cards         */
+  --ring-seam:    rgba(96,165,250,.18);   /* dividers inside a card */
+
+  /* ---- the recessed-card recipe, one definition for every surface ----
+     Dark inside the top edge, a hairline lift below, and a faint blue spill
+     just inside the ring so the well reads as lit rather than merely dark.
+     Each page also defines --well locally: .pos-card uses it inside a
+     box-shadow, and an unresolved var() makes CSS discard the WHOLE
+     declaration — the cards would lose their long/short edge silently. */
+  --well: inset 0 1px 0 rgba(0,0,0,.6),
+          inset 0 0 22px -14px rgba(96,165,250,.55),
+          0 1px 0 rgba(255,255,255,.035);
+}
+
+/* Restated because body.sharp out-specifies :root. */
+body.sharp {
+  --surface: #0c1320;
+  --card:    #0a0f19;
+  --hero:    #0d1730;
+}
+
+/* ---- ordinary cards ------------------------------------------------------
+   Every page's name for the same object. Hero surfaces are not in this list. */
+.card, .balcard, .rollup, .scroller, .pos-card, .kcard,
+body.sharp .card, body.sharp .balcard, body.sharp .rollup,
+body.sharp .scroller, body.sharp .pos-card, body.sharp .kcard {
+  background: var(--card);
+  border: 1px solid var(--ring-card);
+  box-shadow: var(--well);
+}
+
+/* .balcard.total is a hero surface — restore what the rule above just took. */
+.balcard.total, body.sharp .balcard.total {
+  background: var(--hero);
+  border-color: var(--ring-primary);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08),
+              inset 60px -45px 120px -75px rgba(59,130,246,.34),
+              0 0 0 1px rgba(2,6,14,.85),
+              0 20px 44px -30px rgba(0,0,0,.95);
+}
+
+/* Header bands stay lifted so they read as the card's lid, not more card. */
+.card-head, .rail-head, .dock-tabs, .modal-head, thead th,
+body.sharp .card-head, body.sharp thead th { background: var(--head); }
+
+/* Anything that hosts cards is the middle plane. */
+.dock-body, .modal-body { background: var(--surface); --pane-bg: var(--surface); }
+
+/* ---- inner wells ---------------------------------------------------------
+   Sub-panels sit ON a card, so they lift rather than recess — otherwise the
+   nesting collapses into one flat black. */
+/* .cell is NOT in this list. On Portfolio and Trading it means a sub-panel
+   sitting on a card, where a white lift is right. On Overview it means the
+   equity strip cell — and a 2.2% white film there washes the navy out, drops
+   the contrast between cells and turns the amber alert wash muddy. Same class
+   name, two different objects: trap 2 from the header above. */
+.stat, .kpi, .kpicell, .balance-row, .read-card, .pd-inner, .tl-body,
+body.sharp .stat, body.sharp .kpi, body.sharp .kpicell {
+  background: rgba(255,255,255,.022);
+}
+
+/* Where a lift IS wanted on a card sub-panel called .cell, scope it to the
+   page that means it that way rather than reaching for the bare class. */
+.pd-inner .cell, .card .cell { background: rgba(255,255,255,.022); }
+
+/* ---- seams ---------------------------------------------------------------
+   Dividers carry a trace of the same blue. At neutral white they vanish
+   against near-black and the strip stops reading as a grid. */
+.strip .cell + .cell { border-left-color: var(--ring-seam); }
+.substrip { border-top-color: var(--ring-card); }
+.substrip .sub-cell + .sub-cell { border-left-color: var(--ring-seam); }
+@media (max-width: 1100px) { .strip .cell + .cell { border-top-color: var(--ring-seam); } }
+@media (max-width: 620px) { .substrip .sub-cell + .sub-cell { border-top-color: var(--ring-seam); } }
+
+/* ---- alert states --------------------------------------------------------
+   currentColor resolves to --text, which is #ffffff under body.sharp — that
+   painted a hard white rule down every flagged cell, reading as a rendering
+   fault rather than a warning. Tinted per state instead. */
+.cell.attn-warn, .card.attn-warn,
+body.sharp .cell.attn-warn, body.sharp .card.attn-warn {
+  border-color: rgba(251,191,36,.50);
+}
+.cell.attn-neg, .card.attn-neg,
+body.sharp .cell.attn-neg, body.sharp .card.attn-neg {
+  border-color: rgba(251,113,133,.55);
+}
+.cell.attn-warn + .cell { border-left-color: rgba(251,191,36,.38); }
+.cell.attn-neg  + .cell { border-left-color: rgba(251,113,133,.40); }
+
+/* ---- glow off ------------------------------------------------------------
+   Drops the spill, never the ring. A border is information; the spill is
+   emphasis. */
+body.glow-off .card, body.glow-off .balcard, body.glow-off .rollup,
+body.glow-off .scroller, body.glow-off .pos-card, body.glow-off .kcard {
+  box-shadow: inset 0 1px 0 rgba(0,0,0,.6), 0 1px 0 rgba(255,255,255,.035);
+}
+
+/* ---- tables --------------------------------------------------------------
+   The rule goes on the cell, not the row — under border-collapse the two
+   compete and the cell wins anyway, so a tr rule is dead code. */
+tbody td { border-top: 1px solid rgba(255,255,255,.05); }
+tbody tr:hover { background: rgba(96,165,250,.05); }
+
+/* ---- true hairlines ------------------------------------------------------
+   1px doubles to 2 device px at 2dppx and reads heavy. Seams thin; rings stay
+   at 1px, because a half-pixel low-alpha blue stops reading as an edge. */
+@media (min-resolution: 2dppx) {
+  .strip .cell + .cell, .substrip, .substrip .sub-cell + .sub-cell,
+  tbody td { border-width: .5px; }
+  .card, .balcard, .rollup, .scroller, .pos-card, .kcard,
+  .stripwrap, .panel { border-width: 1px; }
+}
+
+/* ---- scrollbars ---------------------------------------------------------- */
+* { scrollbar-width: thin; scrollbar-color: rgba(96,165,250,.45) transparent; }
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-thumb {
+  background: rgba(96,165,250,.45); border-radius: 5px;
+  border: 2px solid transparent; background-clip: padding-box;
+}
+::-webkit-scrollbar-thumb:hover { background: rgba(96,165,250,.75); background-clip: padding-box; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* ---- focus ---------------------------------------------------------------
+   One visible focus ring across all pages rather than five near-misses. */
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
