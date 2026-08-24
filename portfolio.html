@@ -94,7 +94,11 @@
 
   /* Hero surface: navy fill rather than the ordinary card plane, so the panel
      reads blue on its own instead of relying on the bloom to tint it. */
-  .panel { background: var(--hero); border: 1px solid var(--accent-edge); border-radius: 14px;
+  /* Black, like every other surface. Performance and the equity curve are the
+     two LARGEST panels on this page, so filling them with hero navy made navy
+     the background rather than an accent — hero works by scarcity. The brighter
+     accent border still marks them as primary. */
+  .panel { background-color: var(--panel); border: 1px solid var(--accent-edge); border-radius: 14px;
            padding: 18px 20px; margin-top: 16px; }
 
   /* ----------------------------------------------------- headline stats */
@@ -133,11 +137,11 @@
   .section-title h2 { font-family: Georgia, serif; font-weight: 400; font-size: 19px; margin: 0; }
   .section-title span { color: var(--dim); font-size: 12px; }
 
-  .scroller { overflow-x: auto; border: 1px solid var(--edge); border-radius: 14px; background: var(--panel); }
+  .scroller { overflow-x: auto; border: 1px solid var(--edge); border-radius: 14px; background-color: var(--panel); }
   table { width: 100%; border-collapse: collapse; }
   thead th { text-align: right; font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
              color: var(--muted); font-weight: 700; padding: 17px 14px;
-             background: var(--head); border-bottom: 2px solid var(--edge); white-space: nowrap; }
+             background: var(--head); border-bottom: 1px solid var(--edge); white-space: nowrap; }
   thead th:first-child, tbody td:first-child, .lt { text-align: left; }
   tbody td { text-align: right; padding: 12px 14px; border-top: 1px solid var(--hair);
              font-variant-numeric: tabular-nums; white-space: nowrap; }
@@ -226,14 +230,30 @@
 
   /* ---- account composition ---- */
   .balrow { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-top:0; }
-  .balcard { background:var(--panel); border:1px solid var(--edge); border-radius:14px; padding:16px 18px; }
+  /* A vertical falloff from the top edge, not a corner tint. This reads as
+     light landing on the card — it keeps the edges crisp, which is what the
+     radial corner wash was fighting. Same treatment the Overview cards use, so
+     the two pages describe surfaces the same way. */
+  .balcard, .rollup, .panel, .scroller {
+    /* Blue light, not white. A neutral sheen on black reads as grey haze; a
+       cool tint reads as the brand light falling on the surface, and it ties
+       the cards to the accent border. Thin white line at the very top edge is
+       the specular — that stays neutral, or the lip looks tinted rather than
+       lit. */
+    background-image: linear-gradient(180deg,
+      rgba(255,255,255,.05)  0px,  rgba(255,255,255,0) 1px,
+      rgba(96,165,250,.13)   1px,  rgba(96,165,250,.045) 22%,
+      rgba(96,165,250,0)     52%);
+    background-repeat: no-repeat;
+  }
+  .balcard { background-color:var(--panel); border:1px solid var(--edge); border-radius:14px; padding:16px 18px; }
   .balcard .v { font-family:Georgia,serif; font-size:24px; margin-top:5px; font-variant-numeric:tabular-nums; }
   .balcard .n { font-size:12px; color:var(--dim); margin-top:4px; }
   .balcard .pill { display:inline-block; margin-top:12px; padding:4px 11px; border-radius:999px;
                    font-size:11px; border:1px solid var(--hair); color:var(--muted);
                    background:rgba(255,255,255,.02); }
-  .balcard.total { background:var(--hero); border-color:var(--accent-edge);
-                   box-shadow: inset 60px -45px 120px -75px rgba(59,130,246,.34); }
+  /* The one hero left: small enough that navy reads as emphasis again. */
+  .balcard.total { background-color:var(--hero); border-color:var(--accent-edge); }
 
   .asset { display:flex; align-items:center; gap:11px; }
   .coin { width:27px; height:27px; border-radius:50%; display:grid; place-items:center; flex:0 0 auto;
@@ -252,7 +272,7 @@
   .nav a.soon:hover { background:none; color:var(--muted); }
 
   /* ---- category rollup: the one cut the asset table can't give ---- */
-  .rollup { background:var(--panel); border:1px solid var(--edge); border-radius:14px;
+  .rollup { background-color:var(--panel); border:1px solid var(--edge); border-radius:14px;
             padding:16px 18px; margin-top:14px; }
   .rollup-head { display:flex; justify-content:space-between; align-items:baseline; gap:12px; }
   .stack { display:flex; height:8px; border-radius:4px; overflow:hidden; margin-top:12px;
@@ -361,8 +381,11 @@
 
   /* ---- sharp mode (see index.html for the reasoning) ---- */
   body.sharp {
-    --panel: #0a0f19; --panel-2: #080d15;
-    --hair: rgba(255,255,255,.055); --edge: rgba(96,165,250,.26); --head: #122140;
+    /* Matches Overview and Trading: black card surfaces on a page one step
+       above them. Navy stays on header bands and hero surfaces. */
+    --bg: #06090f;
+    --panel: #000000; --panel-2: #000000;
+    --hair: rgba(255,255,255,.055); --edge: rgba(96,165,250,.20); --head: #122140;
     --text: #ffffff; --muted: #6f8098; --dim: #47566c;
     /* Restated because body.sharp out-specifies :root — a token defined only
        there silently does nothing on a page that boots into sharp. */
@@ -463,16 +486,16 @@
   .nav { top: 45px; }
 
   .drawer {
-    background: rgba(11, 20, 36, .82);
+    background: rgba(0, 0, 0, .86);
     backdrop-filter: blur(22px) saturate(1.4);
     -webkit-backdrop-filter: blur(22px) saturate(1.4);
   }
-  .dr-head { background: rgba(18, 33, 64, .72); }
+  .dr-head { background: var(--head); }
 
   /* Fallback: no backdrop-filter means no translucency, or the text goes soft. */
   @supports not (backdrop-filter: blur(2px)) {
     .topbar, .nav { background: var(--bar); }
-    .drawer { background: var(--panel); }
+    .drawer { background: #000; }
   }
 
   .live-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:var(--pos);
@@ -485,10 +508,10 @@
 
   /* ---- composition cards ------------------------------------------------ */
   .balcard { position:relative; overflow:hidden; }
-  .balcard::after {                      /* corner wash, tinted per card */
-    content:""; position:absolute; inset:0; pointer-events:none;
-    background:radial-gradient(120% 90% at 100% 0%, var(--tint, transparent), transparent 58%);
-  }
+  /* No corner wash. On black the tint read as a smudge across the top-right
+     rather than as light, and it softened the card's edge — the opposite of
+     what the sharp treatment is doing everywhere else. The icon already
+     carries the per-card colour, so nothing is lost. */
   .balcard > * { position:relative; z-index:1; }
   .bal-top { display:flex; align-items:flex-start; justify-content:space-between; gap:10px; }
   .bal-icon { width:26px; height:26px; border-radius:8px; display:grid; place-items:center;
@@ -584,13 +607,14 @@
   tbody tr:hover { background: rgba(255, 255, 255, .028); }
 
   /* Total-equity card keeps its bloom on top of the edge treatment. */
+  /* Same edge stack as every other card — a specular lip, a dark separation
+     ring, a grounding shadow. The hero navy fill is what marks it out now,
+     not an interior glow. */
   .balcard.total { box-shadow:
       inset 0 1px 0 rgba(255,255,255,.08),
-      inset 60px -45px 120px -75px rgba(59,130,246,.34),
-      0 0 0 1px rgba(2,6,14,.85),
+      0 0 0 1px rgba(0,0,0,.9),
       0 20px 44px -30px rgba(0,0,0,.95); }
 </style>
-<link rel="stylesheet" href="mx1.css" />
 
 <!-- ============================================================== chrome -->
 <div class="topbar">
@@ -667,10 +691,16 @@
        font-agnostic and immune to the circular case where an item's
        width:100% resolves against an indefinite max-content parent. */
     position:fixed; z-index:80; min-width:200px;
-    background:rgba(11,20,36,.97); backdrop-filter:blur(18px) saturate(1.4);
-    -webkit-backdrop-filter:blur(18px) saturate(1.4);
-    border:1px solid rgba(96,165,250,.42); border-radius:12px; padding:6px;
-    box-shadow:0 0 0 1px rgba(2,6,14,.9), 0 26px 52px -26px rgba(0,0,0,.95);
+    /* Same material as Overview's dropdown: near-black over a blur, with a
+       deeper lift than a card because it floats well above the page. */
+    background:rgba(0,0,0,.88); backdrop-filter:blur(26px) saturate(1.3);
+    -webkit-backdrop-filter:blur(26px) saturate(1.3);
+    border:1px solid rgba(96,165,250,.42); border-radius:14px; padding:6px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.10),
+      0 0 0 1px rgba(0,0,0,.95),
+      0 32px 64px -24px rgba(0,0,0,1),
+      0 0 40px -18px rgba(59,130,246,.55);
     display:none;
   }
   /* Flex column with stretch, not width:100% on the items — a percentage
@@ -682,7 +712,7 @@
      rather than the parent's attribute. */
   .navmenu-panel.open { display:flex; flex-direction:column;
                         align-items:stretch; gap:2px; }
-  @supports not (backdrop-filter: blur(2px)) { .navmenu-panel { background:var(--panel); } }
+  @supports not (backdrop-filter: blur(2px)) { .navmenu-panel { background:#05070d; } }
 
   .navmenu-item {
     display:flex; align-items:flex-start; gap:10px; text-align:left; width:100%;
@@ -698,7 +728,9 @@
   .navmenu-item small { display:block; font-size:10.5px; color:var(--dim); margin-top:3px;
                         line-height:1.4; }
   .navmenu-item svg { margin-top:1px; }
-  .navmenu-item[aria-current="page"] { color:#fff; background:rgba(59,130,246,.15); }
+  .navmenu-item[aria-current="page"] { color:#fff;
+    background:linear-gradient(180deg, rgba(96,165,250,.20), rgba(59,130,246,.10));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.09); }
   .navmenu-item[aria-current="page"] svg { color:var(--brand-2); opacity:1; }
   /* Not built yet: dimmed, not clickable, and says so rather than 404ing. */
   .navmenu-item.soon { opacity:.5; cursor:not-allowed; }
@@ -853,11 +885,14 @@
           </linearGradient>
         </defs>
         <g id="grid"></g>
-        <path id="ddArea" fill="rgba(251,113,133,.10)"></path>
-        <path id="area" fill="url(#fill)"></path>
+        <path id="ddArea" fill="rgba(251,113,133,.16)"></path>
+        <!-- The equity area fill is gone: two large translucent fills side by
+             side muddied where they met, and the blue one was both bigger and
+             brighter than the drawdown band it was competing with. Shading now
+             means one thing only — time spent below the peak. -->
         <line id="base" stroke="rgba(255,255,255,.22)" stroke-width="1" stroke-dasharray="5 5"
               vector-effect="non-scaling-stroke"></line>
-        <path id="line" fill="none" stroke="#60a5fa" stroke-width="1.6"
+        <path id="line" fill="none" stroke="#60a5fa" stroke-width="2.1"
               vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"></path>
         <g id="marks"></g>
         <g id="xaxis"></g>
@@ -866,7 +901,7 @@
     </div>
     <div class="curve-legend">
       <span><i class="swatch" style="background:#60a5fa"></i>Equity</span>
-      <span><i class="swatch" style="background:rgba(251,113,133,.45)"></i>Underwater from peak</span>
+      <span><i class="swatch" style="background:rgba(251,113,133,.6)"></i>Underwater from peak</span>
       <span><i class="swatch" style="background:rgba(255,255,255,.3)"></i>Period open</span>
     </div>
   </section>
@@ -937,7 +972,7 @@
 
   <div class="scroller" style="margin-top:14px">
     <table>
-      <thead><tr><th>Asset</th><th>Network</th><th>Balance</th><th>USD value</th>
+      <thead><tr><th>Asset</th><th class="lt">Network</th><th>Balance</th><th>USD value</th>
         <th class="lt">Allocation</th><th>24h change</th><th>Avg cost</th><th>Unrealized PnL</th></tr></thead>
       <tbody id="balBody"></tbody>
     </table>
@@ -1001,7 +1036,7 @@
     <table>
       <thead>
         <tr>
-          <th>#</th><th>Instrument</th><th>Dir</th><th>Opened</th><th>Closed</th><th>Held</th>
+          <th>#</th><th class="lt">Instrument</th><th class="lt">Dir</th><th>Opened</th><th>Closed</th><th>Held</th>
           <th>Size</th><th>Entry</th><th>Exit</th><th>P&amp;L</th><th>Return</th>
           <th>Cash in/out</th><th>Balance</th><th class="lt">Notes</th>
         </tr>
@@ -1557,6 +1592,10 @@ function drawCurve() {
   const yOf = v => Math.max(padT, Math.min(H - padB, H - padB - ((v - lo)/span) * (H - padB - padT)));
   GEO = { d, xOf, yOf, W, H, plotW, padB, open };
 
+  /* The pill's position has to be known before the axis is drawn, so a label
+     landing underneath it can be skipped — otherwise the two overprint. */
+  const pillY = yOf(d[d.length - 1].eq);
+
   /* ---- value axis ---- */
   const g = $("grid"); clear(g);
   const step = niceStep(span / 4);
@@ -1564,8 +1603,9 @@ function drawCurve() {
     const y = yOf(v);
     g.appendChild(el("line", { x1:0, x2:plotW, y1:y, y2:y,
       stroke:"rgba(255,255,255,.045)", "stroke-width":1, "vector-effect":"non-scaling-stroke" }));
-    g.appendChild(el("text", { x:plotW + 8, y:y + 3.5, fill:"var(--dim)", "font-size":10.5,
-      "font-variant-numeric":"tabular-nums" }, money(v)));
+    if (Math.abs(y - pillY) > 20)   /* label baseline sits 3.5px below y, and the pill is 20px tall */
+      g.appendChild(el("text", { x:plotW + 13, y:y + 3.5, fill:"var(--dim)", "font-size":10.5,
+        "font-variant-numeric":"tabular-nums" }, money(v)));
   }
 
   /* ---- curve + underwater band ---- */
@@ -1579,15 +1619,25 @@ function drawCurve() {
   for (let i = d.length - 1; i >= 0; i--) back += "L" + xOf(i).toFixed(1) + "," + yOf(d[i].eq).toFixed(2) + " ";
 
   $("line").setAttribute("d", line);
-  $("area").setAttribute("d", line + `L${plotW.toFixed(1)},${H - padB} L0,${H - padB} Z`);
   $("ddArea").setAttribute("d", peakPath + back + "Z");
 
+  /* Last-value pill, same as the Overview chart — without it the series just
+     runs into the axis numbers and the two pages stop looking related. */
+  const lastEq = d[d.length - 1].eq, ly = yOf(lastEq);
+  const rising = lastEq >= open;
+  const pill = $("marks");
   const by = yOf(open), b = $("base");
   b.setAttribute("x1", 0); b.setAttribute("x2", plotW);
   b.setAttribute("y1", by); b.setAttribute("y2", by);
 
   /* ---- peak, trough, cash flows ---- */
   const m = $("marks"); clear(m);
+
+  m.appendChild(el("rect", { x:plotW + 3, y:ly - 10, width:padR - 8, height:20, rx:4,
+    fill: rising ? "var(--pos)" : "var(--neg)" }));
+  m.appendChild(el("text", { x:plotW + 3 + (padR - 8)/2, y:ly + 4, "text-anchor":"middle",
+    "font-size":10.5, "font-weight":"600", fill:"#04121c",
+    "font-variant-numeric":"tabular-nums" }, money(lastEq)));
   const eqs = d.map(p => p.eq);
   const hiI = eqs.indexOf(Math.max(...eqs)), loI = eqs.indexOf(Math.min(...eqs));
   [[hiI, "Peak", -11], [loI, "Trough", 17]].forEach(([i, label, dy]) => {
