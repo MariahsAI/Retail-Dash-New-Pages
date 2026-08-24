@@ -573,7 +573,7 @@
            transition:opacity .25s ease, transform .25s cubic-bezier(.22,.61,.36,1); }
   .modal.open { opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1); }
   .modal-head { display:flex; align-items:center; justify-content:space-between; gap:14px;
-                padding:17px 20px; background:var(--head); border-bottom:2px solid var(--edge); }
+                padding:17px 20px; background:var(--head); border-bottom:1px solid var(--edge); }
   .modal-head h2 { margin:0; font-family:Georgia,serif; font-weight:400; font-size:17px; }
   .modal-body { overflow:auto; }
   @supports not (backdrop-filter: blur(2px)) { .modal, .pdrawer { background:#000; } }
@@ -602,7 +602,7 @@
            transition:opacity .25s ease, transform .25s cubic-bezier(.22,.61,.36,1); }
   .modal.open { opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1); }
   .modal-head { display:flex; align-items:center; justify-content:space-between; gap:14px;
-                padding:17px 20px; background:var(--head); border-bottom:2px solid var(--edge); }
+                padding:17px 20px; background:var(--head); border-bottom:1px solid var(--edge); }
   .modal-head h2 { margin:0; font-family:Georgia,serif; font-weight:400; font-size:17px; }
   .modal-body { overflow:auto; }
   .modal-close { background:rgba(255,255,255,.04); border:1px solid var(--hair); color:var(--muted);
@@ -624,7 +624,7 @@
              z-index:47; display:flex; flex-direction:column; overflow:hidden;
              box-shadow:-24px 0 60px -30px rgba(0,0,0,.9); }
   .pdrawer.open { transform:translateX(0); }
-  .pd-head { padding:20px 22px 22px; border-bottom:2px solid var(--edge); background:var(--head); }
+  .pd-head { padding:20px 22px 22px; border-bottom:1px solid var(--edge); background:var(--head); }
   .pd-top { display:flex; align-items:flex-start; justify-content:space-between; gap:14px; }
   .pd-head h3 { margin:0; font-family:Georgia,serif; font-weight:400; font-size:19px; }
   .pd-sub { color:var(--dim); font-size:11.5px; margin-top:5px; display:flex; gap:8px;
@@ -803,10 +803,18 @@
        font-agnostic and immune to the circular case where an item's
        width:100% resolves against an indefinite max-content parent. */
     position:fixed; z-index:80; min-width:200px;
-    background:rgba(11,20,36,.97); backdrop-filter:blur(18px) saturate(1.4);
-    -webkit-backdrop-filter:blur(18px) saturate(1.4);
-    border:1px solid rgba(96,165,250,.42); border-radius:12px; padding:6px;
-    box-shadow:0 0 0 1px rgba(2,6,14,.9), 0 26px 52px -26px rgba(0,0,0,.95);
+    /* Same material as the overlays: near-black over a blur, not the lighter
+       navy. A menu floating above the page needs a deeper shadow than a card
+       resting on it — it is further off the surface, so the ground shadow is
+       longer and the specular lip brighter. */
+    background:rgba(0,0,0,.88); backdrop-filter:blur(26px) saturate(1.3);
+    -webkit-backdrop-filter:blur(26px) saturate(1.3);
+    border:1px solid rgba(96,165,250,.42); border-radius:14px; padding:6px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.10),      /* top lip */
+      0 0 0 1px rgba(0,0,0,.95),                /* separation ring */
+      0 32px 64px -24px rgba(0,0,0,1),          /* ground shadow, long */
+      0 0 40px -18px rgba(59,130,246,.55);      /* brand lift */
     display:none;
   }
   /* Flex column with stretch, not width:100% on the items — a percentage
@@ -818,7 +826,7 @@
      rather than the parent's attribute. */
   .navmenu-panel.open { display:flex; flex-direction:column;
                         align-items:stretch; gap:2px; }
-  @supports not (backdrop-filter: blur(2px)) { .navmenu-panel { background:var(--panel); } }
+  @supports not (backdrop-filter: blur(2px)) { .navmenu-panel { background:#05070d; } }
 
   .navmenu-item {
     display:flex; align-items:flex-start; gap:10px; text-align:left; width:100%;
@@ -834,7 +842,9 @@
   .navmenu-item small { display:block; font-size:10.5px; color:var(--dim); margin-top:3px;
                         line-height:1.4; }
   .navmenu-item svg { margin-top:1px; }
-  .navmenu-item[aria-current="page"] { color:#fff; background:rgba(59,130,246,.15); }
+  .navmenu-item[aria-current="page"] { color:#fff;
+    background:linear-gradient(180deg, rgba(96,165,250,.20), rgba(59,130,246,.10));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.09); }
   .navmenu-item[aria-current="page"] svg { color:var(--brand-2); opacity:1; }
   /* Not built yet: dimmed, not clickable, and says so rather than 404ing. */
   .navmenu-item.soon { opacity:.5; cursor:not-allowed; }
