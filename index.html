@@ -109,15 +109,28 @@
   .split .l { background:var(--pos); } .split .s { background:var(--neg); }
 
   /* --------------------------------------------------------------- grid */
+  /* Paired rows rather than two independent columns: chart beside signals,
+     positions beside activity, balances across the foot. The horizontal
+     alignment gives the eye a line to scan along — two stacked columns of
+     different heights never line up, so nothing relates to anything. */
   .grid { display:grid; gap:16px; margin-top:16px; grid-template-columns:1fr; }
   @media (min-width:1200px) {
-    .grid { grid-template-columns: minmax(0,1.9fr) minmax(0,1fr); align-items: start; }
+    .grid { grid-template-columns: minmax(0,1.9fr) minmax(0,1fr);
+            align-items: stretch; }
+    .r-chart   { grid-column:1; grid-row:1; }
+    .r-signals { grid-column:2; grid-row:1; }
+    .r-pos     { grid-column:1; grid-row:2; }
+    .r-feed    { grid-column:2; grid-row:2; }
+    /* Asset balances is a wide table — it was the one card being squeezed by
+       the column split, so it takes the full width. */
+    .r-bal     { grid-column:1 / span 2; grid-row:3; }
   }
-  /* Cards size to their content; the column doesn't stretch them to fill. */
-  .col { display:grid; gap:16px; min-width:0; align-content:start; }
+  /* Rows only align if both cards fill the row. The lists take the overflow
+     internally rather than stretching the row to their content. */
+  .r-signals .card-body, .r-feed .card-body { overflow-y:auto; min-height:0; }
 
   .card { background:var(--panel); border:1px solid var(--edge); border-radius:14px; overflow:hidden;
-          display:flex; flex-direction:column; align-self:start;
+          display:flex; flex-direction:column; align-self:stretch;
           transition:box-shadow .55s ease, border-color .55s ease; }
 
   /* ---- glow -------------------------------------------------------------
@@ -942,9 +955,7 @@
   <!-- ========================================================== grid -->
   <div class="grid">
 
-    <!-- ---- left column ---- -->
-    <div class="col">
-      <section class="card">
+      <section class="card r-chart">
         <div class="card-head">
           <div style="display:flex;align-items:center;gap:12px;min-width:0">
             <span class="picker-wrap">
@@ -988,7 +999,7 @@
         </div>
       </section>
 
-      <section class="card">
+      <section class="card r-pos">
         <div class="card-head"><h2>Open Positions</h2><span class="sub" id="posSub">—</span></div>
         <div class="filterbar" id="posFilters">
           <div class="fgroup"><span class="label">Mode</span>
@@ -1026,7 +1037,7 @@
         </div>
       </section>
 
-      <section class="card">
+      <section class="card r-bal">
         <div class="card-head"><h2>Asset Balances</h2><span class="sub">Spot + DEX holdings</span></div>
         <div class="card-body flush scroll">
           <table>
@@ -1039,16 +1050,13 @@
           <button class="more-btn" id="balMore">View all assets</button>
         </div>
       </section>
-    </div>
 
-    <!-- ---- right column ---- -->
-    <div class="col">
-      <section class="card">
+      <section class="card r-signals">
         <div class="card-head"><h2>TradingView Signals</h2><span class="sub">Alert webhooks</span></div>
         <div class="card-body flush" id="signals"></div>
       </section>
 
-      <section class="card">
+      <section class="card r-feed">
         <div class="card-head"><h2>Fusion Activity</h2><span class="sub">Newest first</span></div>
         <div class="card-body flush" id="feed"></div>
       </section>
