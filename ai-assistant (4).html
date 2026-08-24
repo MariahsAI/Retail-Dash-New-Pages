@@ -1,0 +1,1581 @@
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>MX1 Trade — AI Assistant</title>
+
+<style>
+  :root {
+    --bg: #050b16; --bar: #070e1c; --panel: #0b1424; --panel-2: #0a1220;
+    --hair: rgba(255,255,255,.07);
+    --text: #e9eff8; --muted: #8093ab; --dim: #4c5a70;
+    --brand: #3b82f6; --brand-2: #60a5fa; --brand-strong: #2563eb;
+    --edge: rgba(59,130,246,.22); --head: #122140; --chart: #60a5fa; --warn: #fbbf24;
+    --accent: var(--brand); --accent-soft: rgba(59,130,246,.16); --accent-edge: rgba(59,130,246,.34);
+    --pos: #34d399; --neg: #fb7185;
+    --hero: #0d1730;   /* hero surfaces — navy, so they read blue */
+
+    /* .pos-card uses var(--well) inside a box-shadow, and an unresolved var()
+       makes CSS discard the WHOLE declaration — the cards would silently lose
+       their recessed treatment and their long/short edge. Defined here so the
+       page is fully self-contained. */
+    --well: inset 0 1px 0 rgba(0,0,0,.6),
+            inset 0 0 22px -14px rgba(96,165,250,.55),
+            0 1px 0 rgba(255,255,255,.035);
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin:0; background:var(--bg); color:var(--text); font-size:14px;
+         font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+         -webkit-font-smoothing:antialiased; text-rendering:optimizeLegibility;
+         font-feature-settings:"tnum" 1,"kern" 1; }
+  .label { font-size:10px; letter-spacing:.16em; text-transform:uppercase; color:var(--muted); }
+  .num { font-variant-numeric:tabular-nums; transition:color .3s ease; }
+  .up { color:var(--pos); } .down { color:var(--neg); }
+  .flash-up { color:var(--pos) !important; } .flash-down { color:var(--neg) !important; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+  /* ------------------------------------------------------------- chrome */
+  .topbar { display:flex; align-items:center; gap:14px; padding:9px 18px;
+            border-bottom:1px solid var(--hair); flex-wrap:wrap; }
+  .brand { display:flex; flex-direction:column; line-height:1; margin-right:4px; }
+  .brand b { font-size:19px; letter-spacing:.06em; }
+  .brand b i { font-style:normal; color:var(--brand); }
+  .brand span { font-size:9px; color:var(--dim); margin-top:2px; }
+  .seg { display:inline-flex; border:1px solid var(--hair); border-radius:10px; padding:3px; }
+  .seg button { background:none; border:0; color:var(--muted); font:inherit; font-size:12px;
+                font-weight:600; padding:6px 15px; cursor:pointer; border-radius:7px; }
+  .seg button[aria-pressed="true"] { background:linear-gradient(135deg,#60a5fa,#6366f1); color:#fff;
+                                     box-shadow:0 0 20px -5px rgba(99,102,241,.8); }
+  .chip { font:inherit; display:inline-flex; align-items:center; gap:7px; border:1px solid var(--hair);
+          border-radius:999px; padding:5px 13px; font-size:11.5px; color:var(--muted);
+          background:rgba(255,255,255,.02); white-space:nowrap; }
+  button.chip { cursor:pointer; }
+  .chip.online { border-color:rgba(52,211,153,.45); color:var(--pos);
+                 box-shadow:0 0 22px -9px rgba(52,211,153,.75), inset 0 0 26px -16px rgba(52,211,153,.95); }
+  .chip.kill { border-color:rgba(251,113,133,.32); color:var(--neg);
+               transition:box-shadow .25s ease, border-color .25s ease; }
+  .chip.kill:hover { border-color:rgba(251,113,133,.75);
+                     box-shadow:0 0 24px -8px rgba(251,113,133,.8); }
+  .toggle { width:34px; height:18px; border-radius:999px; background:#16233a; position:relative;
+            cursor:pointer; transition:background .3s ease, box-shadow .3s ease; }
+  .toggle::after { content:""; position:absolute; top:2px; left:2px; width:14px; height:14px;
+                   border-radius:50%; background:#e9eff8; transition:left .28s cubic-bezier(.4,0,.2,1); }
+  .toggle.on { background:linear-gradient(135deg,#60a5fa,#6366f1);
+               box-shadow:0 0 18px -4px rgba(99,102,241,.85); }
+  .toggle.on::after { left:18px; }
+  .pill-price { display:inline-flex; align-items:center; gap:10px; border:1px solid var(--accent-edge);
+                border-radius:999px; padding:6px 16px; background:var(--accent-soft);
+                margin-left:auto; margin-right:auto; }
+  .uid { border:1px solid var(--hair); border-radius:999px; padding:5px 13px; font-size:11px;
+         color:var(--muted); font-family:ui-monospace,monospace; }
+  .avatar { width:26px; height:26px; border-radius:50%; display:grid; place-items:center;
+            background:linear-gradient(140deg,var(--brand),var(--brand-2));
+            font-size:10px; font-weight:700; color:#04121c; }
+
+  /* One height across the three columns — otherwise the chart header (big
+     price, two lines) sits taller than the book and rail and the tops stagger. */
+  .card-head { display:flex; align-items:center; justify-content:space-between; gap:12px;
+               padding:0 16px; min-height:50px; background:var(--head);
+               border-bottom:1px solid var(--edge); flex-wrap:wrap; }
+  .card-head h2 { margin:0; font-size:13px; letter-spacing:.05em; text-transform:uppercase;
+                  font-weight:700; }
+  .card-head .sub { color:var(--dim); font-size:11.5px; }
+  .card-body { padding:0; }
+
+  /* ---- instrument bar ---- */
+  .inst { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  .picker-wrap { position:relative; display:inline-flex; }
+  .picker-face { display:inline-flex; align-items:center; gap:9px; font-family:Georgia,serif;
+                 font-size:17px; color:var(--text); background:rgba(59,130,246,.10);
+                 border:1px solid var(--edge); border-radius:9px; padding:6px 12px 6px 14px;
+                 white-space:nowrap; transition:background .2s, border-color .2s; }
+  .picker-face svg { width:11px; height:11px; stroke:var(--brand-2); stroke-width:2.2; fill:none;
+                     stroke-linecap:round; stroke-linejoin:round; }
+  .picker-wrap:hover .picker-face { background:rgba(59,130,246,.18); border-color:var(--brand); }
+  .picker { position:absolute; inset:0; width:100%; height:100%; opacity:0; cursor:pointer;
+            appearance:none; border:0; }
+  .picker:focus-visible + .picker-face { outline:2px solid var(--brand); outline-offset:2px; }
+  .picker option { background:var(--panel); color:var(--text); font-size:13px; }
+
+  .tfs { display:inline-flex; gap:2px; padding:3px; border:1px solid var(--hair);
+         border-radius:10px; background:rgba(255,255,255,.02); }
+  .tfs button { background:none; border:0; color:var(--muted); font:inherit; font-size:11.5px;
+                font-weight:600; padding:6px 12px; border-radius:7px; cursor:pointer; }
+  .tfs button:hover { color:var(--text); }
+  .tfs button[aria-pressed="true"] { background:var(--brand); color:#fff; }
+  .last { font-family:Georgia,serif; font-size:21px; line-height:1.1; font-variant-numeric:tabular-nums; }
+  .ohlc { display:flex; gap:13px; font-size:11px; color:var(--dim); flex-wrap:wrap;
+          font-variant-numeric:tabular-nums; }
+  .ohlc b { color:var(--muted); font-weight:600; }
+
+  .routing { display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+             padding:10px 18px; border-bottom:1px solid var(--hair);
+             background:rgba(255,255,255,.012); font-size:11.5px; color:var(--dim); }
+  .dot { width:6px; height:6px; border-radius:50%; background:var(--pos);
+         animation:pulse 1.6s ease-in-out infinite; }
+
+  /* ---- chart ---- */
+  .chart svg { width:100%; height:100%; display:block; cursor:crosshair;
+               shape-rendering:geometricPrecision; }
+
+  /* ---- fusion rail ---- */
+  .field { padding:14px 18px; border-bottom:1px solid var(--hair); }
+  .field:last-child { border-bottom:0; }
+  .field > .label { display:block; margin-bottom:8px; }
+  .inp, .sel { width:100%; background:rgba(255,255,255,.03); border:1px solid var(--hair);
+               color:var(--text); font:inherit; font-size:14px; padding:10px 12px;
+               border-radius:9px; font-variant-numeric:tabular-nums; }
+  .inp:focus, .sel:focus { outline:none; border-color:var(--brand); background:rgba(59,130,246,.07); }
+  .sel { appearance:none; cursor:pointer;
+         background-image:linear-gradient(45deg,transparent 50%,var(--muted) 50%),
+                          linear-gradient(135deg,var(--muted) 50%,transparent 50%);
+         background-position:calc(100% - 17px) 53%, calc(100% - 12px) 53%;
+         background-size:5px 5px,5px 5px; background-repeat:no-repeat; }
+  .quick { display:grid; grid-template-columns:repeat(4,1fr); gap:6px; margin-top:8px; }
+  .quick button { background:rgba(255,255,255,.02); border:1px solid var(--hair); color:var(--muted);
+                  font:inherit; font-size:11.5px; padding:7px 0; border-radius:8px; cursor:pointer; }
+  .quick button:hover { color:var(--text); border-color:var(--edge); }
+  .quick button[aria-pressed="true"] { background:var(--brand); border-color:var(--brand); color:#fff; }
+
+  input[type=range] { width:100%; appearance:none; height:4px; border-radius:2px; margin-top:12px;
+                      background:linear-gradient(90deg,var(--brand) var(--fill,30%),
+                                 rgba(255,255,255,.09) var(--fill,30%)); cursor:pointer; }
+  input[type=range]::-webkit-slider-thumb { appearance:none; width:15px; height:15px; border-radius:50%;
+    background:#fff; border:3px solid var(--brand); box-shadow:0 0 12px -2px rgba(59,130,246,.9); }
+  input[type=range]::-moz-range-thumb { width:15px; height:15px; border-radius:50%; background:#fff;
+    border:3px solid var(--brand); }
+
+  .meta { display:flex; justify-content:space-between; margin-top:9px; font-size:11px; color:var(--dim); }
+  .meta b { color:var(--muted); font-weight:600; font-variant-numeric:tabular-nums; }
+
+  .risk { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+  .risk button { background:rgba(255,255,255,.02); border:1px solid var(--hair); color:var(--muted);
+                 font:inherit; font-size:12px; padding:9px 0; border-radius:9px; cursor:pointer;
+                 transition:background .2s, color .2s, border-color .2s; }
+  .risk button:hover { color:var(--text); }
+  .risk button[aria-pressed="true"] { background:var(--brand); border-color:var(--brand); color:#fff; }
+  .risk button[data-v="high"][aria-pressed="true"] { background:var(--warn); border-color:var(--warn);
+                                                     color:#1a1205; }
+
+  .run { width:100%; border:0; border-radius:11px; padding:15px; cursor:pointer;
+         font:inherit; font-size:14px; font-weight:600; color:#fff;
+         background:linear-gradient(135deg,#3b82f6,#6366f1);
+         box-shadow:0 0 30px -8px rgba(99,102,241,.9);
+         transition:filter .2s, transform .08s; }
+  .run:hover { filter:brightness(1.1); }
+  .run:active { transform:translateY(1px); }
+  .run[disabled] { filter:grayscale(.5) brightness(.7); cursor:default; }
+  .run-note { text-align:center; font-size:11px; color:var(--dim); margin-top:10px; }
+
+  /* ---- positions ---- */
+  .scroll { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; }
+  thead th { text-align:right; font-size:10px; letter-spacing:.14em; text-transform:uppercase;
+             color:var(--muted); font-weight:700; padding:14px 16px; white-space:nowrap;
+             background:transparent; border-bottom:1px solid var(--hair); }
+  thead th:first-child, tbody td:first-child, .lt { text-align:left; }
+  tbody td { text-align:right; padding:12px 16px; border-top:1px solid var(--hair);
+             font-variant-numeric:tabular-nums; white-space:nowrap; font-size:13px; }
+  tbody tr:hover { background:rgba(255,255,255,.028); }
+  .tag { font-size:9.5px; letter-spacing:.07em; padding:3px 8px; border-radius:5px; }
+  .tag.long { background:rgba(52,211,153,.15); color:var(--pos); }
+  .tag.short { background:rgba(251,113,133,.15); color:var(--neg); }
+  .asset { display:flex; align-items:center; gap:11px; }
+  .coin { width:26px; height:26px; border-radius:50%; display:grid; place-items:center; flex:0 0 auto;
+          font-size:11px; font-weight:700; color:#071018; }
+  .asset b { font-weight:600; display:block; font-size:13px; line-height:1.25; }
+  .asset small { color:var(--dim); font-size:11px; }
+  .empty { padding:34px; text-align:center; color:var(--dim); font-size:13px; }
+  .mini { background:rgba(255,255,255,.02); border:1px solid var(--hair); color:var(--muted);
+          font:inherit; font-size:11px; padding:5px 11px; border-radius:7px; cursor:pointer; }
+  .mini:hover { color:var(--text); border-color:var(--edge); }
+  .mini.danger { border-color:rgba(251,113,133,.3); color:var(--neg); }
+  .mini.danger:hover { border-color:rgba(251,113,133,.7); }
+
+  /* ---- ambient + dither + edges ---- */
+  body::before {
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    background:
+      radial-gradient(1100px 520px at 15% -8%,  rgba(59,130,246,.13), transparent 62%),
+      radial-gradient(820px 420px at 88% 4%,    rgba(99,102,241,.09), transparent 60%),
+      radial-gradient(1200px 620px at 55% 112%, rgba(37,99,235,.07),  transparent 66%);
+  }
+  body::after {
+    content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+    opacity:.035; mix-blend-mode:overlay;
+    background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-size:140px 140px;
+  }
+  body.glow-off::before, body.glow-off::after { display:none; }
+  .page { position:relative; z-index:1; }
+  .topbar { background:rgba(7,14,28,.86); }
+
+  /* Safari implements -webkit-backdrop-filter but NOT the unprefixed property,
+   so testing only the unprefixed one made Safari take the opaque fallback
+   while Chrome kept the translucent fill — same page, two different
+   surfaces. Test both. */
+@supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) { .topbar, .nav { background:var(--bar); } }
+
+  .card-head { box-shadow: inset 0 1px 0 rgba(255,255,255,.05); }
+
+  @media (min-resolution: 2dppx) {
+    tbody td, thead th, .field, .routing { border-bottom-width:.5px; border-top-width:.5px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .dot { animation:none; } }
+
+  /* ---- sharp mode (matches index.html / portfolio.html) ------------------
+     Density and contrast, not squared corners. This is what the other two
+     pages boot into, so without it Trading renders a lighter, bluer surface
+     and reads as a different product. */
+  body.sharp {
+    /* Matches Overview: black card surfaces on a page that sits a touch above
+       them, so a black panel still reads as a surface. Navy stays on the
+       header bands and the hero. */
+    --bg: #06090f;
+    --panel: #000000; --panel-2: #000000;
+    --hair: rgba(255,255,255,.055); --edge: rgba(96,165,250,.20); --head: #122140;
+    --text: #ffffff; --muted: #6f8098; --dim: #47566c;
+    /* Restated because body.sharp out-specifies :root — a token defined only
+       there silently does nothing on a page that boots into sharp. */
+    --hero: #0d1730;
+  }
+
+  body.sharp .work { gap:1px; }
+  body.sharp .card-head { min-height:50px; padding:0 15px; }
+  body.sharp .field { padding:12px 15px; }
+  body.sharp .routing { padding:9px 15px; }
+  body.sharp thead th { padding:13px 15px; font-size:10px; letter-spacing:.13em; font-weight:700; }
+  body.sharp tbody td { padding:10px 15px; font-size:12.5px; }
+  body.sharp .card-head h2 { font-size:14px; letter-spacing:.05em; font-weight:700; }
+  body.sharp .label { color:var(--muted); font-size:9.5px; letter-spacing:.14em; }
+  body.sharp::before { opacity:.45; }
+
+  /* --- serif kept for the figures you actually read --- */
+  body.sharp .last, body.sharp .picker-face { font-family:Georgia,"Times New Roman",serif; }
+
+  /* ---- chart toolbar ----------------------------------------------------- */
+  .toolbar { display:flex; align-items:center; gap:6px; flex-wrap:wrap;
+             padding:8px 14px; border-bottom:1px solid var(--hair);
+             background:rgba(255,255,255,.012); }
+  .tool { display:inline-flex; align-items:center; gap:6px; background:none;
+          border:1px solid transparent; color:var(--muted); font:inherit; font-size:11.5px;
+          padding:6px 9px; border-radius:8px; cursor:pointer;
+          transition:background .18s, color .18s, border-color .18s; }
+  .tool:hover { color:var(--text); background:rgba(255,255,255,.05); }
+  .tool[aria-pressed="true"] { background:var(--brand); border-color:var(--brand); color:#fff; }
+  .tool:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
+  .tool svg { width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:1.7;
+              stroke-linecap:round; stroke-linejoin:round; }
+  .tool-sep { width:1px; height:20px; background:var(--hair); margin:0 4px; }
+  .tool-group { display:inline-flex; gap:2px; padding:2px; border:1px solid var(--hair);
+                border-radius:9px; background:rgba(255,255,255,.02); }
+  .tool-group .tool { padding:5px 9px; border-radius:6px; }
+
+  .menu-wrap { position:relative; }
+  .menu { position:absolute; top:calc(100% + 6px); left:0; z-index:20; min-width:210px;
+          background:linear-gradient(180deg, rgba(255,255,255,.055) 0%,
+                                    rgba(255,255,255,.014) 18%,
+                                    rgba(255,255,255,0) 44%), #000000;
+          border:1px solid var(--accent-edge); border-radius:11px; padding:6px;
+          box-shadow:0 24px 48px -24px rgba(0,0,0,.95); display:none; }
+  .menu.open { display:block; }
+  .menu-item { display:flex; align-items:center; justify-content:space-between; gap:12px;
+               width:100%; background:none; border:0; color:var(--muted); font:inherit;
+               font-size:12.5px; padding:9px 11px; border-radius:8px; cursor:pointer; text-align:left; }
+  .menu-item:hover { background:rgba(255,255,255,.05); color:var(--text); }
+  .menu-item .swatch { width:9px; height:2.5px; border-radius:2px; }
+  .menu-item .tick { opacity:0; color:var(--brand-2); font-size:13px; }
+  .menu-item[aria-pressed="true"] { color:var(--text); }
+  .menu-item[aria-pressed="true"] .tick { opacity:1; }
+  .menu-note { font-size:10.5px; color:var(--dim); padding:7px 11px 4px;
+               letter-spacing:.1em; text-transform:uppercase; }
+
+  .ind-legend { display:flex; gap:16px; flex-wrap:wrap; padding:9px 18px;
+                border-bottom:1px solid var(--hair); font-size:11.5px;
+                font-variant-numeric:tabular-nums; }
+  .ind-legend span b { font-weight:600; }
+  .ind-legend:empty { display:none; }
+
+  .chart.full { position:fixed; inset:0; z-index:60; background:var(--bg);
+                height:100vh; padding:14px 18px; }
+  .chart.full svg { height:calc(100vh - 28px); }
+
+  /* ---- 24h stats strip ---- */
+  .stats { display:flex; gap:0; flex-wrap:wrap; border-bottom:1px solid var(--hair); }
+  .stats div { padding:8px 16px; border-left:1px solid var(--hair); min-width:0; }
+  .stats div:first-child { border-left:0; }
+  .stats .k { font-size:9.5px; letter-spacing:.14em; text-transform:uppercase; color:var(--dim); }
+  .stats .v { font-size:13px; margin-top:3px; font-variant-numeric:tabular-nums; font-weight:600; }
+
+  /* ---- order book ---- */
+  .book { font-variant-numeric:tabular-nums; }
+  .book-head { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; padding:9px 14px;
+               font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--dim);
+               border-bottom:1px solid var(--hair); }
+  .book-head span:nth-child(2), .book-head span:nth-child(3) { text-align:right; }
+  .lvl { position:relative; display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px;
+         padding:4px 14px; font-size:11.5px; cursor:pointer; }
+  .lvl:hover { background:rgba(255,255,255,.05); }
+  .lvl .depth { position:absolute; top:0; bottom:0; right:0; opacity:.14; }
+  .lvl span { position:relative; }
+  .lvl span:nth-child(2), .lvl span:nth-child(3) { text-align:right; color:var(--muted); }
+  .lvl.ask .px { color:var(--neg); } .lvl.ask .depth { background:var(--neg); }
+  .lvl.bid .px { color:var(--pos); } .lvl.bid .depth { background:var(--pos); }
+  .spread { display:flex; align-items:baseline; justify-content:space-between; gap:10px;
+            padding:10px 14px; border-block:1px solid var(--hair);
+            background:rgba(255,255,255,.02); }
+  .spread b { font-family:Georgia,serif; font-size:17px; }
+  .spread small { color:var(--dim); font-size:11px; }
+
+  /* ---- fusion read on this pair ---- */
+  .verdict-row { display:flex; align-items:center; justify-content:space-between; gap:12px;
+                 padding:14px 18px; border-bottom:1px solid var(--hair); }
+  .verdict-big { font-family:Georgia,serif; font-size:24px; }
+  .conf { height:4px; border-radius:2px; background:rgba(255,255,255,.08); overflow:hidden;
+          margin-top:9px; }
+  .conf i { display:block; height:100%; border-radius:2px; transition:width .5s ease; }
+
+  /* ---- positions modal --------------------------------------------------- */
+  .more-row { display:flex; justify-content:center; padding:11px 15px;
+              border-top:1px solid var(--hair); }
+  .more-btn { background:rgba(59,130,246,.10); border:1px solid var(--edge); color:var(--brand-2);
+              font:inherit; font-size:12px; padding:7px 16px; border-radius:999px; cursor:pointer;
+              transition:background .2s, border-color .2s; }
+  .more-btn:hover { background:rgba(59,130,246,.2); border-color:var(--brand); }
+  .more-btn:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
+
+  .scrim { position:fixed; inset:0; background:rgba(3,7,15,.62); backdrop-filter:blur(2px);
+           opacity:0; pointer-events:none; transition:opacity .28s ease; z-index:44; }
+  .scrim.open { opacity:1; pointer-events:auto; }
+  .modal { position:fixed; top:50%; left:50%; transform:translate(-50%,-48%) scale(.98);
+           width:min(1080px, calc(100% - 40px)); max-height:min(82vh,900px);
+           background:linear-gradient(180deg, rgba(255,255,255,.055) 0%,
+                                    rgba(255,255,255,.014) 18%,
+                                    rgba(255,255,255,0) 44%), #000000;
+           border:1px solid var(--accent-edge); border-radius:16px; overflow:hidden;
+           display:flex; flex-direction:column; z-index:45; opacity:0; pointer-events:none;
+           transition:opacity .25s ease, transform .25s cubic-bezier(.22,.61,.36,1); }
+  .modal.open { opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1); }
+  .modal-head { display:flex; align-items:center; justify-content:space-between; gap:14px;
+                padding:0 20px; min-height:50px; background:var(--head); border-bottom:1px solid var(--edge); }
+  .modal-head h2 { margin:0; font-size:13px; letter-spacing:.05em; text-transform:uppercase;
+                   font-weight:700; }
+  .modal-body { overflow:auto; }
+  .modal-close { background:rgba(255,255,255,.04); border:1px solid var(--hair); color:var(--muted);
+                 font:inherit; width:30px; height:30px; border-radius:50%; cursor:pointer; line-height:1; }
+  .modal-close:hover { color:var(--text); border-color:var(--edge); }
+  @supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) { .modal { background:var(--panel); } }
+
+  /* Book columns flex inside their region. */
+  .book { display:flex; flex-direction:column; min-height:0; }
+  .book #asks, .book #bids { flex:1 1 auto; min-height:0; overflow:hidden; }
+
+  /* ---- expandable position detail --------------------------------------- */
+  tbody tr[data-pos] { cursor:pointer; }
+  tbody tr[data-pos].open { background:rgba(59,130,246,.07); }
+  .caret { display:inline-block; width:9px; margin-right:6px; color:var(--dim);
+           transition:transform .2s ease; }
+  tr.open .caret { transform:rotate(90deg); color:var(--brand-2); }
+
+  .pos-detail td { padding:0 !important; border-top:0 !important; }
+  .pd-inner { padding:16px 18px 18px; background:rgba(255,255,255,.015);
+              border-top:1px solid var(--hair); border-bottom:1px solid var(--edge); }
+  .pd-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(126px,1fr)); gap:14px 18px; }
+  .pd-grid .k { font-size:9.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--dim); }
+  .pd-grid .v { font-size:13.5px; margin-top:4px; font-weight:600;
+                font-variant-numeric:tabular-nums; }
+  .pd-acts { display:flex; gap:7px; flex-wrap:wrap; margin-top:16px; align-items:center; }
+  .act { background:rgba(255,255,255,.03); border:1px solid var(--hair); color:var(--muted);
+         font:inherit; font-size:11.5px; padding:8px 14px; border-radius:999px; cursor:pointer;
+         transition:color .18s, border-color .18s, background .18s; }
+  .act:hover { color:var(--text); border-color:var(--edge); background:rgba(255,255,255,.06); }
+  .act.warn { border-color:rgba(251,191,36,.35); color:var(--warn); }
+  .act.warn:hover { border-color:rgba(251,191,36,.75); }
+  .act.danger { border-color:rgba(251,113,133,.35); color:var(--neg); }
+  .act.danger:hover { border-color:rgba(251,113,133,.8); }
+  .tpsl-edit { display:flex; gap:7px; align-items:center; margin-left:auto; flex-wrap:wrap; }
+  .pc-grid input { width:70px; background:rgba(255,255,255,.03); border:1px solid var(--hair);
+                   color:var(--text); font:inherit; font-size:11px; padding:5px 7px;
+                   border-radius:7px; font-variant-numeric:tabular-nums; margin-right:4px; }
+  .pc-grid input:focus { outline:none; border-color:var(--brand); }
+
+  .tpsl-edit input { width:104px; background:rgba(255,255,255,.03); border:1px solid var(--hair);
+                     color:var(--text); font:inherit; font-size:11.5px; padding:7px 10px;
+                     border-radius:8px; font-variant-numeric:tabular-nums; }
+  .tpsl-edit input:focus { outline:none; border-color:var(--brand); }
+  .tpsl-edit .tp { color:var(--pos); } .tpsl-edit .sl { color:var(--neg); }
+
+  .liq-bar { grid-column:1 / -1; margin-top:2px; }
+  .liq-track { position:relative; height:4px; border-radius:2px; margin:8px 0 6px;
+               background:linear-gradient(90deg, rgba(251,113,133,.5), rgba(255,255,255,.08)); }
+  .liq-track i { position:absolute; top:-4px; width:2px; height:12px; border-radius:1px;
+                 transform:translateX(-50%); }
+
+  /* ---- book / trades tabs ------------------------------------------------
+     One panel, two views. They answer the same question — what is happening at
+     this price right now — so they belong in the same place, not stacked as two
+     cards competing for the column. */
+  .mkt-tabs { display:flex; gap:0; align-self:stretch; }
+  .mkt-tabs button { background:none; border:0; border-bottom:2px solid transparent;
+                     color:var(--muted); font:inherit; font-size:13px; font-weight:700;
+                     letter-spacing:.05em; text-transform:uppercase; padding:0 17px;
+                     cursor:pointer; transition:color .2s, border-color .2s; }
+  .mkt-tabs button:hover { color:var(--text); }
+  .mkt-tabs button[aria-pressed="true"] { color:#fff; border-bottom-color:var(--brand); }
+  .mkt-tabs button:focus-visible { outline:2px solid var(--brand); outline-offset:-4px; }
+
+  .tape-wrap { flex:1 1 auto; min-height:0; display:flex; flex-direction:column; }
+  .tape-head { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; padding:9px 14px;
+               font-size:9.5px; letter-spacing:.12em; text-transform:uppercase; color:var(--dim);
+               border-bottom:1px solid var(--hair); }
+  .tape-head span:nth-child(2), .tape-head span:nth-child(3) { text-align:right; }
+  .tape { flex:1 1 auto; min-height:0; overflow-y:auto; }
+  .tape::-webkit-scrollbar { width:9px; }
+  .tape::-webkit-scrollbar-thumb { background:rgba(96,165,250,.28); border-radius:5px; }
+  .tape::-webkit-scrollbar-track { background:transparent; }
+  .tape .row { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; padding:4px 14px;
+               font-size:11.5px; font-variant-numeric:tabular-nums; }
+  .tape .row span:nth-child(1) { color:var(--dim); }
+  .tape .row span:nth-child(2) { text-align:right; }
+  .tape .row span:nth-child(3) { text-align:right; color:var(--muted); }
+  .tape .row.buy .p { color:var(--pos); } .tape .row.sell .p { color:var(--neg); }
+
+  /* ---- terminal layout ---------------------------------------------------
+     A trading desk is a fixed set of regions filling the viewport, not a
+     document you scroll. Everything below the nav sizes to the window and each
+     region scrolls internally. */
+  html, body { height:100%; }
+  body { overflow:hidden; }
+
+  /* The window never scrolls. Each pane scrolls under the cursor, which is why
+     the work row can take whatever is left. */
+  .app { display:grid; height:100vh; overflow:hidden;
+         grid-template-rows:auto auto auto minmax(0,1fr) auto; }
+  /* The dock is a sized grid TRACK, not a sized element — an element height
+     can still be outgrown by content, a track cannot. */
+  /* A position card needs ~200px to show both rows of its grid; below that the
+     dock is showing you a cropped card, which is worse than a shorter chart. */
+  @media (max-height:900px) { .app { --dock-h:244px; } }
+  @media (max-height:800px) { .app { --dock-h:238px; } }
+  /* Collapsed: just the tab strip, so the work area gets the height back. */
+  .app.dock-collapsed { --dock-h:47px; }
+  .app.dock-collapsed .dock-body { display:none; }
+  /* Without min-width:0 a grid item is sized by its widest content, so the
+     10-column positions table was stretching every row past the viewport and
+     pushing the left edge off screen. */
+  .app > * { min-width:0; max-width:100vw; }
+
+  /* instrument strip */
+  .inst-bar { display:flex; align-items:center; gap:0; flex-wrap:wrap; min-width:0;
+              border-bottom:1px solid var(--hair); background:var(--head); }
+  .inst-lead { display:flex; align-items:center; gap:14px; padding:10px 16px; }
+  .inst-price { font-family:Georgia,serif; font-size:23px; line-height:1;
+                font-variant-numeric:tabular-nums; }
+  .inst-stat { padding:8px 16px; border-left:1px solid var(--hair); min-width:0; }
+  .inst-stat .k { font-size:9px; letter-spacing:.13em; text-transform:uppercase; color:var(--dim);
+                  white-space:nowrap; }
+  .inst-stat .v { font-size:12.5px; margin-top:3px; font-weight:600;
+                  font-variant-numeric:tabular-nums; white-space:nowrap; }
+
+  /* watchlist ticker */
+  .ticker { display:flex; gap:0; overflow-x:auto; border-bottom:1px solid var(--hair);
+            background:rgba(255,255,255,.012); scrollbar-width:none; }
+  .ticker::-webkit-scrollbar { display:none; }
+  .ticker button { display:flex; align-items:center; gap:8px; background:none; border:0;
+                   border-right:1px solid var(--hair); color:var(--muted); font:inherit;
+                   font-size:11.5px; padding:8px 15px; cursor:pointer; white-space:nowrap;
+                   font-variant-numeric:tabular-nums; }
+  .ticker button:hover { background:rgba(255,255,255,.04); color:var(--text); }
+  .ticker button[aria-pressed="true"] { background:rgba(59,130,246,.14); color:#fff; }
+  .ticker .sym { font-weight:600; }
+
+  /* Chart, market, dock and rail live in ONE grid. The rail spans both rows,
+     the way an exchange's order panel runs the full height beside the position
+     dock — that is what stops it being squeezed into whatever is left over. */
+  .work { display:grid; gap:1px; background:rgba(96,165,250,.34); min-height:0; overflow:hidden;
+          grid-template-columns:minmax(0,1fr);
+          /* Dock down ~144px (1.5in) so the chart and book get that height
+             back. The dock still clears one full position card plus its tab
+             row; the rest scroll, and the grip drags it back if you want the
+             old split. */
+          grid-template-rows:minmax(0,1fr) var(--dock-h,248px); }
+  /* 1200 was too high — a 1190px viewport fell through to the stacked layout
+     and pushed the whole Fusion column off screen. */
+  @media (min-width:1040px) {
+    .work { grid-template-columns:minmax(0,1fr) 250px 320px; }
+    .r-chart  { grid-column:1; grid-row:1; }
+    .r-market { grid-column:2; grid-row:1; }
+    .r-dock   { grid-column:1 / span 2; grid-row:2; }
+    .r-rail   { grid-column:3; grid-row:1 / span 2; }
+  }
+  @media (min-width:1400px) {
+    .work { grid-template-columns:minmax(0,1fr) 292px 372px; }
+    .r-chart  { grid-column:1; grid-row:1; }
+    .r-market { grid-column:2; grid-row:1; }
+    .r-dock   { grid-column:1 / span 2; grid-row:2; }
+    .r-rail   { grid-column:3; grid-row:1 / span 2; }
+  }
+  @media (min-width:1680px) {
+    .work { grid-template-columns:minmax(0,1fr) 320px 408px; }
+    /* Book ends where the chart ends. The dock runs beneath both of them, up
+       to the Fusion column. Only Fusion spans the full height. */
+    .r-chart  { grid-column:1; grid-row:1; }
+    .r-market { grid-column:2; grid-row:1; }
+    .r-dock   { grid-column:1 / span 2; grid-row:2; }
+    .r-rail   { grid-column:3; grid-row:1 / span 2; }
+  }
+
+  .region { background:var(--bg); min-height:0; min-width:0; display:flex;
+            flex-direction:column; overflow:hidden; }
+  .region > * { flex:0 0 auto; }
+  /* .chart-wrap is in this list because the chart is now nested inside it —
+     the old selector matched .chart as a direct child, so after wrapping it
+     the plot stopped growing and collapsed to content width. */
+  .region > .chart, .region > .chart-wrap, .region > .book,
+  .region > .tape-wrap { flex:1 1 auto; min-height:0; }
+  /* The book's own body scrolls if the level count still overflows. */
+  .book { overflow:hidden; }
+  /* Tool rail sits beside the plot, not over it — an overlay would cover the
+     left-most candles, which on a 120-bar series is real data. */
+  .chart-wrap { flex:1 1 auto; min-height:0; display:flex; }
+  .tools { flex:0 0 auto; width:42px; display:flex; flex-direction:column; align-items:center;
+           gap:3px; padding:8px 0; border-right:1px solid var(--hair);
+           background:rgba(255,255,255,.012); }
+  .tbtn { width:30px; height:30px; border:1px solid transparent; border-radius:8px;
+          background:none; color:var(--muted); cursor:pointer; display:grid; place-items:center;
+          transition:background .18s, color .18s, border-color .18s; }
+  .tbtn:hover { color:var(--text); background:rgba(255,255,255,.06); }
+  .tbtn[aria-pressed="true"] { color:#fff; background:rgba(59,130,246,.18);
+                               border-color:rgba(59,130,246,.45); }
+  .tbtn:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
+  .tbtn svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.6;
+              stroke-linecap:round; stroke-linejoin:round; }
+  .tsep { width:18px; height:1px; background:var(--hair); margin:5px 0; }
+
+  /* The plot sits on true black — the candles and the volume bars are the only
+     things that should carry lightness inside the frame. */
+  .chart { min-height:180px; background:#000; flex:1 1 auto; min-width:0; }
+  .chart svg { width:100%; height:100%; display:block; }
+  /* The rail is taller than its row by design — it has to scroll, and its
+     children must not be flex:0 0 auto or they refuse to overflow cleanly. */
+  .region.scrolls { overflow-y:auto; overflow-x:hidden; }
+  .region.scrolls > * { flex:0 0 auto; }
+  .region.scrolls::-webkit-scrollbar { width:9px; }
+  .region.scrolls::-webkit-scrollbar-thumb { background:rgba(96,165,250,.28); border-radius:5px; }
+  .region.scrolls::-webkit-scrollbar-track { background:transparent; }
+
+  /* bottom dock */
+  .dock { position:relative; z-index:5; min-width:0; border-top:1px solid var(--edge);
+          background:var(--panel-2); display:flex; flex-direction:column;
+          height:100%; min-height:0; overflow:hidden; }
+  /* Matches the other panel headers: same height, same weight, same 2px rule
+     underneath. It was reading as a strip rather than a header. */
+  .dock-tabs { display:flex; align-items:center; gap:0; min-width:0; min-height:50px;
+               border-bottom:1px solid var(--edge); background:var(--head); overflow-x:auto; }
+  .dock-tabs button { background:none; border:0; border-bottom:2px solid transparent;
+                      color:var(--muted); font:inherit; font-size:12.5px; font-weight:700;
+                      letter-spacing:.03em; padding:9px 14px 7px; cursor:pointer;
+                      white-space:nowrap; }
+  .dock-tabs button:hover { color:var(--text); }
+  .dock-tabs button[aria-pressed="true"] { color:#fff; border-bottom-color:var(--brand); }
+  .dock-actions { margin-left:auto; display:flex; align-items:center; gap:10px; padding:0 16px; }
+  .dock-body { flex:1 1 auto; min-height:0; min-width:0; overflow:auto; }
+  .dock-body table { min-width:940px; }
+  .dock-empty { padding:40px; text-align:center; color:var(--dim); font-size:13px; }
+
+  /* ---- rounding -----------------------------------------------------------
+   * The shell stays square: a terminal is panes meeting at seams, and rounded
+   * corners there would leave gaps the seam colour shows through. Controls
+   * round, because they are objects you press.
+   */
+  .app, .work, .region, .dock, .inst-bar { border-radius:0; }
+  .tool, .tfs button, .seg button, .quick button, .risk button,
+  .mini, .act, .chip, .btn { border-radius:8px; }
+  .run { border-radius:11px; }
+  .picker-face, .inp, .sel { border-radius:9px; }
+  .modal { border-radius:14px; }
+
+  /* ---- status bar --------------------------------------------------------
+     The bottom rail answers "is what I'm looking at real?" — feed health,
+     latency, clock. On a page where an engine trades for you, a stale feed is
+     the failure you most need to notice.
+   */
+  .statusbar { display:flex; align-items:center; gap:0; border-top:1px solid var(--edge);
+               background:var(--bar); font-size:11px; color:var(--dim); min-width:0; }
+  .st { display:inline-flex; align-items:center; gap:7px; padding:7px 14px;
+        border-right:1px solid var(--hair); white-space:nowrap; }
+  .st:last-child { border-right:0; }
+  .st b { color:var(--muted); font-weight:600; font-variant-numeric:tabular-nums; }
+  .st .led { width:6px; height:6px; border-radius:50%; background:var(--pos);
+             box-shadow:0 0 8px -1px var(--pos); }
+  .st .led.warn { background:var(--warn); box-shadow:0 0 8px -1px var(--warn); }
+  .st .led.bad  { background:var(--neg);  box-shadow:0 0 8px -1px var(--neg);
+                  animation:pulse 1.2s ease-in-out infinite; }
+  .st.ok b { color:var(--pos); }
+  .st.push { margin-left:auto; }
+  .bars { display:inline-flex; align-items:flex-end; gap:2px; height:11px; }
+  .bars i { width:3px; border-radius:1px; background:var(--dim); }
+  .bars i:nth-child(1){height:4px} .bars i:nth-child(2){height:7px} .bars i:nth-child(3){height:11px}
+  .bars.s3 i { background:var(--pos); }
+  .bars.s2 i:nth-child(-n+2) { background:var(--warn); }
+  .bars.s1 i:nth-child(1) { background:var(--neg); }
+
+  /* ---- fusion rail ------------------------------------------------------- */
+  .rail .inp, .rail .sel { padding:8px 10px; font-size:13px; }
+  .rail .quick { margin-top:0; gap:5px; }
+  .rail .quick button { padding:6px 0; font-size:11px; }
+  .rail input[type=range] { margin-top:10px; }
+  .rail .meta { margin-top:7px; font-size:10.5px; }
+  .rail .risk button { padding:7px 0; font-size:11.5px; }
+  .rail .run { padding:12px; font-size:13.5px; }
+  .rail .run-note { font-size:10.5px; margin-top:7px; }
+
+  /* ---- compact chrome ----------------------------------------------------
+     Four stacked bars (topbar, nav, instrument, ticker) were eating 202px of a
+     718px viewport before a single candle drew. Merging the watchlist into the
+     instrument row halves that. */
+  .topbar { padding:7px 14px; gap:10px; row-gap:6px; }
+
+  .inst-lead { padding:7px 14px; }
+  .inst-price { font-size:20px; }
+  .inst-stat { padding:6px 13px; }
+  .inst-stat .v { font-size:12px; margin-top:2px; }
+
+  /* watchlist rides the instrument row instead of taking its own */
+  .ticker { border-bottom:0; border-left:1px solid var(--hair); background:transparent;
+            max-width:100%; }
+  .ticker button { padding:6px 12px; font-size:11px; }
+
+  /* ---- scroll affordance --------------------------------------------------
+   * A pane that scrolls has to look like it does. These are scroll shadows:
+   * the "local" layers scroll with the content and cover the "scroll" layers
+   * at the extremes, so the glow appears only when there is more to see, with
+   * no JS listening to scroll events.
+   */
+  .pane-scroll {
+    overflow-y:auto; overscroll-behavior:contain;
+    background:
+      linear-gradient(var(--pane-bg, var(--bg)) 30%, rgba(5,11,22,0)) top / 100% 24px no-repeat local,
+      linear-gradient(rgba(5,11,22,0), var(--pane-bg, var(--bg)) 70%) bottom / 100% 24px no-repeat local,
+      radial-gradient(farthest-side at 50% 0,   rgba(96,165,250,.35), rgba(96,165,250,0)) top / 100% 11px no-repeat scroll,
+      radial-gradient(farthest-side at 50% 100%,rgba(96,165,250,.35), rgba(96,165,250,0)) bottom / 100% 11px no-repeat scroll;
+  }
+  .pane-scroll::-webkit-scrollbar { width:10px; }
+  .pane-scroll::-webkit-scrollbar-thumb { background:rgba(96,165,250,.5); border-radius:5px;
+                                          border:2px solid var(--bg); }
+  .pane-scroll::-webkit-scrollbar-thumb:hover { background:rgba(96,165,250,.8); }
+  .pane-scroll::-webkit-scrollbar-track { background:rgba(255,255,255,.03); }
+  .pane-scroll { scrollbar-width:thin; scrollbar-color:rgba(96,165,250,.5) rgba(255,255,255,.03); }
+
+  /* ---- drag-resize the dock ---- */
+  .dock-grip { height:5px; cursor:row-resize; background:transparent; flex:0 0 auto;
+               margin-top:-3px; position:relative; z-index:6; }
+  .dock-grip:hover, .dock-grip.dragging { background:rgba(96,165,250,.5); }
+
+  /* ---- position cards ----------------------------------------------------
+     A ten-column table forces every value into the same narrow column and
+     needs horizontal scroll. A card per position reads better and fits the
+     dock without scrolling sideways.
+     The card is a recessed well: near-black fill on a lifted dock surface.
+     A card lighter than its background reads as a raised chip, which fights
+     the dense-terminal look — recessed is sharper and lets the numbers sit
+     on true black. */
+  .pos-list { padding:10px 12px; display:flex; flex-direction:column; gap:9px; }
+  .pos-card { border-radius:11px; padding:11px 13px;
+              background:var(--panel); border:1px solid rgba(96,165,250,.26); }
+  .pos-card.long  { border-left:3px solid var(--pos);
+                    box-shadow: inset 12px 0 22px -18px var(--pos), var(--well); }
+  .pos-card.short { border-left:3px solid var(--neg);
+                    box-shadow: inset 12px 0 22px -18px var(--neg), var(--well); }
+
+  .pc-top { display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-bottom:9px; }
+  .pc-top .sym { font-size:14px; font-weight:700; letter-spacing:.01em; }
+  .pc-badge { font-size:10px; letter-spacing:.05em; padding:3px 8px; border-radius:6px;
+              border:1px solid var(--hair); color:var(--muted); }
+  .pc-badge.long  { background:rgba(52,211,153,.16); color:var(--pos); border-color:transparent; }
+  .pc-badge.short { background:rgba(251,113,133,.16); color:var(--neg); border-color:transparent; }
+  .pc-actions { margin-left:auto; display:flex; gap:6px; flex-wrap:wrap; }
+
+  /* Five across, two down — so the second row (entry, liq, margin rate,
+     realized) is always on screen. */
+  .pc-grid { display:grid; gap:10px 22px; grid-template-columns:repeat(5, minmax(0,1fr)); }
+  @media (max-width:1280px) { .pc-grid { grid-template-columns:repeat(3, minmax(0,1fr)); } }
+  .pc-grid .k { font-size:9.5px; letter-spacing:.13em; text-transform:uppercase; color:var(--dim);
+                white-space:nowrap; }
+  .pc-grid .v { font-size:13px; font-weight:600; margin-top:3px; color:#fff;
+                font-variant-numeric:tabular-nums; white-space:nowrap; }
+  .pc-grid .v small { display:block; font-weight:400; font-size:11px; color:var(--dim);
+                      margin-top:2px; }
+  /* The editor row is a row, not a caption — its own class so it isn't caught
+     by the generic caption rule above. */
+  .pc-grid .v small.tpsl { display:flex; align-items:center; gap:6px; margin-top:6px;
+                           flex-wrap:wrap; }
+
+  /* ---- fusion rail, rebuilt ----------------------------------------------
+     Header and action are fixed; only the parameters scroll between them. The
+     read sits at the top as a card because it is a conclusion, not a field. */
+  .rail { display:flex; flex-direction:column; min-height:0; background:var(--panel-2); }
+  /* Title over subtitle, sized to match the tab rows beside it. */
+  .rail-head { flex:0 0 auto; min-height:50px; display:flex; flex-direction:column;
+               justify-content:center; gap:2px; padding:0 16px; background:var(--head);
+               border-bottom:1px solid var(--edge); }
+  .rail-head h2 { margin:0; font-size:13px; letter-spacing:.05em; text-transform:uppercase;
+                  font-weight:700; }
+  .rail-head .sub { color:var(--dim); font-size:11.5px; line-height:1.3; }
+  .rail-body { flex:1 1 auto; min-height:0; padding:12px; }
+  .rail-foot { flex:0 0 auto; padding:12px; border-top:1px solid var(--edge);
+               background:rgba(255,255,255,.02); }
+
+  .read-card { border:1px solid var(--edge); border-radius:11px; padding:12px 13px;
+               background:linear-gradient(160deg, rgba(59,130,246,.10), transparent 70%); }
+  .read-top { display:flex; align-items:baseline; justify-content:space-between; }
+  .read-conf { font-size:15px; font-weight:700; }
+  .read-card .verdict-big { font-family:Georgia,serif; font-size:26px; line-height:1.1;
+                            margin-top:3px; }
+  .read-card .conf { height:4px; border-radius:2px; background:rgba(255,255,255,.09);
+                     overflow:hidden; margin-top:9px; }
+  .read-card .conf i { display:block; height:100%; border-radius:2px; transition:width .5s ease; }
+  .read-note { font-size:10.5px; color:var(--dim); margin-top:8px; }
+
+  .sec { margin-top:14px; padding-top:12px; border-top:1px solid var(--hair); }
+  .sec-title { display:block; font-size:9.5px; letter-spacing:.15em; text-transform:uppercase;
+               color:var(--brand-2); font-weight:700; margin-bottom:9px; }
+  .sec .k { display:block; font-size:9.5px; letter-spacing:.13em; text-transform:uppercase;
+            color:var(--dim); margin-bottom:5px; }
+  .sec label { display:block; }
+  .sec .inp, .sec .sel { width:100%; }
+  .sec label.full { margin-top:9px; }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+  .ro { border:1px solid var(--edge); border-radius:9px; padding:8px 10px; font-size:13px;
+        color:var(--brand-2); background:rgba(59,130,246,.08); text-align:center; }
+  .lev-head { display:flex; align-items:baseline; justify-content:space-between; margin-top:13px; }
+  .lev-head .k { margin-bottom:0; }
+  .lev-head b { font-size:14px; }
+  .sec .quick { margin-top:8px; }
+  .sec .risk { display:grid; grid-template-columns:repeat(3,1fr); gap:6px; }
+
+  /* ---- book pressure ------------------------------------------------------
+     Cumulative bid vs ask depth across the visible book. It answers "which
+     side is stacked" faster than reading twenty rows of sizes. One thick bar
+     with the readings inside it — a 5px sliver plus a separate label row was
+     two things saying one thing. */
+  .ratio { flex:0 0 auto; padding:8px 10px 10px; border-top:1px solid var(--hair);
+           background:rgba(255,255,255,.015); }
+  .ratio-bar { display:flex; height:24px; border-radius:6px; overflow:hidden;
+               background:rgba(255,255,255,.06); font-size:11.5px;
+               font-variant-numeric:tabular-nums; }
+  .ratio-bar i { display:flex; align-items:center; height:100%; min-width:0;
+                 transition:width .4s ease; font-style:normal; overflow:hidden; }
+  .ratio-bar i > span { padding:0 9px; white-space:nowrap; }
+  .ratio-bar .b { background:rgba(52,211,153,.26); color:var(--pos);
+                  justify-content:flex-start; }
+  .ratio-bar .s { background:rgba(251,113,133,.26); color:var(--neg);
+                  justify-content:flex-end; }
+  .ratio-bar b { font-weight:700; }
+
+  /* ---- nav row -----------------------------------------------------------
+     Merging this into the top bar was meant to save a row, but at real widths
+     it wrapped and cost the same height with worse grouping. Account controls
+     on one row, navigation on its own. */
+  .nav { display:flex; gap:4px; padding:6px 14px; background:var(--bar);
+         border-bottom:1px solid var(--hair); overflow-x:auto; scrollbar-width:none; }
+  .nav::-webkit-scrollbar { display:none; }
+  .nav a { display:inline-flex; align-items:center; gap:8px; color:var(--muted);
+           text-decoration:none; font-size:13.5px; padding:8px 13px; border-radius:9px;
+           border:1px solid transparent; white-space:nowrap;
+           transition:background .25s, box-shadow .35s, color .25s; }
+  .nav a svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.6;
+               stroke-linecap:round; stroke-linejoin:round; opacity:.8; flex:0 0 auto; }
+  .nav a:hover { color:var(--text); background:rgba(255,255,255,.05); }
+  .nav a.on { color:#fff; background:rgba(59,130,246,.16); border-color:rgba(59,130,246,.45);
+              box-shadow:0 0 22px -9px rgba(59,130,246,.9); }
+  .nav a.on svg { color:var(--brand-2); opacity:1; }
+  .nav a.soon { opacity:.5; cursor:not-allowed; }
+  .nav a.soon:hover { background:none; color:var(--muted); }
+
+  /* top bar keeps one line: account controls only */
+  .topbar { flex-wrap:nowrap; overflow-x:auto; scrollbar-width:none; }
+  .topbar::-webkit-scrollbar { display:none; }
+  .topbar .uid { margin-left:auto; }
+</style>
+
+<div class="app">
+<div class="topbar">
+  <div class="brand"><b>M<i>X</i>1</b><span>mx1trade.com</span></div>
+
+  <div class="seg"><button aria-pressed="true">CEX</button><button aria-pressed="false">DEX</button></div>
+  <button class="chip" id="aiAuto" aria-pressed="true">AI AUTO <span class="toggle on"></span></button>
+  <div class="chip online">&#9679; FUSION ONLINE</div>
+  <button class="chip kill">&#9211; KILL SWITCH</button>
+  <div class="pill-price"><span class="label">CEX &middot; USDT</span>
+    <b class="num" id="barEquity">$0.00</b></div>
+  <div class="uid">UID okx_856274432502104602</div>
+  <div class="avatar">MT</div>
+  <span style="color:var(--muted);font-size:13px">MX1 Trade</span>
+</div>
+
+<nav class="nav">
+  <a href="index.html"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2.5" y="2.5" width="5.5" height="5.5" rx="1"/><rect x="10" y="2.5" width="5.5" height="5.5" rx="1"/><rect x="2.5" y="10" width="5.5" height="5.5" rx="1"/><rect x="10" y="10" width="5.5" height="5.5" rx="1"/></svg>Overview</a>
+  <span class="navmenu" data-open="false">
+    <button class="nav-trigger on" aria-haspopup="true" aria-expanded="false">
+      <svg class="ico" viewBox="0 0 18 18" aria-hidden="true"><polyline points="2 12.5 6.3 8.2 9.8 11 15.5 4.5"/><polyline points="11.6 4.5 15.5 4.5 15.5 8.4"/></svg>Trading
+      <svg class="caret" viewBox="0 0 12 12" aria-hidden="true"><polyline points="2.5 4.5 6 8 9.5 4.5"/></svg>
+    </button>
+    <span class="navmenu-panel" role="menu">
+      <a class="navmenu-item" role="menuitem" href="trading.html">
+        <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M3 15V7.5M7 15V3M11 15v-5M15 15V5.5"/></svg>
+        <span>Manual Trade<small>Chart, order book, Fusion controller</small></span>
+      </a>
+      <a class="navmenu-item" role="menuitem" href="auto-autonomous.html">
+        <svg viewBox="0 0 18 18" aria-hidden="true"><rect x="3" y="6.2" width="12" height="8" rx="2.6"/><circle cx="6.9" cy="10.2" r=".95" fill="currentColor" stroke="none"/><circle cx="11.1" cy="10.2" r=".95" fill="currentColor" stroke="none"/><path d="M9 6.2V3.8"/><circle cx="9" cy="2.9" r="1.1"/></svg>
+        <span>Auto Autonomous<small>Hands-off — Fusion runs the book</small></span>
+      </a>
+    </span>
+  </span>
+  <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="6.6" cy="6" r="2.7"/><path d="M2 15.2c0-2.6 2.1-4.2 4.6-4.2s4.6 1.6 4.6 4.2"/><path d="M12.1 3.7a2.7 2.7 0 0 1 0 5.2"/><path d="M13.2 11.2c1.9.5 2.9 1.9 2.9 4"/></svg>Community</a>
+  <a href="ai-assistant.html" class="on"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="3" y="6.2" width="12" height="8" rx="2.6"/><circle cx="6.9" cy="10.2" r=".95" fill="currentColor" stroke="none"/><circle cx="11.1" cy="10.2" r=".95" fill="currentColor" stroke="none"/><path d="M9 6.2V3.8"/><circle cx="9" cy="2.9" r="1.1"/></svg>AI Assistant</a>
+  <a href="chat.html"><svg viewBox="0 0 18 18" aria-hidden="true"><path d="M15.2 10.4A2.6 2.6 0 0 1 12.6 13H6.2l-3.4 2.7V4.9A2.6 2.6 0 0 1 5.4 2.3h7.2a2.6 2.6 0 0 1 2.6 2.6z"/></svg>Chat</a>
+  <a href="portfolio.html"><svg viewBox="0 0 18 18" aria-hidden="true"><rect x="2" y="5.4" width="14" height="9.8" rx="2.2"/><path d="M6.4 5.4V4a1.6 1.6 0 0 1 1.6-1.6h2A1.6 1.6 0 0 1 11.6 4v1.4"/><path d="M2 9.6h14"/></svg>Portfolio</a>
+  <a href="#" class="soon" title="Not built yet"><svg viewBox="0 0 18 18" aria-hidden="true"><circle cx="9" cy="9" r="2.5"/><path d="M9 1.7v1.7M9 14.6v1.7M2.7 9H1M17 9h-1.7M4.6 4.6 3.4 3.4M14.6 14.6l-1.2-1.2M4.6 13.4l-1.2 1.2M14.6 3.4l-1.2 1.2"/></svg>Settings</a>
+</nav>
+
+<style>
+  /* ---- nav dropdown ------------------------------------------------------
+     Trading is two products now — the manual desk and the autonomous engine.
+     A submenu keeps them under one nav item instead of widening a nav that
+     already scrolls at laptop widths. Class names are namespaced because
+     trading.html already owns .menu / .menu-item for the indicator picker.
+   */
+  .navmenu { position:relative; display:inline-flex; }
+  .navmenu > .nav-trigger {
+    display:inline-flex; align-items:center; gap:8px; background:none; font:inherit;
+    color:var(--muted); font-size:13.5px; padding:8px 13px; border-radius:9px;
+    border:1px solid transparent; white-space:nowrap; cursor:pointer;
+    transition:background .25s, box-shadow .35s, color .25s;
+  }
+  .navmenu > .nav-trigger svg.ico { width:16px; height:16px; fill:none; stroke:currentColor;
+    stroke-width:1.6; stroke-linecap:round; stroke-linejoin:round; opacity:.8; flex:0 0 auto; }
+  .navmenu > .nav-trigger svg.caret { width:9px; height:9px; fill:none; stroke:currentColor;
+    stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; flex:0 0 auto;
+    transition:transform .2s ease; opacity:.7; }
+  .navmenu > .nav-trigger:hover { color:var(--text); background:rgba(255,255,255,.05); }
+  .navmenu > .nav-trigger:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
+  /* Lit when this section is the page you're on, matching .nav a.on exactly. */
+  .navmenu > .nav-trigger.on { color:#fff; background:rgba(59,130,246,.16);
+    border-color:rgba(59,130,246,.45); box-shadow:0 0 22px -9px rgba(59,130,246,.9); }
+  .navmenu > .nav-trigger.on svg.ico { color:var(--brand-2); opacity:1; }
+  .navmenu[data-open="true"] > .nav-trigger svg.caret { transform:rotate(180deg); }
+
+  /* Fixed, not absolute: .nav is overflow-x:auto, which makes it a scroll
+     container and clips any absolutely-positioned child. Fixed escapes it;
+     the position is written from the trigger's rect on open. */
+  /* An explicit width, because width:100% on the items resolved against an
+     indefinite width and blew the shrink-to-fit panel out to fill the
+     viewport — 433px of item holding 165px of text. */
+  .navmenu-panel {
+    /* Width is measured and written by place() below. Doing it in JS makes it
+       font-agnostic and immune to the circular case where an item's
+       width:100% resolves against an indefinite max-content parent. */
+    position:fixed; z-index:80; min-width:200px;
+    /* Same material as Overview's dropdown: near-black over a blur, with a
+       deeper lift than a card because it floats well above the page. */
+    background:linear-gradient(180deg, rgba(255,255,255,.055) 0%,
+                                    rgba(255,255,255,.014) 18%,
+                                    rgba(255,255,255,0) 44%), #000000;
+    border:1px solid rgba(96,165,250,.42); border-radius:14px; padding:6px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.10),
+      0 0 0 1px rgba(0,0,0,.95),
+      0 32px 64px -24px rgba(0,0,0,1),
+      0 0 40px -18px rgba(59,130,246,.55);
+    display:none;
+  }
+  /* Flex column with stretch, not width:100% on the items — a percentage
+     width resolving against a max-content parent is circular, which is
+     what blew the panel out to 433px the first time. Stretch gets the
+     full-width rows with no cycle. */
+  /* The panel is moved to <body> on boot (see navMenus), so it is no longer a
+     descendant of .navmenu — the open state has to key off its own class
+     rather than the parent's attribute. */
+  .navmenu-panel.open { display:flex; flex-direction:column;
+                        align-items:stretch; gap:2px; }
+  @supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) { .navmenu-panel { background:#000; } }
+
+  .navmenu-item {
+    display:flex; align-items:flex-start; gap:10px; text-align:left; width:100%;
+    background:none; border:0; color:var(--muted); font:inherit; font-size:13px;
+    padding:9px 11px; border-radius:8px; cursor:pointer; text-decoration:none;
+    transition:background .18s, color .18s;
+  }
+  .navmenu-item > span { min-width:0; line-height:1.35; }
+  .navmenu-item:hover { background:rgba(96,165,250,.10); color:var(--text); }
+  .navmenu-item:focus-visible { outline:2px solid var(--brand); outline-offset:-2px; }
+  .navmenu-item svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.6;
+    stroke-linecap:round; stroke-linejoin:round; flex:0 0 auto; opacity:.8; }
+  .navmenu-item small { display:block; font-size:10.5px; color:var(--dim); margin-top:3px;
+                        line-height:1.4; }
+  .navmenu-item svg { margin-top:1px; }
+  .navmenu-item[aria-current="page"] { color:#fff;
+    background:linear-gradient(180deg, rgba(96,165,250,.20), rgba(59,130,246,.10));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.09); }
+  .navmenu-item[aria-current="page"] svg { color:var(--brand-2); opacity:1; }
+  /* Not built yet: dimmed, not clickable, and says so rather than 404ing. */
+  .navmenu-item.soon { opacity:.5; cursor:not-allowed; }
+  .navmenu-item.soon:hover { background:none; color:var(--muted); }
+</style>
+
+<script>
+/* One dropdown, wired generically so adding a second section later is markup
+   only. Click-outside and Escape both close; arrow keys walk the items. */
+(function navMenus() {
+  const menus = [...document.querySelectorAll(".navmenu")];
+  if (!menus.length) return;
+
+  const close = m => {
+    m.setAttribute("data-open", "false");
+    m._panel?.classList.remove("open");
+  };
+  const closeAll = except => menus.forEach(m => { if (m !== except) close(m); });
+
+  menus.forEach(m => {
+    const trigger = m.querySelector(".nav-trigger");
+    const items = () => [...m.querySelectorAll(".navmenu-item:not(.soon)")];
+
+    const panel = m.querySelector(".navmenu-panel");
+
+    /* Reparent to <body>. .topbar/.nav carry backdrop-filter on some pages, and
+       a backdrop-filter makes an element the containing block for fixed-position
+       descendants — so the panel stopped being viewport-fixed and got clipped by
+       .nav's overflow:auto. Clicks then landed on the page behind it. Pages
+       without backdrop-filter on the nav were unaffected, which is why this only
+       bit Overview and Portfolio. */
+    document.body.appendChild(panel);
+
+    /* Place the fixed panel under its trigger, and keep it on screen if the
+       trigger sits near the right edge. */
+    /* Two passes: let the panel size to its content, read that, then pin it as
+       a definite px width. The items' width:100% then resolves against a real
+       number and every row fills the panel — no trailing gap at any font. */
+    const sizeToContent = () => {
+      panel.style.width = "max-content";
+      const w = Math.min(Math.ceil(panel.getBoundingClientRect().width), 360);
+      panel.style.width = w + "px";
+      return w;
+    };
+
+    const place = () => {
+      const w = sizeToContent();
+      const r = trigger.getBoundingClientRect();
+      panel.style.top = (r.bottom + 6) + "px";
+      panel.style.left = Math.max(8, Math.min(r.left, innerWidth - w - 8)) + "px";
+    };
+
+    trigger.addEventListener("click", e => {
+      e.stopPropagation();
+      const open = m.getAttribute("data-open") !== "true";
+      closeAll(m);
+      m.setAttribute("data-open", open);
+      panel.classList.toggle("open", open);
+      trigger.setAttribute("aria-expanded", open);
+      /* preventScroll: focusing inside the scrollable nav would otherwise
+         scroll the whole row out from under the cursor. */
+      if (open) { place(); items()[0]?.focus({ preventScroll: true }); }
+    });
+
+    addEventListener("resize", () => { if (m.getAttribute("data-open") === "true") place(); });
+    panel.addEventListener("click", e => e.stopPropagation());
+
+    m._panel = panel;
+    /* Keydown has to be bound to the panel too: it is no longer inside .navmenu,
+       so events from the items cannot bubble to it. */
+    [m, panel].forEach(node => node.addEventListener("keydown", e => {
+      const list = items();
+      const i = list.indexOf(document.activeElement);
+      if (e.key === "Escape") { close(m); trigger.setAttribute("aria-expanded","false"); trigger.focus(); }
+      if (e.key === "ArrowDown") { e.preventDefault();
+        list[Math.min(i + 1, list.length - 1)]?.focus({ preventScroll: true }); }
+      if (e.key === "ArrowUp")   { e.preventDefault();
+        (i <= 0 ? trigger : list[i - 1]).focus({ preventScroll: true }); }
+    }));
+
+    /* A placeholder item shouldn't jump the page to the top. */
+    m.querySelectorAll(".navmenu-item.soon").forEach(a =>
+      a.addEventListener("click", e => e.preventDefault()));
+
+    /* The item for the page you are already on is a no-op: navigating to your
+       own URL is a full reload, which reseeds the chart, empties the tape and
+       resets the dock. Close the menu and stay put. */
+    m.querySelectorAll('.navmenu-item[aria-current="page"]').forEach(a =>
+      a.addEventListener("click", e => {
+        e.preventDefault();
+        close(m);
+        trigger.setAttribute("aria-expanded", "false");
+        trigger.focus({ preventScroll: true });
+      }));
+  });
+
+  document.addEventListener("click", () => closeAll(null));
+})();
+</script>
+<style>
+  /* ===================================================================
+     AI Assistant. Two panes: history on the left, one conversation on the
+     right. Same surfaces as the rest of the product — black panes, navy
+     header bands, blue seam between columns.
+     =================================================================== */
+
+  .work2 { display:grid; min-height:0; overflow:hidden; background:var(--edge);
+           gap:1px; grid-template-columns:minmax(0,1fr); }
+  @media (min-width:900px)  { .work2 { grid-template-columns:300px minmax(0,1fr); } }
+  @media (min-width:1400px) { .work2 { grid-template-columns:340px minmax(0,1fr); } }
+  .pane { background:#000; min-width:0; min-height:0; display:flex;
+          flex-direction:column; overflow:hidden; }
+
+  /* ---- history rail ---- */
+  .hhead { flex:0 0 auto; display:flex; align-items:center; justify-content:space-between;
+           gap:12px; height:50px; padding:0 16px; background:var(--head);
+           border-bottom:1px solid var(--edge); }
+  /* Sans, not serif. The serif is reserved for figures you read. */
+  .hhead h1 { margin:0; font-size:13px; letter-spacing:.05em; text-transform:uppercase;
+              font-weight:700; }
+  .newbtn { width:30px; height:30px; border-radius:9px; display:grid; place-items:center;
+            background:rgba(59,130,246,.12); border:1px solid var(--edge); color:var(--brand-2);
+            cursor:pointer; flex:0 0 auto; transition:background .2s, border-color .2s; }
+  .newbtn:hover { background:rgba(59,130,246,.24); border-color:var(--brand); }
+  .newbtn svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.9;
+                stroke-linecap:round; }
+
+  .hsearch { flex:0 0 auto; padding:10px 12px; border-bottom:1px solid var(--hair); }
+  .hsearch label { position:relative; display:flex; align-items:center; }
+  .hsearch svg { position:absolute; left:11px; width:14px; height:14px; fill:none;
+                 stroke:var(--dim); stroke-width:1.8; pointer-events:none; }
+  .hsearch input { width:100%; background:rgba(255,255,255,.03); border:1px solid var(--hair);
+                   color:var(--text); font:inherit; font-size:13px; padding:9px 12px 9px 33px;
+                   border-radius:9px; }
+  .hsearch input::placeholder { color:var(--dim); }
+  .hsearch input:focus { outline:none; border-color:var(--brand); background:rgba(59,130,246,.07); }
+
+  .hlist { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain; }
+  .hgroup { font-size:9.5px; letter-spacing:.16em; text-transform:uppercase; color:var(--dim);
+            padding:14px 16px 7px; }
+
+  /* One line, not two. The old list repeated the title as the preview, which
+     cost half the rail's height and told you nothing you had not just read. */
+  .hitem { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:10px; align-items:baseline;
+           width:100%; text-align:left; background:none; border:0; color:inherit; font:inherit;
+           padding:9px 16px; cursor:pointer; transition:background .18s; }
+  .hitem:hover { background:rgba(96,165,250,.06); }
+  .hitem[aria-selected="true"] { background:rgba(59,130,246,.13);
+                                 box-shadow:inset 2px 0 0 var(--brand); }
+  .hitem:focus-visible { outline:2px solid var(--brand); outline-offset:-2px; }
+  .hitem .t { font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .hitem .d { font-size:10.5px; color:var(--dim); font-variant-numeric:tabular-nums;
+              white-space:nowrap; }
+
+  /* ---- conversation pane ---- */
+  .chead { flex:0 0 auto; display:flex; align-items:center; gap:10px; height:50px;
+           padding:0 16px; background:var(--head); border-bottom:1px solid var(--edge); }
+  .models { display:inline-flex; gap:3px; padding:3px; border:1px solid var(--hair);
+            border-radius:10px; background:rgba(255,255,255,.02); }
+  .models button { background:none; border:0; color:var(--muted); font:inherit; font-size:12px;
+                   font-weight:600; padding:6px 13px; border-radius:7px; cursor:pointer;
+                   display:inline-flex; align-items:center; gap:7px; }
+  .models button:hover { color:var(--text); }
+  .models button[aria-pressed="true"] { background:rgba(59,130,246,.18); color:#fff; }
+  .models .dot { width:6px; height:6px; border-radius:50%; background:var(--dim); }
+  .models button[aria-pressed="true"] .dot { background:var(--pos);
+                                             box-shadow:0 0 8px -1px var(--pos); }
+  .chead .spacer { margin-left:auto; }
+  .ghost { display:inline-flex; align-items:center; gap:8px; background:none;
+           border:1px solid var(--hair); color:var(--muted); font:inherit; font-size:11.5px;
+           padding:7px 12px; border-radius:9px; cursor:pointer;
+           transition:color .2s, border-color .2s; }
+  .ghost:hover { color:var(--text); border-color:var(--edge); }
+  .ghost svg { width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:1.7;
+               stroke-linecap:round; stroke-linejoin:round; }
+
+  .thread { flex:1 1 auto; min-height:0; overflow-y:auto; overscroll-behavior:contain;
+            padding:20px 22px 8px; }
+  /* The opening state centres in the pane; a live conversation goes back to
+     flowing from the top. Without this the intro sat in the top third with
+     half the pane empty beneath it. */
+  .thread.empty { display:flex; align-items:center; justify-content:center; }
+
+  /* ---- opening state ---- */
+  .intro { max-width:760px; width:100%; margin:0 auto; padding:8px 0; text-align:center; }
+  .mark { width:64px; height:64px; margin:0 auto 20px; border-radius:18px; display:grid;
+          place-items:center; background:linear-gradient(140deg,#3b82f6,#22d3ee);
+          box-shadow:0 0 46px -14px rgba(59,130,246,.9); }
+  .mark svg { width:30px; height:30px; fill:#04121c; }
+  .intro h2 { margin:0 0 10px; font-family:Georgia,"Times New Roman",serif; font-weight:400;
+              font-size:29px; letter-spacing:-.01em; }
+  .intro p { margin:0 auto; max-width:560px; font-size:13.5px; color:var(--muted);
+             line-height:1.65; }
+
+  .caps { display:flex; flex-wrap:wrap; justify-content:center; gap:9px; margin-top:24px; }
+  .cap { display:inline-flex; align-items:center; gap:8px; background:rgba(255,255,255,.025);
+         border:1px solid var(--hair); color:var(--muted); font:inherit; font-size:12.5px;
+         padding:9px 15px; border-radius:999px; cursor:pointer;
+         transition:all .2s; }
+  .cap:hover { color:var(--text); border-color:var(--edge); background:rgba(59,130,246,.10); }
+  .cap svg { width:14px; height:14px; fill:none; stroke:currentColor; stroke-width:1.7;
+             stroke-linecap:round; stroke-linejoin:round; color:var(--brand-2); }
+
+  /* Starter prompts, in the user's own words — they go straight into the
+     composer rather than firing, so you can edit before sending. */
+  .starters { display:grid; gap:10px; margin-top:26px; text-align:left;
+              grid-template-columns:1fr; }
+  @media (min-width:760px) { .starters { grid-template-columns:1fr 1fr; } }
+  .starter { display:flex; align-items:flex-start; gap:11px; background:rgba(255,255,255,.02);
+             border:1px solid var(--hair); color:var(--text); font:inherit; font-size:13px;
+             padding:14px 15px; border-radius:12px; cursor:pointer; text-align:left;
+             transition:all .2s; }
+  .starter:hover { border-color:var(--edge); background:rgba(59,130,246,.08); }
+  .starter svg { width:15px; height:15px; margin-top:1px; flex:0 0 auto; fill:none;
+                 stroke:var(--brand-2); stroke-width:1.7; stroke-linecap:round;
+                 stroke-linejoin:round; }
+
+  /* ---- messages ---- */
+  .msg { max-width:min(720px, 86%); width:fit-content; margin-bottom:4px; }
+  .msg.me { margin-left:auto; }
+  .msg .who { font-size:10.5px; color:var(--dim); margin:12px 0 4px; }
+  .msg.me .who { text-align:right; }
+  .bub { padding:11px 14px; border-radius:14px; font-size:13.5px; line-height:1.6;
+         background:rgba(255,255,255,.055); border-bottom-left-radius:5px; }
+  .msg.me .bub { background:rgba(59,130,246,.22); border-bottom-left-radius:14px;
+                 border-bottom-right-radius:5px; }
+  .bub p { margin:0 0 9px; } .bub p:last-child { margin:0; }
+  .bub ul { margin:0; padding-left:18px; } .bub li { margin:3px 0; }
+  .bub b { font-weight:600; }
+  .typing { display:flex; align-items:center; gap:7px; padding:8px 0 0;
+            font-size:11.5px; color:var(--dim); }
+  .typing i { width:5px; height:5px; border-radius:50%; background:var(--dim);
+              animation:pulse 1.2s ease-in-out infinite; }
+  .typing i:nth-child(2){animation-delay:.18s} .typing i:nth-child(3){animation-delay:.36s}
+  @media (prefers-reduced-motion: reduce) { .typing i { animation:none; } }
+
+  /* ---- composer ---- */
+  .comp { flex:0 0 auto; padding:12px 18px 14px; border-top:1px solid var(--edge);
+          background:rgba(255,255,255,.014); }
+  .comp-top { display:flex; align-items:center; gap:8px; margin-bottom:9px; }
+  .iconbtn { width:30px; height:30px; border-radius:8px; display:grid; place-items:center;
+             background:none; border:1px solid transparent; color:var(--dim); cursor:pointer;
+             transition:color .2s, background .2s; }
+  .iconbtn:hover { color:var(--brand-2); background:rgba(96,165,250,.08); }
+  .iconbtn svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.7;
+                 stroke-linecap:round; stroke-linejoin:round; }
+  .status { margin-left:auto; display:inline-flex; align-items:center; gap:7px;
+            font-size:11.5px; color:var(--muted); }
+  .status .dot { width:6px; height:6px; border-radius:50%; background:var(--pos);
+                 box-shadow:0 0 8px -1px var(--pos); }
+
+  .cbox { display:flex; align-items:flex-end; gap:9px; border:1px solid var(--hair);
+          border-radius:13px; background:rgba(255,255,255,.03); padding:7px 8px 7px 13px;
+          transition:border-color .2s, background .2s; }
+  .cbox:focus-within { border-color:var(--brand); background:rgba(59,130,246,.06); }
+  .cbox textarea { flex:1 1 auto; background:none; border:0; color:var(--text); font:inherit;
+                   font-size:13.5px; line-height:1.5; resize:none; padding:6px 0;
+                   max-height:150px; min-height:26px; }
+  .cbox textarea:focus { outline:none; }
+  .cbox textarea::placeholder { color:var(--dim); }
+  .send { width:34px; height:34px; border-radius:10px; border:0; cursor:pointer; flex:0 0 auto;
+          display:grid; place-items:center; color:#fff;
+          background:linear-gradient(135deg,#3b82f6,#6366f1);
+          box-shadow:0 0 22px -8px rgba(99,102,241,.9); transition:filter .18s, opacity .18s; }
+  .send:hover:not(:disabled) { filter:brightness(1.12); }
+  .send:disabled { opacity:.32; cursor:not-allowed; box-shadow:none; }
+  .send svg { width:16px; height:16px; fill:none; stroke:currentColor; stroke-width:1.9;
+              stroke-linecap:round; stroke-linejoin:round; }
+  .hint { display:flex; gap:14px; margin-top:8px; font-size:10.5px; color:var(--dim); }
+  .hint kbd { border:1px solid var(--hair); border-radius:4px; padding:0 4px;
+              background:rgba(255,255,255,.03); font:inherit; font-size:10px; }
+
+  .hlist::-webkit-scrollbar, .thread::-webkit-scrollbar { width:10px; }
+  .hlist::-webkit-scrollbar-thumb, .thread::-webkit-scrollbar-thumb {
+    background:rgba(96,165,250,.45); border-radius:5px; border:2px solid transparent;
+    background-clip:padding-box; }
+  .app { display:grid; height:100vh; overflow:hidden; grid-template-rows:auto auto minmax(0,1fr); }
+  .app > * { min-width:0; max-width:100vw; }
+  /* Below the width where the chrome fits on one line, let it wrap instead of
+     scrolling. A horizontally scrolling bar can hide the kill switch and the
+     account controls with nothing on screen to say they are there. */
+  @media (max-width:1000px) {
+    .topbar { flex-wrap:wrap; overflow-x:visible; row-gap:8px; }
+    .nav { flex-wrap:wrap; overflow-x:visible; row-gap:6px; }
+  }
+  /* Nothing may push the document sideways. */
+  html, body { max-width:100%; overflow-x:hidden; }
+  html, body { height:100%; } body { overflow:hidden; }
+</style>
+
+<div class="work2">
+
+  <!-- ---- history ---- -->
+  <div class="pane">
+    <div class="hhead">
+      <h1>History</h1>
+      <button class="newbtn" id="newChat" title="New conversation" aria-label="New conversation">
+        <svg viewBox="0 0 16 16"><path d="M8 3v10M3 8h10"/></svg>
+      </button>
+    </div>
+    <div class="hsearch">
+      <label>
+        <svg viewBox="0 0 16 16"><circle cx="7" cy="7" r="4.5"/><path d="M10.4 10.4 14 14"/></svg>
+        <input id="hq" type="search" placeholder="Search conversations" aria-label="Search conversations" />
+      </label>
+    </div>
+    <div class="hlist" id="hlist" role="listbox" aria-label="Conversation history"></div>
+  </div>
+
+  <!-- ---- conversation ---- -->
+  <div class="pane">
+    <div class="chead">
+      <div class="models" id="models">
+        <button data-m="v3" aria-pressed="true"><span class="dot"></span>Mariah v3</button>
+        <button data-m="v2" aria-pressed="false"><span class="dot"></span>v2</button>
+        <button data-m="v1" aria-pressed="false"><span class="dot"></span>v1</button>
+      </div>
+      <span class="spacer"></span>
+      <button class="ghost" id="modelSettings">
+        <svg viewBox="0 0 18 18"><path d="M3 5.5h12M3 12.5h12"/><circle cx="7" cy="5.5" r="2"/><circle cx="12" cy="12.5" r="2"/></svg>
+        Model settings
+      </button>
+    </div>
+
+    <div class="thread" id="thread"></div>
+
+    <div class="comp">
+      <div class="comp-top">
+        <button class="iconbtn" title="Attach a file" aria-label="Attach a file">
+          <svg viewBox="0 0 18 18"><path d="M15 8.5 9.2 14.3a3.6 3.6 0 0 1-5.1-5.1l6.2-6.2a2.4 2.4 0 0 1 3.4 3.4l-6.2 6.2a1.2 1.2 0 0 1-1.7-1.7l5.6-5.6"/></svg>
+        </button>
+        <button class="iconbtn" title="Attach a chart image" aria-label="Attach a chart image">
+          <svg viewBox="0 0 18 18"><rect x="2.5" y="3.5" width="13" height="11" rx="2"/><circle cx="6.5" cy="7.5" r="1.3"/><path d="M3 12.5 7 9l3 2.4 2.5-2 2.5 2.6"/></svg>
+        </button>
+        <span class="status"><span class="dot"></span>Mariah online</span>
+      </div>
+      <div class="cbox">
+        <textarea id="input" rows="1" aria-label="Message Mariah"
+          placeholder="Ask about markets, request analysis, or run a Fusion cycle"></textarea>
+        <button class="send" id="send" disabled aria-label="Send">
+          <svg viewBox="0 0 18 18"><path d="M2.4 9 15.6 3.2 12.8 15.4 9.2 11z"/><path d="M9.2 11 15.6 3.2"/></svg>
+        </button>
+      </div>
+      <div class="hint">
+        <span><kbd>Enter</kbd> send</span>
+        <span><kbd>Shift</kbd> + <kbd>Enter</kbd> new line</span>
+        <span><kbd>/</kbd> search history</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ------------------------------------------------------------------ config */
+const CONFIG = {
+  density: "sharp",
+  apiUrl: "",          // e.g. "/api/mariah" — blank runs the demo responder
+  model: "v3",
+  /* Audit-verified count. The old copy claimed "25+", which does not match the
+     16 production agents across five layers — and an agent count in
+     user-facing copy is the same number diligence will ask about. */
+  agentCount: 16,
+};
+
+const $ = id => document.getElementById(id);
+document.body.classList.toggle("sharp", CONFIG.density === "sharp");
+addEventListener("keydown", e => {
+  if (e.shiftKey && (e.key === "D" || e.key === "d") && !isTyping(e.target)) {
+    CONFIG.density = CONFIG.density === "sharp" ? "soft" : "sharp";
+    document.body.classList.toggle("sharp", CONFIG.density === "sharp");
+  }
+});
+const isTyping = el => el && /^(INPUT|TEXTAREA)$/.test(el.tagName);
+const esc = s => String(s).replace(/[&<>"]/g, c =>
+  ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
+
+/* ---- state --------------------------------------------------------------- */
+const DAY = 86400e3, now = Date.now();
+let CHATS = [], active = null, filter = "";
+
+function demoChats() {
+  return [
+    { id:"c1", t: now - 40*60e3, title:"Analyse BTC/USDT for a long entry on 15m", msgs:[
+      { me:true,  text:"Analyse BTC/USDT for a long entry on 15m" },
+      { me:false, text:"<p><b>15m read on BTC/USDT — cautious long.</b></p><ul><li>Price is holding above the 20-period mean after a clean higher low at 63,880.</li><li>Volume on the last two pushes is below the session average, so momentum is thin.</li><li>Nearest resistance sits at 64,420, roughly 0.6% away.</li></ul><p>An entry here works with a stop under 63,820 and a first target at 64,400 — about 1.9R. I would size at half your usual until the volume confirms.</p>" },
+    ]},
+    { id:"c2", t: now - 5*3600e3, title:"What is the current market regime?", msgs:[
+      { me:true,  text:"What is the current market regime?" },
+      { me:false, text:"<p><b>Range-bound, low conviction.</b></p><p>Realized volatility is in the lower third of its 30-day range and the majors are moving together — correlation across BTC, ETH and SOL is around 0.86 on the hour. That combination usually favours mean reversion over breakout entries.</p><p>Fusion is holding rather than placing, which is consistent with the regime.</p>" },
+    ]},
+    { id:"c3", t: now - 28*3600e3, title:"Run a Fusion cycle for ETH/USDT, medium risk", msgs:[
+      { me:true,  text:"Run a Fusion cycle for ETH/USDT, medium risk" },
+      { me:false, text:"<p>Cycle complete. <b>Result: hold.</b></p><ul><li>11 of 16 agents returned neutral.</li><li>Spread was 0.04% at evaluation — above the medium-risk threshold of 0.03%.</li><li>No order was placed. Logged as <code>spread_too_wide</code>.</li></ul><p>The next scheduled cycle runs in 38 minutes, or you can force one now.</p>" },
+    ]},
+    { id:"c4", t: now - 3*DAY, title:"Check whale movements for SOL today", msgs:[
+      { me:true,  text:"Check whale movements for SOL today" },
+      { me:false, text:"<p>Three transfers above $2M in the last 12 hours, all exchange-inbound. That is mild distribution pressure rather than accumulation.</p><p>Nothing large enough to move the book on its own — the deepest of the three was about 4% of visible SOL depth.</p>" },
+    ]},
+    { id:"c5", t: now - 6*DAY, title:"Technical analysis on BNB", msgs:[
+      { me:true,  text:"Technical analysis on BNB" },
+      { me:false, text:"<p>BNB is compressing into the apex of a two-week triangle, with the 4h Bollinger width at a 40-day low. Direction is unresolved — the honest answer is to wait for the break rather than to guess it.</p>" },
+    ]},
+  ];
+}
+
+/* ---- history rail --------------------------------------------------------
+ * Grouped by when, and one line per row. The previous list repeated the title
+ * as the preview and filed everything under "Older" regardless of date.
+ */
+function bucket(t) {
+  const d = new Date(t); d.setHours(0,0,0,0);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const days = Math.round((today - d) / DAY);
+  if (days <= 0) return "Today";
+  if (days === 1) return "Yesterday";
+  if (days < 7) return "This week";
+  if (days < 30) return "This month";
+  return "Older";
+}
+/* The stamp has to agree with the group heading, so both are derived from the
+   same calendar-day difference. Using elapsed milliseconds for one and calendar
+   days for the other put a "Sun" row under "Yesterday". */
+const stamp = t => {
+  const d = now - t;
+  if (d < 60e3) return "now";
+  if (d < 3600e3) return Math.floor(d/60e3) + "m";
+  const b = bucket(t);
+  if (b === "Today") return Math.floor(d/3600e3) + "h";
+  if (b === "Yesterday") return "1d";
+  if (b === "This week") return new Date(t).toLocaleDateString(undefined, { weekday:"short" });
+  return new Date(t).toLocaleDateString(undefined, { month:"short", day:"numeric" });
+};
+
+function renderHistory() {
+  const q = filter.trim().toLowerCase();
+  const rows = CHATS
+    .filter(c => !q || c.title.toLowerCase().includes(q) ||
+                 c.msgs.some(m => m.text.toLowerCase().includes(q)))
+    .sort((a,b) => b.t - a.t);
+
+  if (!rows.length) {
+    $("hlist").innerHTML = `<div style="padding:28px 16px;color:var(--dim);font-size:12.5px;text-align:center">
+      ${CHATS.length ? "Nothing matches \u201c" + esc(filter.trim()) + "\u201d."
+                     : "No conversations yet."}</div>`;
+    return;
+  }
+
+  let html = "", group = null;
+  rows.forEach(c => {
+    const b = bucket(c.t);
+    if (b !== group) { html += `<div class="hgroup">${b}</div>`; group = b; }
+    html += `<button class="hitem" role="option" data-id="${c.id}"
+      aria-selected="${active === c.id}">
+      <span class="t">${esc(c.title)}</span><span class="d">${stamp(c.t)}</span></button>`;
+  });
+  $("hlist").innerHTML = html;
+}
+
+$("hlist").addEventListener("click", e => {
+  const b = e.target.closest("[data-id]");
+  if (b) openChat(b.dataset.id);
+});
+$("hq").addEventListener("input", e => { filter = e.target.value; renderHistory(); });
+addEventListener("keydown", e => {
+  if (e.key === "/" && !isTyping(e.target)) { e.preventDefault(); $("hq").focus(); }
+  if (e.key === "Escape" && document.activeElement === $("hq")) {
+    $("hq").value = ""; filter = ""; renderHistory(); $("hq").blur();
+  }
+});
+
+/* ---- opening state ------------------------------------------------------- */
+const CAPS = [
+  ["Technical analysis", '<path d="M2 13.5h14"/><path d="M4.5 11V6.5"/><path d="M8 11V3"/><path d="M11.5 11V8"/><path d="M15 11V5"/>'],
+  ["Sentiment", '<path d="M15.2 9.4A2.6 2.6 0 0 1 12.6 12H6.2l-3.4 2.7V3.9A2.6 2.6 0 0 1 5.4 1.3h7.2a2.6 2.6 0 0 1 2.6 2.6z"/>'],
+  ["Whale tracking", '<path d="M2 11c3 2.5 5.5 2.5 7 1s2-4 6-4"/><path d="M15 8c0 3-2 5-5 5"/><circle cx="12.5" cy="6.2" r=".8" fill="currentColor" stroke="none"/>'],
+  ["Risk management", '<path d="M9 1.8 15 4v4.6c0 3.6-2.5 6-6 7.6-3.5-1.6-6-4-6-7.6V4z"/><path d="M6.6 8.8 8.4 10.6 11.8 7"/>'],
+  ["Market regime", '<polyline points="2 12.5 6.3 8.2 9.8 11 15.5 4.5"/><polyline points="11.6 4.5 15.5 4.5 15.5 8.4"/>'],
+];
+
+const STARTERS = [
+  ["Analyse BTC/USDT for a long entry on 15m", '<circle cx="7.5" cy="7.5" r="4.8"/><path d="M11 11l3.5 3.5"/>'],
+  ["What is the current market regime?", '<polyline points="2 12.5 6.3 8.2 9.8 11 15.5 4.5"/><polyline points="11.6 4.5 15.5 4.5 15.5 8.4"/>'],
+  ["Run a Fusion cycle for ETH/USDT, medium risk", '<path d="M10 1.5 3.5 10h4l-1 6.5L15 8h-4z"/>'],
+  ["Check whale movements for SOL today", '<path d="M2 11c3 2.5 5.5 2.5 7 1s2-4 6-4"/><path d="M15 8c0 3-2 5-5 5"/>'],
+  /* Four, not five. The grid is two columns, so a fifth sits alone on its own
+     row and reads as an afterthought rather than part of the set. */
+];
+
+function renderIntro() {
+  $("thread").className = "thread empty";
+  $("thread").innerHTML = `
+    <div class="intro">
+      <div class="mark"><svg viewBox="0 0 24 24"><path d="M12 2.6l2.2 5.6 5.6 2.2-5.6 2.2L12 18.2l-2.2-5.6L4.2 10.4l5.6-2.2z"/><path d="M18.6 15.4l.9 2.3 2.3.9-2.3.9-.9 2.3-.9-2.3-2.3-.9 2.3-.9z"/></svg></div>
+      <h2>Hey, I'm Mariah</h2>
+      <p>Your trading assistant, with ${CONFIG.agentCount} specialised analysis agents behind it.
+         Ask about market conditions, request a technical read, or run a Fusion cycle.</p>
+
+      <div class="caps">
+        ${CAPS.map(([label, path]) =>
+          `<button class="cap" data-cap="${esc(label)}">
+             <svg viewBox="0 0 18 18">${path}</svg>${label}</button>`).join("")}
+      </div>
+
+      <div class="starters">
+        ${STARTERS.map(([text, path]) =>
+          `<button class="starter" data-starter="${esc(text)}">
+             <svg viewBox="0 0 18 18">${path}</svg><span>${esc(text)}</span></button>`).join("")}
+      </div>
+    </div>`;
+}
+
+/* Both fill the composer rather than sending. You almost always want to add a
+   pair or a timeframe before it goes. */
+$("thread").addEventListener("click", e => {
+  const s = e.target.closest("[data-starter]");
+  const c = e.target.closest("[data-cap]");
+  if (!s && !c) return;
+  /* A starter is a whole question; a chip is the opening of one, so it leaves
+     the cursor where the pair goes rather than sending a fragment. */
+  $("input").value = s ? s.dataset.starter : c.dataset.cap + " on ";
+  $("input").focus();
+  autoGrow();
+});
+
+/* ---- thread -------------------------------------------------------------- */
+function openChat(id) {
+  const c = CHATS.find(x => x.id === id);
+  if (!c) return;
+  active = id;
+  renderThread();
+  renderHistory();
+  $("input").focus();
+}
+
+function renderThread() {
+  const c = CHATS.find(x => x.id === active);
+  if (!c) return renderIntro();
+  $("thread").className = "thread";
+  $("thread").innerHTML = c.msgs.map(m => `
+    <div class="msg ${m.me ? "me" : ""}">
+      <div class="who">${m.me ? "You" : "Mariah"}</div>
+      <div class="bub">${m.me ? esc(m.text) : m.text}</div>
+    </div>`).join("");
+  $("thread").scrollTop = $("thread").scrollHeight;
+}
+
+/* ---- composer ------------------------------------------------------------ */
+const input = $("input");
+function autoGrow() {
+  input.style.height = "auto";
+  input.style.height = Math.min(input.scrollHeight, 150) + "px";
+  $("send").disabled = !input.value.trim();
+}
+input.addEventListener("input", autoGrow);
+input.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+});
+$("send").addEventListener("click", send);
+
+function send() {
+  const text = input.value.trim();
+  if (!text) return;
+
+  /* A new conversation is created on the first message, titled with it — so
+     the history rail never holds an empty entry. */
+  if (!active) {
+    const id = "c" + Date.now();
+    CHATS.unshift({ id, t: Date.now(), title: text, msgs: [] });
+    active = id;
+  }
+  const c = CHATS.find(x => x.id === active);
+  c.msgs.push({ me:true, text });
+  c.t = Date.now();
+  input.value = ""; autoGrow();
+  renderThread(); renderHistory();
+
+  reply(c, text);
+}
+
+function reply(c, prompt) {
+  const t = document.createElement("div");
+  t.className = "typing";
+  t.innerHTML = "<i></i><i></i><i></i><span>Mariah is thinking</span>";
+  $("thread").appendChild(t);
+  $("thread").scrollTop = $("thread").scrollHeight;
+
+  const finish = html => {
+    t.remove();
+    c.msgs.push({ me:false, text: html });
+    renderThread(); renderHistory();
+  };
+
+  if (!CONFIG.apiUrl) {
+    setTimeout(() => finish(demoReply(prompt)), 900 + Math.random() * 700);
+    return;
+  }
+
+  fetch(CONFIG.apiUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ model: CONFIG.model, prompt,
+                           history: c.msgs.map(m => ({ role: m.me ? "user" : "assistant",
+                                                       content: m.text })) }),
+  })
+    .then(r => r.json())
+    .then(d => finish(d.html || esc(d.text || "")))
+    .catch(() => finish("<p>I could not reach the engine just now. The request was not sent — "
+                      + "nothing has been placed or changed.</p>"));
+}
+
+/* Demo responder. Deliberately hedged and specific about what it does not
+   know — a confident answer here would be the wrong thing to model. */
+function demoReply(q) {
+  const s = q.toLowerCase();
+  if (s.includes("fusion") || s.includes("cycle"))
+    return "<p>Running a cycle now — that takes a few seconds across all "
+         + CONFIG.agentCount + " agents.</p><p>This is a demo build, so no order will reach the "
+         + "exchange. On the live engine you would get the verdict, the agent split, and the "
+         + "reason if it declined to place.</p>";
+  if (s.includes("regime"))
+    return "<p><b>Range-bound, low conviction.</b></p><p>Realized volatility sits in the lower "
+         + "third of its 30-day range and the majors are moving together. That combination "
+         + "favours mean reversion over breakouts.</p>";
+  if (s.includes("whale"))
+    return "<p>Nothing above $2M in the last six hours on that pair. Flow is ordinary.</p>";
+  if (s.includes("risk"))
+    return "<p>Your current envelope allows 3% on a trade and 6% for the day. At the balance on "
+         + "this account that is about $29 before the engine stops for the session.</p>";
+  return "<p>I can read the chart, check sentiment and whale flow, or run a Fusion cycle on a "
+       + "pair.</p><p>Tell me the pair and the timeframe and I will start there — for example "
+       + "<b>BTC/USDT on 15m</b>.</p>";
+}
+
+/* ---- model switch -------------------------------------------------------- */
+$("models").addEventListener("click", e => {
+  const b = e.target.closest("button[data-m]");
+  if (!b) return;
+  CONFIG.model = b.dataset.m;
+  [...$("models").children].forEach(x => x.setAttribute("aria-pressed", x === b));
+});
+$("modelSettings").addEventListener("click", () =>
+  alert("Model settings are not wired up in this build."));
+
+/* ---- new conversation ---------------------------------------------------- */
+$("newChat").addEventListener("click", () => {
+  active = null;
+  filter = ""; $("hq").value = "";
+  renderIntro(); renderHistory();
+  input.focus();
+});
+
+/* placeholder nav items */
+document.querySelectorAll(".nav a.soon").forEach(a =>
+  a.addEventListener("click", e => e.preventDefault()));
+
+/* ---- boot ---------------------------------------------------------------- */
+CHATS = demoChats();
+renderHistory();
+renderIntro();
+</script>
+
+</div>
