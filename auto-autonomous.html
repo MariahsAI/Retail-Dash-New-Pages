@@ -13,10 +13,10 @@
     --pos: #34d399; --neg: #fb7185;
     --hero: #0d1730;   /* hero surfaces — navy, so they read blue */
 
-    /* Defined here as well as in mx1.css: .pos-card uses var(--well) inside a
-       box-shadow, and if the shared sheet 404s the whole declaration is thrown
-       out — the cards silently lose their recessed treatment AND their
-       long/short edge. A local fallback keeps the page standalone. */
+    /* .pos-card uses var(--well) inside a box-shadow, and an unresolved var()
+       makes CSS discard the WHOLE declaration — the cards would silently lose
+       their recessed treatment and their long/short edge. Defined here so the
+       page is fully self-contained. */
     --well: inset 0 1px 0 rgba(0,0,0,.6),
             inset 0 0 22px -14px rgba(96,165,250,.55),
             0 1px 0 rgba(255,255,255,.035);
@@ -209,7 +209,11 @@
   .page { position:relative; z-index:1; }
   .topbar { background:rgba(7,14,28,.86); }
 
-  @supports not (backdrop-filter: blur(2px)) { .topbar, .nav { background:var(--bar); } }
+  /* Safari implements -webkit-backdrop-filter but NOT the unprefixed property,
+   so testing only the unprefixed one made Safari take the opaque fallback
+   while Chrome kept the translucent fill — same page, two different
+   surfaces. Test both. */
+@supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) { .topbar, .nav { background:var(--bar); } }
 
   .card-head { box-shadow: inset 0 1px 0 rgba(255,255,255,.05); }
 
@@ -223,8 +227,11 @@
      pages boot into, so without it Trading renders a lighter, bluer surface
      and reads as a different product. */
   body.sharp {
-    --panel: #0a0f19; --panel-2: #080d15;
-    --hair: rgba(255,255,255,.055); --edge: rgba(96,165,250,.26); --head: #122140;
+    /* Matches the other four pages: black surfaces on a page a step above
+       them, navy reserved for header bands and the run header. */
+    --bg: #06090f;
+    --panel: #000000; --panel-2: #000000;
+    --hair: rgba(255,255,255,.055); --edge: rgba(96,165,250,.20); --head: #122140;
     --text: #ffffff; --muted: #6f8098; --dim: #47566c;
     /* Restated because body.sharp out-specifies :root — a token defined only
        there silently does nothing on a page that boots into sharp. */
@@ -264,8 +271,9 @@
 
   .menu-wrap { position:relative; }
   .menu { position:absolute; top:calc(100% + 6px); left:0; z-index:20; min-width:210px;
-          background:rgba(11,20,36,.96); backdrop-filter:blur(18px);
-          -webkit-backdrop-filter:blur(18px);
+          background:linear-gradient(180deg, rgba(255,255,255,.055) 0%,
+                                    rgba(255,255,255,.014) 18%,
+                                    rgba(255,255,255,0) 44%), #000000;
           border:1px solid var(--accent-edge); border-radius:11px; padding:6px;
           box-shadow:0 24px 48px -24px rgba(0,0,0,.95); display:none; }
   .menu.open { display:block; }
@@ -339,8 +347,9 @@
   .scrim.open { opacity:1; pointer-events:auto; }
   .modal { position:fixed; top:50%; left:50%; transform:translate(-50%,-48%) scale(.98);
            width:min(1080px, calc(100% - 40px)); max-height:min(82vh,900px);
-           background:rgba(11,20,36,.9); backdrop-filter:blur(22px) saturate(1.4);
-           -webkit-backdrop-filter:blur(22px) saturate(1.4);
+           background:linear-gradient(180deg, rgba(255,255,255,.055) 0%,
+                                    rgba(255,255,255,.014) 18%,
+                                    rgba(255,255,255,0) 44%), #000000;
            border:1px solid var(--accent-edge); border-radius:16px; overflow:hidden;
            display:flex; flex-direction:column; z-index:45; opacity:0; pointer-events:none;
            transition:opacity .25s ease, transform .25s cubic-bezier(.22,.61,.36,1); }
@@ -353,7 +362,7 @@
   .modal-close { background:rgba(255,255,255,.04); border:1px solid var(--hair); color:var(--muted);
                  font:inherit; width:30px; height:30px; border-radius:50%; cursor:pointer; line-height:1; }
   .modal-close:hover { color:var(--text); border-color:var(--edge); }
-  @supports not (backdrop-filter: blur(2px)) { .modal { background:var(--panel); } }
+  @supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) { .modal { background:var(--panel); } }
 
   /* Book columns flex inside their region. */
   .book { display:flex; flex-direction:column; min-height:0; }
@@ -678,9 +687,9 @@
      read sits at the top as a card because it is a conclusion, not a field. */
   .rail { display:flex; flex-direction:column; min-height:0; background:var(--panel-2); }
   /* Title over subtitle, sized to match the tab rows beside it. */
-  .rail-head { flex:0 0 auto; min-height:62px; display:flex; flex-direction:column;
-               justify-content:center; gap:4px; padding:10px 16px; background:var(--head);
-               border-bottom:2px solid var(--edge); }
+  .rail-head { flex:0 0 auto; min-height:50px; display:flex; flex-direction:column;
+               justify-content:center; gap:2px; padding:0 16px; background:var(--head);
+               border-bottom:1px solid var(--edge); }
   .rail-head h2 { margin:0; font-size:13px; letter-spacing:.05em; text-transform:uppercase;
                   font-weight:700; }
   .rail-head .sub { color:var(--dim); font-size:11.5px; line-height:1.3; }
@@ -760,7 +769,6 @@
   .topbar::-webkit-scrollbar { display:none; }
   .topbar .uid { margin-left:auto; }
 </style>
-<link rel="stylesheet" href="mx1.css" />
 
 <div class="app">
 <div class="topbar">
@@ -840,8 +848,9 @@
        font-agnostic and immune to the circular case where an item's
        width:100% resolves against an indefinite max-content parent. */
     position:fixed; z-index:80; min-width:200px;
-    background:rgba(11,20,36,.97); backdrop-filter:blur(18px) saturate(1.4);
-    -webkit-backdrop-filter:blur(18px) saturate(1.4);
+    background:linear-gradient(180deg, rgba(255,255,255,.055) 0%,
+                                    rgba(255,255,255,.014) 18%,
+                                    rgba(255,255,255,0) 44%), #000000;
     border:1px solid rgba(96,165,250,.42); border-radius:12px; padding:6px;
     box-shadow:0 0 0 1px rgba(2,6,14,.9), 0 26px 52px -26px rgba(0,0,0,.95);
     display:none;
@@ -855,7 +864,7 @@
      rather than the parent's attribute. */
   .navmenu-panel.open { display:flex; flex-direction:column;
                         align-items:stretch; gap:2px; }
-  @supports not (backdrop-filter: blur(2px)) { .navmenu-panel { background:var(--panel); } }
+  @supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) { .navmenu-panel { background:var(--panel); } }
 
   .navmenu-item {
     display:flex; align-items:flex-start; gap:10px; text-align:left; width:100%;
@@ -983,7 +992,11 @@
            gap:1px; grid-template-columns:minmax(0,1fr); }
   @media (min-width:1180px) { .apage { grid-template-columns:minmax(0,1fr) 380px; } }
   @media (min-width:1560px) { .apage { grid-template-columns:minmax(0,1fr) 428px; } }
-  .acol { background:var(--bg); min-width:0; min-height:0; display:flex; flex-direction:column;
+  /* The columns ARE the surface on this page — there is no page plane behind
+     them the way there is on Overview — so they carry the black themselves.
+     var(--bg) left them at #06090f, which reads blue-grey against the true
+     black everywhere else. */
+  .acol { background:#000000; min-width:0; min-height:0; display:flex; flex-direction:column;
           overflow:hidden; }
 
   /* ---- run header: state first, then the one control that stops it ---- */
@@ -996,7 +1009,10 @@
               color-mix(in srgb, var(--hero) 55%, var(--bg)) 60%,
               var(--bg) 100%); }
   @supports not (background: color-mix(in srgb, red 50%, blue)) {
-    .runbar { background:linear-gradient(180deg, var(--hero) 0%, var(--bg) 100%); }
+    /* The run header is the page's hero. A full navy fill made it the largest
+       coloured surface again, so it fades to the page black — the state chip
+       and the stop control carry the emphasis instead. */
+    .runbar { background:linear-gradient(180deg, var(--hero) 0%, #000000 78%); }
   }
   .state { display:inline-flex; align-items:center; gap:8px; padding:6px 13px; border-radius:999px;
            font-size:12px; font-weight:600; border:1px solid transparent; white-space:nowrap; }
@@ -1040,7 +1056,11 @@
   /* ---- KPIs ---- */
   .kpis { flex:0 0 auto; display:grid; gap:12px; padding:16px 20px;
           grid-template-columns:repeat(auto-fit, minmax(200px,1fr)); }
-  .kcard { background:var(--panel); border:1px solid rgba(96,165,250,.26); border-radius:13px;
+  .kcard { background:linear-gradient(180deg, rgba(255,255,255,.055) 0%,
+                                              rgba(255,255,255,.014) 18%,
+                                              rgba(255,255,255,0) 44%),
+                      #05070d;
+           border:1px solid rgba(96,165,250,.26); border-radius:13px;
            padding:14px 16px; position:relative; overflow:hidden;
            box-shadow: inset 0 1px 0 rgba(255,255,255,.06),
                        0 0 0 1px rgba(2,6,14,.85), 0 18px 40px -30px rgba(0,0,0,.95); }
@@ -1076,10 +1096,14 @@
   .logwrap thead th { position:sticky; top:0; z-index:2; text-align:left; font-size:9.5px;
                       letter-spacing:.14em; text-transform:uppercase; color:var(--muted);
                       font-weight:700; padding:11px 16px; white-space:nowrap;
-                      background:var(--head); border-bottom:2px solid rgba(96,165,250,.26);
+                      background:var(--head); border-bottom:1px solid var(--edge);
                       box-shadow: inset 0 1px 0 rgba(255,255,255,.05); }
+  /* Left, matching the headers. This log is identifiers, timestamps and
+     reasons — text, not figures to compare down a column, so right-aligning
+     the cells under left-aligned headers just broke the grid. */
   .logwrap tbody td { padding:10px 16px; border-top:1px solid rgba(255,255,255,.05);
-                      font-size:12.5px; white-space:nowrap; font-variant-numeric:tabular-nums; }
+                      text-align:left; font-size:12.5px; white-space:nowrap;
+                      font-variant-numeric:tabular-nums; }
   .logwrap tbody tr:hover { background:rgba(96,165,250,.05); }
   .runid { font-family:ui-monospace,monospace; font-size:11px; color:var(--dim); }
   .sym { font-weight:600; }
@@ -1130,6 +1154,28 @@
   .rail-body { flex:1 1 auto; min-height:0; overflow-y:auto; padding:14px 18px 18px; }
   .rail-foot { flex:0 0 auto; padding:14px 18px; border-top:1px solid rgba(96,165,250,.26);
                background:rgba(255,255,255,.02); }
+  /* One row, not stacked. A full-width primary directly above a full-width
+     secondary puts Back in the path of the eye travelling down to commit —
+     side by side, with Back sized to its label, removes that. */
+  /* width:100% on .cont beats flex sizing, so it has to be reset here or both
+     buttons claim the full row and wrap. */
+  .footrow { display:flex; gap:10px; align-items:stretch; }
+  .footrow .cont { flex:1 1 auto; width:auto; }
+  /* Same padding as .cont so the two buttons match height — 13px against the
+     primary's 13px still came out 8px shorter because .cont.back was also
+     overriding font-weight and line-height. */
+  /* .cont.back sets margin-top:8px and is declared later in the file, so an
+     equal-specificity reset lost to it — the button sat 8px low inside the row
+     and looked shorter than the primary. Scoped one level deeper to win. */
+  .rail-foot .footrow .back { flex:0 0 auto; width:auto; padding:13px 20px;
+                              margin:0; font-size:13.5px; line-height:normal; }
+  .footrow .cont, .footrow .back { display:flex; align-items:center;
+                                   justify-content:center; }
+
+  /* The final commit is a different action from stepping forward, so it stops
+     being the same blue as every Continue button. */
+  .cont.launch { background:linear-gradient(135deg,#34d399,#10b981);
+                 box-shadow:0 0 30px -8px rgba(52,211,153,.85); }
 
   .fgroup { margin-bottom:16px; }
   .fgroup > .k { display:block; font-size:9.5px; letter-spacing:.14em; text-transform:uppercase;
@@ -1152,6 +1198,98 @@
   .inp:focus { outline:none; border-color:var(--brand); background:rgba(59,130,246,.07); }
   .unit { font-size:9.5px; letter-spacing:.1em; text-transform:uppercase; color:var(--dim);
           display:block; margin-bottom:4px; }
+
+  /* ---- roomier rail ------------------------------------------------------
+     The rail is 380–428px wide and the steps were laid out as if it were half
+     that. Groups get real separation, controls get height, and nothing needs
+     to be read at a squint. */
+  .fgroup { margin-bottom:22px; }
+  .fgroup > .k { margin-bottom:10px; }
+  .rail-body { padding:18px 18px 24px; }
+  .inp { padding:11px 12px; font-size:13.5px; }
+  .row2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .row2 .k { margin-bottom:7px; }
+  .pairgrid { gap:9px; }
+  .pairbtn { padding:11px 4px; font-size:12px; }
+  .allocrow { margin-bottom:12px; }
+
+  /* slider rows: label and value share a line, control sits under it */
+  .slabel { display:flex; align-items:baseline; justify-content:space-between;
+            gap:12px; margin-bottom:10px; }
+  .slabel span { font-size:13px; font-weight:600; }
+  .slabel b { font-size:14px; color:var(--brand-2); }
+  .rail-body input[type=range] { width:100%; appearance:none; height:4px; border-radius:2px;
+    background:linear-gradient(90deg, var(--brand) var(--fill,30%),
+               rgba(255,255,255,.09) var(--fill,30%)); cursor:pointer; }
+  .rail-body input[type=range]::-webkit-slider-thumb { appearance:none; width:16px; height:16px;
+    border-radius:50%; background:#fff; border:3px solid var(--brand);
+    box-shadow:0 0 12px -2px rgba(59,130,246,.9); }
+  .rail-body input[type=range]::-moz-range-thumb { width:16px; height:16px; border-radius:50%;
+    background:#fff; border:3px solid var(--brand); }
+
+  /* timeframe profiles: stacked, so the description is readable rather than
+     wrapped to one word per line in a three-across grid */
+  .profiles { display:flex; flex-direction:column; gap:9px; }
+  .profiles button { display:block; width:100%; text-align:left; cursor:pointer;
+    background:rgba(255,255,255,.02); border:1px solid var(--hair); color:var(--muted);
+    font:inherit; padding:12px 14px; border-radius:11px; transition:all .2s; }
+  .profiles button b { display:block; font-size:13.5px; color:var(--text); font-weight:600; }
+  .profiles button span { display:block; font-size:11.5px; color:var(--dim); margin-top:3px; }
+  .profiles button:hover { border-color:rgba(96,165,250,.4); }
+  .profiles button[aria-pressed="true"] { background:rgba(59,130,246,.14);
+    border-color:var(--brand); box-shadow:0 0 20px -9px rgba(59,130,246,.9); }
+  .profiles button[aria-pressed="true"] span { color:var(--muted); }
+
+  /* switches */
+  .switch { display:flex; align-items:center; justify-content:space-between; gap:14px;
+            padding:13px 14px; border-radius:11px; cursor:pointer; margin-bottom:9px;
+            background:rgba(255,255,255,.02); border:1px solid var(--hair);
+            transition:border-color .2s, background .2s; }
+  .switch:hover { border-color:rgba(96,165,250,.35); }
+  .switch:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
+  .switch b { display:block; font-size:13px; font-weight:600; }
+  .switch span { display:block; font-size:11.5px; color:var(--dim); margin-top:3px; }
+  .switch .track { width:38px; height:21px; border-radius:999px; background:#16233a;
+                   position:relative; flex:0 0 auto; transition:background .28s, box-shadow .28s; }
+  .switch .track::after { content:""; position:absolute; top:2.5px; left:2.5px; width:16px; height:16px;
+                          border-radius:50%; background:#e9eff8;
+                          transition:left .28s cubic-bezier(.4,0,.2,1); }
+  .switch[aria-checked="true"] { background:rgba(59,130,246,.09); border-color:var(--edge); }
+  .switch[aria-checked="true"] .track { background:linear-gradient(135deg,#60a5fa,#6366f1);
+                                        box-shadow:0 0 18px -4px rgba(99,102,241,.85); }
+  .switch[aria-checked="true"] .track::after { left:19.5px; }
+
+  /* risk summary */
+  .summary { border:1px solid var(--hair); border-radius:12px; padding:14px 15px;
+             background:rgba(255,255,255,.02); margin-bottom:18px; }
+  .summary-head { display:flex; align-items:center; gap:9px; font-size:12.5px;
+                  font-weight:600; margin-bottom:12px; }
+  .summary-head svg { width:15px; height:15px; fill:none; stroke:var(--warn);
+                      stroke-width:1.6; stroke-linejoin:round; }
+  .summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:11px 14px; }
+  .summary-grid div { display:flex; justify-content:space-between; gap:10px;
+                      font-size:12px; color:var(--dim); }
+  .summary-grid b { color:var(--text); font-variant-numeric:tabular-nums; }
+
+  /* ---- allocation visual --------------------------------------------------
+     Step 1 tells you the total but not the shape of it. This shows each pair's
+     share against the balance and what stays unallocated — the two things you
+     actually weigh before committing — and it uses the space the step was
+     leaving empty rather than stretching the controls to fill it. */
+  .alloc-vis { margin-top:22px; padding-top:20px; border-top:1px solid var(--hair); }
+  .alloc-head { display:flex; align-items:baseline; justify-content:space-between;
+                gap:12px; margin-bottom:12px; }
+  .alloc-head .num { font-size:13px; color:var(--brand-2); font-weight:600; }
+  .alloc-bar { display:flex; height:10px; border-radius:5px; overflow:hidden;
+               background:rgba(255,255,255,.05); }
+  .alloc-bar i { display:block; height:100%; transition:width .4s ease; }
+  .alloc-legend { display:flex; flex-direction:column; gap:9px; margin-top:14px; }
+  .alloc-legend div { display:flex; align-items:center; gap:9px; font-size:12px; }
+  .alloc-legend .dot { width:9px; height:9px; border-radius:3px; flex:0 0 auto; }
+  .alloc-legend .nm { color:var(--muted); }
+  .alloc-legend .amt { margin-left:auto; font-variant-numeric:tabular-nums; color:var(--text); }
+  .alloc-legend .sh { color:var(--dim); font-variant-numeric:tabular-nums; min-width:44px;
+                      text-align:right; }
 
   .risk { display:grid; grid-template-columns:repeat(3,1fr); gap:7px; }
   .risk button { background:rgba(255,255,255,.02); border:1px solid var(--hair); color:var(--muted);
@@ -1324,6 +1462,15 @@
           <span class="v num" id="totalBudget">$0.00</span>
         </div>
         <div class="valid" id="validBox"></div>
+
+        <div class="alloc-vis" id="allocVis">
+          <div class="alloc-head">
+            <span class="k">Allocation of available balance</span>
+            <span class="num" id="allocPct">&mdash;</span>
+          </div>
+          <div class="alloc-bar" id="allocBar"></div>
+          <div class="alloc-legend" id="allocLegend"></div>
+        </div>
       </div>
 
       <!-- step 2 — risk envelope -->
@@ -1332,41 +1479,95 @@
           <span class="k">Risk profile</span>
           <div class="risk" id="riskSet">
             <button data-v="low" aria-pressed="false">Low</button>
-            <button data-v="med" aria-pressed="true">Med</button>
+            <button data-v="med" aria-pressed="true">Medium</button>
             <button data-v="high" aria-pressed="false">High</button>
           </div>
         </div>
+
         <div class="fgroup">
-          <span class="k">Hard limits</span>
-          <div class="allocrow" style="grid-template-columns:1fr 1fr">
-            <label><span class="unit">Max leverage</span>
-              <input class="inp num" id="cfgLev" type="number" min="1" max="50" value="5" /></label>
-            <label><span class="unit">Daily loss cap ($)</span>
-              <input class="inp num" id="cfgLoss" type="number" min="1" step="1" value="12" /></label>
-          </div>
-          <div class="allocrow" style="grid-template-columns:1fr 1fr;margin-top:8px">
-            <label><span class="unit">Cycle interval (min)</span>
-              <input class="inp num" id="cfgCycle" type="number" min="5" step="5" value="60" /></label>
-            <label><span class="unit">Min confidence (%)</span>
-              <input class="inp num" id="cfgConf" type="number" min="0" max="100" value="55" /></label>
+          <div class="slabel"><span>Max loss per trade</span><b class="num" id="lossTradeOut">3%</b></div>
+          <input type="range" id="lossTrade" min="1" max="10" step="0.5" value="3" />
+        </div>
+
+        <div class="fgroup">
+          <div class="slabel"><span>Max daily loss</span><b class="num" id="lossDayOut">6%</b></div>
+          <input type="range" id="lossDay" min="1" max="25" step="1" value="6" />
+        </div>
+
+        <div class="fgroup">
+          <div class="row2">
+            <label><span class="k">Max positions / symbol</span>
+              <input class="inp num" id="posPerSym" type="number" min="1" max="10" value="2" /></label>
+            <label><span class="k">Max positions total</span>
+              <input class="inp num" id="posTotal" type="number" min="1" max="40" value="8" /></label>
           </div>
         </div>
+
+        <div class="summary">
+          <div class="summary-head">
+            <svg viewBox="0 0 18 18" aria-hidden="true"><path d="M9 2.2 16.5 15.3H1.5z"/><path d="M9 7v3.4"/><circle cx="9" cy="12.8" r=".9" fill="currentColor" stroke="none"/></svg>
+            Risk summary
+          </div>
+          <div class="summary-grid" id="riskSummary"></div>
+        </div>
+
         <div class="valid" id="riskBox"></div>
       </div>
 
-      <!-- step 3 — review -->
+      <!-- step 3 — engine behaviour, then arm -->
       <div id="step3" hidden>
         <div class="fgroup">
-          <span class="k">Review before arming</span>
-          <div class="review" id="reviewBox"></div>
+          <span class="k">Timeframe profile</span>
+          <div class="profiles" id="profileSet">
+            <button data-p="short" aria-pressed="true">
+              <b>Short term</b><span>15m – 1h candles, intraday focus</span></button>
+            <button data-p="long" aria-pressed="false">
+              <b>Long term</b><span>4h – 1d candles, swing trades</span></button>
+            <button data-p="hybrid" aria-pressed="false">
+              <b>Hybrid</b><span>Multi-timeframe analysis</span></button>
+          </div>
         </div>
+
+        <div class="fgroup">
+          <div class="row2">
+            <label><span class="k">Cycles / day</span>
+              <input class="inp num" id="cyclesDay" type="number" min="1" max="500" value="100" /></label>
+            <label><span class="k">Cooldown after trade (min)</span>
+              <input class="inp num" id="cdTrade" type="number" min="0" max="240" value="5" /></label>
+          </div>
+          <div class="row2" style="margin-top:14px">
+            <label><span class="k">Cooldown after loss (min)</span>
+              <input class="inp num" id="cdLoss" type="number" min="0" max="480" value="10" /></label>
+            <label><span class="k">Daily reset (UTC)</span>
+              <input class="inp num" id="resetAt" type="time" value="00:00" /></label>
+          </div>
+        </div>
+
+        <div class="fgroup">
+          <span class="k">Engine</span>
+          <div class="switch" data-sw="autoTrade" aria-checked="true" role="switch" tabindex="0">
+            <div><b>Autonomous trading</b><span>Let Mariah execute without confirmation</span></div>
+            <i class="track"></i>
+          </div>
+          <div class="switch" data-sw="tml" aria-checked="true" role="switch" tabindex="0">
+            <div><b>Trade management layer</b><span>Trailing stops and DCA management</span></div>
+            <i class="track"></i>
+          </div>
+          <div class="switch" data-sw="killPause" aria-checked="false" role="switch" tabindex="0">
+            <div><b>Auto-pause on kill switch</b><span>Halt cycles when the kill switch fires</span></div>
+            <i class="track"></i>
+          </div>
+        </div>
+
         <div class="valid" id="armBox"></div>
       </div>
     </div>
 
     <div class="rail-foot">
-      <button class="cont" id="nextBtn">Continue &rarr;</button>
-      <button class="cont back" id="backBtn" hidden>&larr; Back</button>
+      <div class="footrow">
+        <button class="cont back" id="backBtn" hidden>&larr; Back</button>
+        <button class="cont" id="nextBtn">Continue &rarr;</button>
+      </div>
     </div>
   </div>
 </div>
@@ -1374,12 +1575,29 @@
 <script>
 /* ------------------------------------------------------------------ config */
 const CONFIG = {
+  density: "sharp",       // "sharp" | "soft" — matches the other four pages
   wsUrl: "",              // blank runs the demo feed
   available: 486.70,      // free collateral the engine may draw on
   pageSize: 12,
 };
 
 const $ = id => document.getElementById(id);
+
+/* Without this the page never gets body.sharp, and every token defined under
+   that selector silently does nothing — the page rendered in soft mode while
+   the other four were sharp. */
+function applyDensity() {
+  document.body.classList.toggle("sharp", CONFIG.density === "sharp");
+}
+applyDensity();
+addEventListener("keydown", e => {
+  if (e.shiftKey && (e.key === "D" || e.key === "d") &&
+      !/^(INPUT|TEXTAREA)$/.test(e.target.tagName)) {
+    CONFIG.density = CONFIG.density === "sharp" ? "soft" : "sharp";
+    applyDensity();
+  }
+});
+
 const money = (v, signed) => (signed && v > 0 ? "+" : v < 0 ? "\u2212" : "") + "$" +
   Math.abs(v).toLocaleString(undefined, { minimumFractionDigits:2, maximumFractionDigits:2 });
 const cls = v => v >= 0 ? "up" : "down";
@@ -1395,7 +1613,9 @@ const S = {
   risk: "med",
   selected: new Set(["BTC/USDT","ETH/USDT"]),
   alloc: { "BTC/USDT":{ budget:15, max:5 }, "ETH/USDT":{ budget:100, max:5 } },
-  lev: 5, lossCap: 12, cycleMin: 60, minConf: 55,
+  lossTrade: 3, lossDay: 6, posPerSym: 2, posTotal: 8,
+  profile: "short", cyclesDay: 100, cdTrade: 5, cdLoss: 10, resetAt: "00:00",
+  sw: { autoTrade:true, tml:true, killPause:false },
   events: [],
   filter: "all",
   page: 1,
@@ -1617,9 +1837,43 @@ function totalBudget() {
   return [...S.selected].reduce((a, p) => a + (S.alloc[p]?.budget || 0), 0);
 }
 
+/* Distinct hues per pair, cycled — the legend is the key, so these only need
+   to be separable from each other and from the grey of unallocated. */
+const ALLOC_HUES = ["#60a5fa","#a78bfa","#34d399","#fbbf24","#fb7185","#22d3ee",
+                    "#f472b6","#84cc16"];
+
+function renderAlloc(total) {
+  const sel = [...S.selected];
+  const free = Math.max(0, CONFIG.available - total);
+  const scale = CONFIG.available || 1;
+
+  $("allocPct").textContent = ((total / scale) * 100).toFixed(1) + "% committed";
+
+  const segs = sel.map((p, i) => ({
+    name: p.split("/")[0],
+    usd: S.alloc[p]?.budget || 0,
+    color: ALLOC_HUES[i % ALLOC_HUES.length],
+  })).filter(x => x.usd > 0);
+
+  $("allocBar").innerHTML = segs.map(x =>
+    `<i style="width:${(x.usd / scale * 100).toFixed(2)}%;background:${x.color}"></i>`).join("")
+    + `<i style="width:${(free / scale * 100).toFixed(2)}%;background:transparent"></i>`;
+
+  $("allocLegend").innerHTML = segs.map(x =>
+    `<div><span class="dot" style="background:${x.color}"></span>
+       <span class="nm">${x.name}</span>
+       <span class="amt">${money(x.usd)}</span>
+       <span class="sh">${(x.usd / scale * 100).toFixed(1)}%</span></div>`).join("")
+    + `<div><span class="dot" style="background:rgba(255,255,255,.12)"></span>
+         <span class="nm">Unallocated</span>
+         <span class="amt">${money(free)}</span>
+         <span class="sh">${(free / scale * 100).toFixed(1)}%</span></div>`;
+}
+
 function renderTotals() {
   const total = totalBudget();
   $("totalBudget").textContent = money(total);
+  renderAlloc(total);
 
   const head = CONFIG.available - total;
   const ok = S.selected.size > 0 && total > 0 && head >= 0;
@@ -1638,36 +1892,101 @@ function renderTotals() {
   $("nextBtn").disabled = S.step === 1 && !ok;
 }
 
-/* ---- config: risk ---- */
+/* ---- config: risk + engine ------------------------------------------------
+ * Every control writes to S and re-renders the summary, so the numbers you
+ * confirm on step 3 are the ones the sliders are actually holding.
+ */
+const setFill = (el, min, max) =>
+  el.style.setProperty("--fill", ((el.value - min) / (max - min)) * 100 + "%");
+
 $("riskSet").addEventListener("click", e => {
   const b = e.target.closest("button[data-v]");
   if (!b) return;
   S.risk = b.dataset.v;
   [...$("riskSet").children].forEach(x => x.setAttribute("aria-pressed", x === b));
-  renderRisk(); renderRun();
+
+  /* A profile is a preset, not a separate setting — it moves the sliders so
+     you can see what "Medium" actually commits you to, then tune from there. */
+  const P = { low:[1.5,4,1,4], med:[3,6,2,8], high:[6,12,4,16] }[S.risk];
+  [S.lossTrade, S.lossDay, S.posPerSym, S.posTotal] = P;
+  $("lossTrade").value = S.lossTrade; $("lossDay").value = S.lossDay;
+  $("posPerSym").value = S.posPerSym; $("posTotal").value = S.posTotal;
+  syncRisk();
 });
-["cfgLev","cfgLoss","cfgCycle","cfgConf"].forEach(id =>
+
+function syncRisk() {
+  S.lossTrade = +$("lossTrade").value;
+  S.lossDay   = +$("lossDay").value;
+  S.posPerSym = +$("posPerSym").value || 1;
+  S.posTotal  = +$("posTotal").value || 1;
+
+  $("lossTradeOut").textContent = S.lossTrade + "%";
+  $("lossDayOut").textContent = S.lossDay + "%";
+  setFill($("lossTrade"), 1, 10);
+  setFill($("lossDay"), 1, 25);
+  renderRisk();
+}
+["lossTrade","lossDay","posPerSym","posTotal"].forEach(id =>
+  $(id).addEventListener("input", syncRisk));
+
+/* ---- step 3: engine behaviour ---- */
+$("profileSet").addEventListener("click", e => {
+  const b = e.target.closest("button[data-p]");
+  if (!b) return;
+  S.profile = b.dataset.p;
+  [...$("profileSet").children].forEach(x => x.setAttribute("aria-pressed", x === b));
+  renderReview();
+});
+
+["cyclesDay","cdTrade","cdLoss","resetAt"].forEach(id =>
   $(id).addEventListener("input", () => {
-    S.lev = Number($("cfgLev").value) || 1;
-    S.lossCap = Number($("cfgLoss").value) || 0;
-    S.cycleMin = Number($("cfgCycle").value) || 5;
-    S.minConf = Number($("cfgConf").value) || 0;
-    renderRisk(); renderKpis();
+    S[id] = id === "resetAt" ? $(id).value : (+$(id).value || 0);
+    renderReview();
   }));
 
+document.querySelectorAll(".switch").forEach(sw => {
+  const toggle = () => {
+    const on = sw.getAttribute("aria-checked") !== "true";
+    sw.setAttribute("aria-checked", on);
+    S.sw[sw.dataset.sw] = on;
+    /* The arming note quotes these switches, so it has to be rewritten when one
+       changes — otherwise it states the values the step opened with, which is
+       the one place on this page you cannot afford to be stale. */
+    if (S.step === 3) renderReview();
+  };
+  sw.addEventListener("click", toggle);
+  sw.addEventListener("keydown", e => {
+    if (e.key === " " || e.key === "Enter") { e.preventDefault(); toggle(); }
+  });
+});
+
 function renderRisk() {
+  /* Positions total below positions-per-symbol is contradictory, and it is the
+     kind of thing you only notice once the engine has been running an hour. */
+  const contradiction = S.posTotal < S.posPerSym;
+  const hot = S.lossDay >= 15 || S.lossTrade >= 6;
+
+  $("riskSummary").innerHTML = [
+    ["Max loss / trade", S.lossTrade + "%"],
+    ["Max daily loss", S.lossDay + "%"],
+    ["Positions / symbol", S.posPerSym],
+    ["Positions total", S.posTotal],
+  ].map(([k, v]) => `<div><span>${k}</span><b>${v}</b></div>`).join("");
+
   const box = $("riskBox");
-  /* Leverage is the one setting here that can end the account unattended, so
-     it gets called out rather than buried in a summary. */
-  const hot = S.lev > 20;
-  box.className = "valid" + (hot ? " bad" : "");
-  box.innerHTML = hot
-    ? `<b>${S.lev}\u00d7 is aggressive for unattended trading</b>
-       <span>At this leverage a ${(100 / S.lev).toFixed(1)}% adverse move liquidates a position
-       while nobody is watching. The daily cap of ${money(S.lossCap)} will not prevent that.</span>`
-    : `<b>Envelope accepted</b><span>Fusion may use up to ${S.lev}\u00d7, stops for the day at
-       ${money(S.lossCap)} of realized loss, runs every ${S.cycleMin} minutes, and ignores any
-       signal under ${S.minConf}% confidence.</span>`;
+  box.className = "valid" + (contradiction || hot ? " bad" : "");
+  box.innerHTML = contradiction
+    ? `<b>Positions total is below positions per symbol</b>
+       <span>A total of ${S.posTotal} cannot hold ${S.posPerSym} on every pair —
+       raise the total or lower the per-symbol limit.</span>`
+    : hot
+      ? `<b>${S.lossDay}% daily is aggressive for unattended trading</b>
+         <span>On ${money(CONFIG.available)} that is ${money(CONFIG.available * S.lossDay / 100)}
+         of realized loss before Fusion stops for the day, with nobody watching.</span>`
+      : `<b>Envelope accepted</b><span>Fusion risks at most ${S.lossTrade}% on a trade,
+         stops for the day at ${S.lossDay}%
+         (${money(CONFIG.available * S.lossDay / 100)}), and holds no more than
+         ${S.posPerSym} per pair or ${S.posTotal} in total.</span>`;
 }
 
 /* ---- steps ---- */
@@ -1676,34 +1995,31 @@ function renderStep() {
   [...$("steps").children].forEach((el, i) => {
     const n = i + 1;
     el.dataset.state = n < S.step ? "done" : n === S.step ? "now" : "";
+    /* A completed step reads as progress when it becomes a tick; left as a
+       number it just reads as a list you happen to be partway down. */
+    const bead = el.querySelector(".bead");
+    bead.textContent = n < S.step ? "\u2713" : n;
   });
   $("backBtn").hidden = S.step === 1;
-  $("nextBtn").textContent = S.step === 3 ? "Arm Autonomous" : "Continue \u2192";
+  $("nextBtn").textContent = S.step === 3 ? "Save & Launch" : "Continue \u2192";
+  $("nextBtn").className = "cont" + (S.step === 3 ? " launch" : "");
   if (S.step === 1) renderTotals();
   if (S.step === 3) renderReview();
   $("nextBtn").disabled = S.step === 1 && $("validBox").classList.contains("bad");
 }
 
 function renderReview() {
-  const total = totalBudget();
-  const rows = [
-    ["Pairs", [...S.selected].map(p => p.split("/")[0]).join(", ") || "None"],
-    ["Total budget", money(total)],
-    ["Headroom after", money(CONFIG.available - total)],
-    ["Risk profile", { low:"Low", med:"Medium", high:"High" }[S.risk]],
-    ["Max leverage", S.lev + "\u00d7"],
-    ["Daily loss cap", money(S.lossCap)],
-    ["Cycle interval", S.cycleMin + " min"],
-    ["Min confidence", S.minConf + "%"],
-  ];
-  $("reviewBox").innerHTML = rows.map(([k, v]) =>
-    `<div class="rrow"><span>${k}</span><b>${v}</b></div>`).join("");
-
   $("armBox").className = "valid";
+  const PROF = { short:"Short term", long:"Long term", hybrid:"Hybrid" }[S.profile];
+  const on = k => S.sw[k] ? "on" : "off";
   $("armBox").innerHTML = `<b>Arming grants execution authority</b>
-    <span>Fusion will open and close positions on these pairs without asking. It cannot
-    withdraw or transfer funds. Stop Autonomous halts new cycles at any time; it does not
-    close what is already open.</span>`;
+    <span>${[...S.selected].map(p => p.split("/")[0]).join(", ") || "No pairs"} ·
+    ${money(totalBudget())} budget · ${PROF} · ${S.cyclesDay} cycles/day ·
+    stops at ${S.lossDay}% daily. Autonomous trading ${on("autoTrade")}, TML
+    ${on("tml")}, auto-pause ${on("killPause")}. Fusion opens and closes
+    positions on these pairs without asking. It cannot withdraw or transfer
+    funds, and Stop Autonomous halts new cycles at any time — it does not close
+    what is already open.</span>`;
 }
 
 $("nextBtn").addEventListener("click", () => {
@@ -1726,7 +2042,7 @@ setInterval(() => {
 
 /* ---- boot ---- */
 S.events = seedEvents();
-renderPairs(); renderRisk(); renderStep();
+renderPairs(); syncRisk(); renderStep();
 renderRun(); renderKpis(); renderLog();
 </script>
 
