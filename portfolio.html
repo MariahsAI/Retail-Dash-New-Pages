@@ -890,7 +890,7 @@
              side muddied where they met, and the blue one was both bigger and
              brighter than the drawdown band it was competing with. Shading now
              means one thing only — time spent below the peak. -->
-        <line id="base" stroke="rgba(255,255,255,.22)" stroke-width="1" stroke-dasharray="5 5"
+        <line id="base" stroke="rgba(255,255,255,.34)" stroke-width="1" stroke-dasharray="2 6"
               vector-effect="non-scaling-stroke"></line>
         <path id="line" fill="none" stroke="#60a5fa" stroke-width="2.1"
               vector-effect="non-scaling-stroke" stroke-linejoin="round" stroke-linecap="round"></path>
@@ -902,7 +902,7 @@
     <div class="curve-legend">
       <span><i class="swatch" style="background:#60a5fa"></i>Equity</span>
       <span><i class="swatch" style="background:rgba(251,113,133,.6)"></i>Underwater from peak</span>
-      <span><i class="swatch" style="background:rgba(255,255,255,.3)"></i>Period open</span>
+      <span><i class="swatch" style="background:rgba(255,255,255,.34)"></i>Period open</span>
     </div>
   </section>
 
@@ -1647,8 +1647,12 @@ function drawCurve() {
        run off the left edge as "rough $367.58". */
     const txt = label + " " + money(eqs[i]);
     const half = txt.length * 2.95 + 5;
+    /* paint-order:stroke puts a dark halo behind the glyphs so the label reads
+       over a gridline instead of tangling with it. */
     m.appendChild(el("text", { x:Math.min(Math.max(xOf(i), half), plotW - half), y:yOf(eqs[i]) + dy,
-      fill:"var(--dim)", "font-size":10, "text-anchor":"middle",
+      fill:"var(--muted)", "font-size":10, "text-anchor":"middle",
+      "paint-order":"stroke", stroke:"#02040a", "stroke-width":3.5,
+      "stroke-linejoin":"round",
       "font-variant-numeric":"tabular-nums" }, txt));
   });
 
