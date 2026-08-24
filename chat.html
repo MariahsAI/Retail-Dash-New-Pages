@@ -17,7 +17,7 @@
 
     /* Seams carry a trace of the brand rather than neutral white — the same
        ring hierarchy the strip uses on Overview. */
-    --ring-seam: rgba(96,165,250,.18);
+    --ring-seam: rgba(96,165,250,.14);
     --ring-card: rgba(96,165,250,.26);
   }
   * { box-sizing: border-box; }
@@ -106,8 +106,8 @@
 
   /* ---- list rail ---- */
   .rail-head { flex:0 0 auto; display:flex; align-items:center; justify-content:space-between;
-               gap:12px; min-height:56px; padding:10px 16px; background:var(--head);
-               border-bottom:2px solid var(--ring-card); }
+               gap:12px; height:62px; padding:0 16px; background:var(--head);
+               border-bottom:1px solid var(--edge); }
   /* Sans, not serif. On Overview and Portfolio the serif is reserved for the
      figures you actually read — equity, P&L. A panel title in Georgia breaks
      that rule and makes the page look like a different product. */
@@ -169,8 +169,8 @@
 
   /* ---- thread ---- */
   .thread-head { flex:0 0 auto; display:flex; align-items:center; gap:12px;
-                 min-height:56px; padding:10px 18px; background:var(--head);
-                 border-bottom:2px solid var(--ring-card); }
+                 height:62px; padding:0 18px; background:var(--head);
+                 border-bottom:1px solid var(--edge); }
   .thread-head .title { min-width:0; }
   .thread-head b { display:block; font-size:14px; font-weight:600; }
   .thread-head .sub { font-size:11.5px; color:var(--dim); margin-top:2px; }
@@ -193,10 +193,17 @@
   .msg.me { align-self:flex-end; align-items:flex-end; }
   .msg .who { font-size:10.5px; color:var(--dim); margin:9px 0 3px; }
   .msg:first-child .who { margin-top:0; }
+  /* Fill carries the shape, not an outline. On black a 1px border around a
+     near-empty fill reads as an empty rectangle with text in it — the border
+     does the work and the bubble doesn't. Raising the fill and dropping the
+     border gives two materials instead of two outlines, and it still holds up
+     against a pure black pane. */
   .bubble { padding:10px 13px; border-radius:14px; font-size:13.5px; line-height:1.5;
-            border:1px solid var(--ring-seam); background:rgba(255,255,255,.035);
+            border:0; background:rgba(255,255,255,.065);
             border-bottom-left-radius:5px; }
-  .msg.me .bubble { background:rgba(59,130,246,.16); border-color:var(--accent-edge);
+  /* Your side runs a shade stronger so the thread splits into two voices at a
+     glance rather than on inspection. */
+  .msg.me .bubble { background:rgba(59,130,246,.24);
                     border-bottom-left-radius:14px; border-bottom-right-radius:5px; }
   /* Runs of messages from one person collapse their tails, so a burst reads as
      one turn rather than five separate shouts. */
@@ -306,12 +313,21 @@
 
   /* ---- sharp mode (matches the other three pages) ---- */
   body.sharp {
-    --panel:#0a0f19; --panel-2:#080d15;
-    --hair:rgba(255,255,255,.055); --edge:rgba(96,165,250,.26);
+    /* Matches Overview and Trading: black panes, navy header bands, blue seam
+       between the columns. The panes ARE the surface here — there is no page
+       behind them — so --bg carries the black rather than --panel. */
+    --bg:#000000;
+    --panel:#000000; --panel-2:#000000;
+    --hair:rgba(255,255,255,.055); --edge:rgba(96,165,250,.20);
+    --head:#122140;
     --text:#ffffff; --muted:#6f8098; --dim:#47566c;
     --hero:#0d1730;              /* restated: body.sharp out-specifies :root */
   }
-  body.sharp .rail-head, body.sharp .thread-head { padding:10px 15px; min-height:52px; }
+  /* One height for both, and horizontal padding only. The thread header holds
+     a 36px avatar plus two lines of text so it outgrew the 52px floor, while
+     the rail header — just a title — sat exactly on it. A shared fixed height
+     lines the two bands up regardless of what each contains. */
+  body.sharp .rail-head, body.sharp .thread-head { padding:0 15px; height:58px; min-height:58px; }
   body.sharp .conv { padding:10px 13px; }
   body.sharp .msgs { padding:14px 15px 6px; }
   body.sharp .composer { padding:10px 14px 12px; }
@@ -337,8 +353,6 @@
   .back svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2;
               stroke-linecap:round; stroke-linejoin:round; }
 </style>
-<link rel="stylesheet" href="mx1.css" />
-
 
 <div class="app">
 
