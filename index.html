@@ -129,6 +129,13 @@
      internally rather than stretching the row to their content. */
   .r-signals .card-body, .r-feed .card-body { overflow-y:auto; min-height:0; }
 
+  /* The chart row is sized by whichever card is taller, and that was the
+     signals list — so the chart kept its fixed 230px and the leftover height
+     collected as dead space above the footer. Letting the plot claim it puts
+     the card's whole area to work and closes the gap under the axis. */
+  .r-chart .card-body { flex:1 1 auto; min-height:0; display:flex; }
+  .r-chart .chart { flex:1 1 auto; height:auto; min-height:230px; }
+
   .card { background:var(--panel); border:1px solid var(--edge); border-radius:14px; overflow:hidden;
           display:flex; flex-direction:column; align-self:stretch;
           transition:box-shadow .55s ease, border-color .55s ease; }
@@ -163,9 +170,29 @@
   @media (prefers-reduced-motion: reduce) {
     .card, .cell, .strip { transition:none; }
   }
+  /* A fixed height, not padding. The chart card's header holds a picker and
+     the others hold an h2 — sized by padding alone, each header took its own
+     content's height and the bands came out different thicknesses across the
+     row. min-height makes them all match the tallest. */
   .card-head { display:flex; align-items:center; justify-content:space-between; gap:12px;
-               padding:17px 18px; background:var(--head); border-bottom:2px solid var(--edge); }
+               min-height:50px; padding:0 18px; background:var(--head);
+               border-bottom:2px solid var(--edge); }
   .card-head h2 { font-family:Georgia,serif; font-weight:400; font-size:16px; margin:0; }
+
+  /* Attribution sits in the dead space under the chart rather than floating
+     over the plot. Quiet by default — it is a signature, not a label, so it
+     should be legible when looked for and invisible when not. */
+  .card-foot { display:flex; align-items:baseline; gap:10px; padding:10px 18px 13px;
+               margin-top:auto; }
+  .card-foot .mark { font-size:12.5px; letter-spacing:.05em; font-weight:700;
+                     color:rgba(233,239,248,.55); }
+  .card-foot .mark i { font-style:normal; color:var(--brand); }
+  /* Subordinate, not a second label: a size down and nudged off the wordmark's
+     baseline so it reads as a clause rather than competing with it.
+     No text-transform — Mariah is a name and gets its capital. */
+  .card-foot .by { font-size:9.5px; letter-spacing:.08em; color:var(--dim);
+                   position:relative; top:1px; }
+  .card-foot .by b { font-weight:600; color:rgba(233,239,248,.42); }
 
   /* A control has to look like one at rest. The old version styled itself as
      plain text until hover, and the chevron sat ~200px from the word because a
@@ -364,10 +391,20 @@
    * flip between the two and judge them side by side.
    */
   body.sharp {
-    --panel: #0a0f19;
-    --panel-2: #080d15;
-    --hair: rgba(255,255,255,.055);
-    --edge: rgba(96,165,250,.26);
+    /* Glass, not navy. The blue that was reading across the whole page came
+       from --head: every card header carried a #122140 band, so the eye saw
+       blue bands stacked down the layout rather than black surfaces. Header
+       bands are now a shade off the card with a hairline under them — the
+       separation comes from the line, not from a colour. */
+    --bg: #06090f;                /* page sits a touch above the cards, so a
+                                     black card still reads as a surface */
+    --panel: #000000;             /* cards — black */
+    --panel-2: #000000;
+    --hair: rgba(255,255,255,.07);
+    --edge: rgba(96,165,250,.20);
+    /* Navy lid on a black card. The jump is large by design — at a black
+       fill the header is the only surface carrying colour, so it reads as the
+       card's label bar rather than as another dark rectangle. */
     --head: #122140;              /* header band — dark blue */
     --text: #ffffff;          /* values go full white — biggest single gain */
     --muted: #6f8098;
@@ -389,7 +426,12 @@
      (0,2,1) specificity beat the full edge-definition stack at the end of the
      file — so sharp mode silently lost its separation ring and the strip read
      as floating rather than framed. The stack lives in one place now. */
-  body.sharp .card { border-color: rgba(96, 165, 250, .30); }
+  /* No blue edge on ordinary cards. The dark separation ring in the
+     edge-definition block still does the work of telling a card from the page,
+     so they stay distinct objects — just without the outline. The strip keeps
+     its blue, because that one is the hero surface and is meant to sit
+     forward. */
+  body.sharp .card { border-color: transparent; }
   body.sharp .stripwrap { border-color: rgba(96, 165, 250, .42); }
 
   /* Density: more rows per screen is most of the effect. */
@@ -397,7 +439,20 @@
   body.sharp .grid, body.sharp .lower { gap: 10px; }
   body.sharp .cell { padding: 11px 15px; }
   body.sharp .sub-cell { padding: 8px 15px; }
-  body.sharp .card-head { padding: 15px 15px; }
+  body.sharp .card-head { min-height:50px; padding: 0 15px; }
+
+  /* Overlays get the same density treatment as the panels behind them —
+     otherwise a drawer opens looking like a page from a different product. */
+  body.sharp .modal-head { min-height:50px; padding: 0 18px; }
+  body.sharp .pd-head { padding: 16px 18px 18px; }
+  body.sharp .pd-body { padding: 16px 18px 24px; }
+  body.sharp .modal-head h2, body.sharp .pd-head h3 {
+    font-family:"Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+    font-weight:600; letter-spacing:-.01em; font-size:14px;
+    text-transform:uppercase; letter-spacing:.05em; font-weight:700;
+  }
+  /* The P&L figure keeps its serif — it is a value you read, not a label. */
+  body.sharp .pd-hero { font-family:Georgia,"Times New Roman",serif; font-weight:400; }
   body.sharp .card-body { padding: 13px 15px; }
   body.sharp thead th { padding: 13px 15px; font-size: 10px; letter-spacing: .13em; font-weight: 700; }
   body.sharp tbody td { padding: 9px 15px; font-size: 12.5px; }
@@ -508,9 +563,11 @@
 
   .modal { position:fixed; top:50%; left:50%; transform:translate(-50%,-48%) scale(.98);
            width:min(1040px, calc(100% - 40px)); max-height:min(82vh, 900px);
-           background:rgba(11,20,36,.9); backdrop-filter:blur(22px) saturate(1.4);
-           -webkit-backdrop-filter:blur(22px) saturate(1.4);
-           border:1px solid var(--accent-edge); border-radius:16px; overflow:hidden;
+           /* Same material as the cards: near-black over a blur, not the
+              lighter navy that made overlays read as a different surface. */
+           background:rgba(0,0,0,.86); backdrop-filter:blur(26px) saturate(1.3);
+           -webkit-backdrop-filter:blur(26px) saturate(1.3);
+           border:1px solid var(--accent-edge); border-radius:14px; overflow:hidden;
            display:flex; flex-direction:column; z-index:45;
            opacity:0; pointer-events:none;
            transition:opacity .25s ease, transform .25s cubic-bezier(.22,.61,.36,1); }
@@ -519,7 +576,7 @@
                 padding:17px 20px; background:var(--head); border-bottom:2px solid var(--edge); }
   .modal-head h2 { margin:0; font-family:Georgia,serif; font-weight:400; font-size:17px; }
   .modal-body { overflow:auto; }
-  @supports not (backdrop-filter: blur(2px)) { .modal { background:var(--panel); } }
+  @supports not (backdrop-filter: blur(2px)) { .modal, .pdrawer { background:#000; } }
   @media (prefers-reduced-motion: reduce) { .modal { transition:none; } }
 
   /* ---- positions modal --------------------------------------------------- */
@@ -560,9 +617,9 @@
   tbody tr[data-pos]:focus-visible { outline:2px solid var(--brand); outline-offset:-2px; }
 
   .pdrawer { position:fixed; top:0; right:0; height:100%; width:min(500px,100%);
-             background:rgba(11,20,36,.9); backdrop-filter:blur(22px) saturate(1.4);
-             -webkit-backdrop-filter:blur(22px) saturate(1.4);
-             border-left:1px solid var(--accent-edge); border-radius:16px 0 0 16px;
+             background:rgba(0,0,0,.86); backdrop-filter:blur(26px) saturate(1.3);
+             -webkit-backdrop-filter:blur(26px) saturate(1.3);
+             border-left:1px solid var(--accent-edge); border-radius:14px 0 0 14px;
              transform:translateX(100%); transition:transform .32s cubic-bezier(.22,.61,.36,1);
              z-index:47; display:flex; flex-direction:column; overflow:hidden;
              box-shadow:-24px 0 60px -30px rgba(0,0,0,.9); }
@@ -671,8 +728,6 @@
   body.glow-off .stripwrap, body.glow-off .card, body.glow-off .cell {
     box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 0 0 1px rgba(2,6,14,.85); }
 </style>
-<link rel="stylesheet" href="mx1.css" />
-
 
 <div class="topbar">
   <div class="brand"><b>M<i>X</i>1</b><span>mx1trade.com</span></div>
@@ -996,6 +1051,10 @@
             </svg>
             <div class="ph" id="ph" hidden>Historical series</div>
           </div>
+        </div>
+        <div class="card-foot">
+          <span class="mark">M<i>X</i>1 Trade</span>
+          <span class="by">powered by <b>Mariah</b></span>
         </div>
       </section>
 
