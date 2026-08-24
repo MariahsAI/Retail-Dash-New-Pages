@@ -547,7 +547,11 @@
   .dr-head { background: rgba(18, 33, 64, .72); }
 
   /* Fallback: no backdrop-filter means no translucency, or the text goes soft. */
-  @supports not (backdrop-filter: blur(2px)) {
+  /* Safari implements -webkit-backdrop-filter but NOT the unprefixed property,
+   so testing only the unprefixed one made Safari take the opaque fallback
+   while Chrome kept the translucent fill — same page, two different
+   surfaces. Test both. */
+@supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) {
     .topbar, .nav { background: var(--bar); }
     .drawer { background: var(--panel); }
   }
@@ -565,8 +569,7 @@
            width:min(1040px, calc(100% - 40px)); max-height:min(82vh, 900px);
            /* Same material as the cards: near-black over a blur, not the
               lighter navy that made overlays read as a different surface. */
-           background:rgba(0,0,0,.86); backdrop-filter:blur(26px) saturate(1.3);
-           -webkit-backdrop-filter:blur(26px) saturate(1.3);
+           background:#05070d;
            border:1px solid var(--accent-edge); border-radius:14px; overflow:hidden;
            display:flex; flex-direction:column; z-index:45;
            opacity:0; pointer-events:none;
@@ -576,7 +579,7 @@
                 padding:17px 20px; background:var(--head); border-bottom:1px solid var(--edge); }
   .modal-head h2 { margin:0; font-family:Georgia,serif; font-weight:400; font-size:17px; }
   .modal-body { overflow:auto; }
-  @supports not (backdrop-filter: blur(2px)) { .modal, .pdrawer { background:#000; } }
+  @supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) { .modal, .pdrawer { background:#000; } }
   @media (prefers-reduced-motion: reduce) { .modal { transition:none; } }
 
   /* ---- positions modal --------------------------------------------------- */
@@ -594,8 +597,7 @@
 
   .modal { position:fixed; top:50%; left:50%; transform:translate(-50%,-48%) scale(.98);
            width:min(1040px, calc(100% - 40px)); max-height:min(82vh, 900px);
-           background:rgba(11,20,36,.9); backdrop-filter:blur(22px) saturate(1.4);
-           -webkit-backdrop-filter:blur(22px) saturate(1.4);
+           background:#05070d;
            border:1px solid var(--accent-edge); border-radius:16px; overflow:hidden;
            display:flex; flex-direction:column; z-index:45;
            opacity:0; pointer-events:none;
@@ -608,7 +610,7 @@
   .modal-close { background:rgba(255,255,255,.04); border:1px solid var(--hair); color:var(--muted);
                  font:inherit; width:30px; height:30px; border-radius:50%; cursor:pointer; line-height:1; }
   .modal-close:hover { color:var(--text); border-color:var(--edge); }
-  @supports not (backdrop-filter: blur(2px)) { .modal { background:var(--panel); } }
+  @supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) { .modal { background:var(--panel); } }
   @media (prefers-reduced-motion: reduce) { .modal { transition:none; } }
 
   /* ---- position detail drawer ------------------------------------------- */
@@ -617,8 +619,7 @@
   tbody tr[data-pos]:focus-visible { outline:2px solid var(--brand); outline-offset:-2px; }
 
   .pdrawer { position:fixed; top:0; right:0; height:100%; width:min(500px,100%);
-             background:rgba(0,0,0,.86); backdrop-filter:blur(26px) saturate(1.3);
-             -webkit-backdrop-filter:blur(26px) saturate(1.3);
+             background:#05070d;
              border-left:1px solid var(--accent-edge); border-radius:14px 0 0 14px;
              transform:translateX(100%); transition:transform .32s cubic-bezier(.22,.61,.36,1);
              z-index:47; display:flex; flex-direction:column; overflow:hidden;
@@ -807,8 +808,7 @@
        navy. A menu floating above the page needs a deeper shadow than a card
        resting on it — it is further off the surface, so the ground shadow is
        longer and the specular lip brighter. */
-    background:rgba(0,0,0,.88); backdrop-filter:blur(26px) saturate(1.3);
-    -webkit-backdrop-filter:blur(26px) saturate(1.3);
+    background:#05070d;
     border:1px solid rgba(96,165,250,.42); border-radius:14px; padding:6px;
     box-shadow:
       inset 0 1px 0 rgba(255,255,255,.10),      /* top lip */
@@ -826,7 +826,7 @@
      rather than the parent's attribute. */
   .navmenu-panel.open { display:flex; flex-direction:column;
                         align-items:stretch; gap:2px; }
-  @supports not (backdrop-filter: blur(2px)) { .navmenu-panel { background:#05070d; } }
+  @supports not ((backdrop-filter: blur(2px)) or (-webkit-backdrop-filter: blur(2px))) { .navmenu-panel { background:#05070d; } }
 
   .navmenu-item {
     display:flex; align-items:flex-start; gap:10px; text-align:left; width:100%;
