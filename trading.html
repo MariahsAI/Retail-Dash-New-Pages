@@ -13,10 +13,10 @@
     --pos: #34d399; --neg: #fb7185;
     --hero: #0d1730;   /* hero surfaces — navy, so they read blue */
 
-    /* Defined here as well as in mx1.css: .pos-card uses var(--well) inside a
-       box-shadow, and if the shared sheet 404s the whole declaration is thrown
-       out — the cards silently lose their recessed treatment AND their
-       long/short edge. A local fallback keeps the page standalone. */
+    /* .pos-card uses var(--well) inside a box-shadow, and an unresolved var()
+       makes CSS discard the WHOLE declaration — the cards would silently lose
+       their recessed treatment and their long/short edge. Defined here so the
+       page is fully self-contained. */
     --well: inset 0 1px 0 rgba(0,0,0,.6),
             inset 0 0 22px -14px rgba(96,165,250,.55),
             0 1px 0 rgba(255,255,255,.035);
@@ -74,8 +74,8 @@
   /* One height across the three columns — otherwise the chart header (big
      price, two lines) sits taller than the book and rail and the tops stagger. */
   .card-head { display:flex; align-items:center; justify-content:space-between; gap:12px;
-               padding:0 16px; min-height:62px; background:var(--head);
-               border-bottom:2px solid var(--edge); flex-wrap:wrap; }
+               padding:0 16px; min-height:50px; background:var(--head);
+               border-bottom:1px solid var(--edge); flex-wrap:wrap; }
   .card-head h2 { margin:0; font-size:13px; letter-spacing:.05em; text-transform:uppercase;
                   font-weight:700; }
   .card-head .sub { color:var(--dim); font-size:11.5px; }
@@ -223,8 +223,12 @@
      pages boot into, so without it Trading renders a lighter, bluer surface
      and reads as a different product. */
   body.sharp {
-    --panel: #0a0f19; --panel-2: #080d15;
-    --hair: rgba(255,255,255,.055); --edge: rgba(96,165,250,.26); --head: #122140;
+    /* Matches Overview: black card surfaces on a page that sits a touch above
+       them, so a black panel still reads as a surface. Navy stays on the
+       header bands and the hero. */
+    --bg: #06090f;
+    --panel: #000000; --panel-2: #000000;
+    --hair: rgba(255,255,255,.055); --edge: rgba(96,165,250,.20); --head: #122140;
     --text: #ffffff; --muted: #6f8098; --dim: #47566c;
     /* Restated because body.sharp out-specifies :root — a token defined only
        there silently does nothing on a page that boots into sharp. */
@@ -232,7 +236,7 @@
   }
 
   body.sharp .work { gap:1px; }
-  body.sharp .card-head { padding:15px 15px; }
+  body.sharp .card-head { min-height:50px; padding:0 15px; }
   body.sharp .field { padding:12px 15px; }
   body.sharp .routing { padding:9px 15px; }
   body.sharp thead th { padding:13px 15px; font-size:10px; letter-spacing:.13em; font-weight:700; }
@@ -264,7 +268,7 @@
 
   .menu-wrap { position:relative; }
   .menu { position:absolute; top:calc(100% + 6px); left:0; z-index:20; min-width:210px;
-          background:rgba(11,20,36,.96); backdrop-filter:blur(18px);
+          background:rgba(0,0,0,.88); backdrop-filter:blur(26px) saturate(1.3);
           -webkit-backdrop-filter:blur(18px);
           border:1px solid var(--accent-edge); border-radius:11px; padding:6px;
           box-shadow:0 24px 48px -24px rgba(0,0,0,.95); display:none; }
@@ -339,14 +343,14 @@
   .scrim.open { opacity:1; pointer-events:auto; }
   .modal { position:fixed; top:50%; left:50%; transform:translate(-50%,-48%) scale(.98);
            width:min(1080px, calc(100% - 40px)); max-height:min(82vh,900px);
-           background:rgba(11,20,36,.9); backdrop-filter:blur(22px) saturate(1.4);
-           -webkit-backdrop-filter:blur(22px) saturate(1.4);
+           background:rgba(0,0,0,.86); backdrop-filter:blur(26px) saturate(1.3);
+           -webkit-backdrop-filter:blur(26px) saturate(1.3);
            border:1px solid var(--accent-edge); border-radius:16px; overflow:hidden;
            display:flex; flex-direction:column; z-index:45; opacity:0; pointer-events:none;
            transition:opacity .25s ease, transform .25s cubic-bezier(.22,.61,.36,1); }
   .modal.open { opacity:1; pointer-events:auto; transform:translate(-50%,-50%) scale(1); }
   .modal-head { display:flex; align-items:center; justify-content:space-between; gap:14px;
-                padding:17px 20px; background:var(--head); border-bottom:2px solid var(--edge); }
+                padding:0 20px; min-height:50px; background:var(--head); border-bottom:1px solid var(--edge); }
   .modal-head h2 { margin:0; font-size:13px; letter-spacing:.05em; text-transform:uppercase;
                    font-weight:700; }
   .modal-body { overflow:auto; }
@@ -444,8 +448,8 @@
      can still be outgrown by content, a track cannot. */
   /* A position card needs ~200px to show both rows of its grid; below that the
      dock is showing you a cropped card, which is worse than a shorter chart. */
-  @media (max-height:900px) { .app { --dock-h:312px; } }
-  @media (max-height:800px) { .app { --dock-h:286px; } }
+  @media (max-height:900px) { .app { --dock-h:244px; } }
+  @media (max-height:800px) { .app { --dock-h:238px; } }
   /* Collapsed: just the tab strip, so the work area gets the height back. */
   .app.dock-collapsed { --dock-h:47px; }
   .app.dock-collapsed .dock-body { display:none; }
@@ -483,7 +487,11 @@
      dock — that is what stops it being squeezed into whatever is left over. */
   .work { display:grid; gap:1px; background:rgba(96,165,250,.34); min-height:0; overflow:hidden;
           grid-template-columns:minmax(0,1fr);
-          grid-template-rows:minmax(0,1fr) var(--dock-h,344px); }
+          /* Dock down ~144px (1.5in) so the chart and book get that height
+             back. The dock still clears one full position card plus its tab
+             row; the rest scroll, and the grip drags it back if you want the
+             old split. */
+          grid-template-rows:minmax(0,1fr) var(--dock-h,248px); }
   /* 1200 was too high — a 1190px viewport fell through to the stacked layout
      and pushed the whole Fusion column off screen. */
   @media (min-width:1040px) {
@@ -513,10 +521,33 @@
   .region { background:var(--bg); min-height:0; min-width:0; display:flex;
             flex-direction:column; overflow:hidden; }
   .region > * { flex:0 0 auto; }
-  .region > .chart, .region > .book, .region > .tape-wrap { flex:1 1 auto; min-height:0; }
+  /* .chart-wrap is in this list because the chart is now nested inside it —
+     the old selector matched .chart as a direct child, so after wrapping it
+     the plot stopped growing and collapsed to content width. */
+  .region > .chart, .region > .chart-wrap, .region > .book,
+  .region > .tape-wrap { flex:1 1 auto; min-height:0; }
   /* The book's own body scrolls if the level count still overflows. */
   .book { overflow:hidden; }
-  .chart { min-height:180px; }
+  /* Tool rail sits beside the plot, not over it — an overlay would cover the
+     left-most candles, which on a 120-bar series is real data. */
+  .chart-wrap { flex:1 1 auto; min-height:0; display:flex; }
+  .tools { flex:0 0 auto; width:42px; display:flex; flex-direction:column; align-items:center;
+           gap:3px; padding:8px 0; border-right:1px solid var(--hair);
+           background:rgba(255,255,255,.012); }
+  .tbtn { width:30px; height:30px; border:1px solid transparent; border-radius:8px;
+          background:none; color:var(--muted); cursor:pointer; display:grid; place-items:center;
+          transition:background .18s, color .18s, border-color .18s; }
+  .tbtn:hover { color:var(--text); background:rgba(255,255,255,.06); }
+  .tbtn[aria-pressed="true"] { color:#fff; background:rgba(59,130,246,.18);
+                               border-color:rgba(59,130,246,.45); }
+  .tbtn:focus-visible { outline:2px solid var(--brand); outline-offset:2px; }
+  .tbtn svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:1.6;
+              stroke-linecap:round; stroke-linejoin:round; }
+  .tsep { width:18px; height:1px; background:var(--hair); margin:5px 0; }
+
+  /* The plot sits on true black — the candles and the volume bars are the only
+     things that should carry lightness inside the frame. */
+  .chart { min-height:180px; background:#000; flex:1 1 auto; min-width:0; }
   .chart svg { width:100%; height:100%; display:block; }
   /* The rail is taller than its row by design — it has to scroll, and its
      children must not be flex:0 0 auto or they refuse to overflow cleanly. */
@@ -532,8 +563,8 @@
           height:100%; min-height:0; overflow:hidden; }
   /* Matches the other panel headers: same height, same weight, same 2px rule
      underneath. It was reading as a strip rather than a header. */
-  .dock-tabs { display:flex; align-items:center; gap:0; min-width:0; min-height:44px;
-               border-bottom:2px solid var(--edge); background:var(--head); overflow-x:auto; }
+  .dock-tabs { display:flex; align-items:center; gap:0; min-width:0; min-height:50px;
+               border-bottom:1px solid var(--edge); background:var(--head); overflow-x:auto; }
   .dock-tabs button { background:none; border:0; border-bottom:2px solid transparent;
                       color:var(--muted); font:inherit; font-size:12.5px; font-weight:700;
                       letter-spacing:.03em; padding:9px 14px 7px; cursor:pointer;
@@ -678,9 +709,9 @@
      read sits at the top as a card because it is a conclusion, not a field. */
   .rail { display:flex; flex-direction:column; min-height:0; background:var(--panel-2); }
   /* Title over subtitle, sized to match the tab rows beside it. */
-  .rail-head { flex:0 0 auto; min-height:62px; display:flex; flex-direction:column;
-               justify-content:center; gap:4px; padding:10px 16px; background:var(--head);
-               border-bottom:2px solid var(--edge); }
+  .rail-head { flex:0 0 auto; min-height:50px; display:flex; flex-direction:column;
+               justify-content:center; gap:2px; padding:0 16px; background:var(--head);
+               border-bottom:1px solid var(--edge); }
   .rail-head h2 { margin:0; font-size:13px; letter-spacing:.05em; text-transform:uppercase;
                   font-weight:700; }
   .rail-head .sub { color:var(--dim); font-size:11.5px; line-height:1.3; }
@@ -760,8 +791,6 @@
   .topbar::-webkit-scrollbar { display:none; }
   .topbar .uid { margin-left:auto; }
 </style>
-<link rel="stylesheet" href="mx1.css" />
-
 
 <!-- ============================================================== chrome -->
 <div class="app">
@@ -842,10 +871,16 @@
        font-agnostic and immune to the circular case where an item's
        width:100% resolves against an indefinite max-content parent. */
     position:fixed; z-index:80; min-width:200px;
-    background:rgba(11,20,36,.97); backdrop-filter:blur(18px) saturate(1.4);
-    -webkit-backdrop-filter:blur(18px) saturate(1.4);
-    border:1px solid rgba(96,165,250,.42); border-radius:12px; padding:6px;
-    box-shadow:0 0 0 1px rgba(2,6,14,.9), 0 26px 52px -26px rgba(0,0,0,.95);
+    /* Same material as Overview's dropdown: near-black over a blur, with a
+       deeper lift than a card because it floats well above the page. */
+    background:rgba(0,0,0,.88); backdrop-filter:blur(26px) saturate(1.3);
+    -webkit-backdrop-filter:blur(26px) saturate(1.3);
+    border:1px solid rgba(96,165,250,.42); border-radius:14px; padding:6px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,.10),
+      0 0 0 1px rgba(0,0,0,.95),
+      0 32px 64px -24px rgba(0,0,0,1),
+      0 0 40px -18px rgba(59,130,246,.55);
     display:none;
   }
   /* Flex column with stretch, not width:100% on the items — a percentage
@@ -857,7 +892,7 @@
      rather than the parent's attribute. */
   .navmenu-panel.open { display:flex; flex-direction:column;
                         align-items:stretch; gap:2px; }
-  @supports not (backdrop-filter: blur(2px)) { .navmenu-panel { background:var(--panel); } }
+  @supports not (backdrop-filter: blur(2px)) { .navmenu-panel { background:#05070d; } }
 
   .navmenu-item {
     display:flex; align-items:flex-start; gap:10px; text-align:left; width:100%;
@@ -873,7 +908,9 @@
   .navmenu-item small { display:block; font-size:10.5px; color:var(--dim); margin-top:3px;
                         line-height:1.4; }
   .navmenu-item svg { margin-top:1px; }
-  .navmenu-item[aria-current="page"] { color:#fff; background:rgba(59,130,246,.15); }
+  .navmenu-item[aria-current="page"] { color:#fff;
+    background:linear-gradient(180deg, rgba(96,165,250,.20), rgba(59,130,246,.10));
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.09); }
   .navmenu-item[aria-current="page"] svg { color:var(--brand-2); opacity:1; }
   /* Not built yet: dimmed, not clickable, and says so rather than 404ing. */
   .navmenu-item.soon { opacity:.5; cursor:not-allowed; }
@@ -1081,13 +1118,50 @@
       <div class="ind-legend" id="indLegend"></div>
       <div class="ohlc" id="ohlc" style="padding:8px 16px;border-bottom:1px solid var(--hair)"></div>
 
-      <div class="chart">
-        <svg id="chart" role="img" aria-label="Price chart">
-          <g id="cgrid"></g><g id="cvol"></g><g id="candles"></g><g id="cind"></g>
-          <g id="clast"></g><g id="caxis"></g>
-          <g id="ccross" style="display:none"></g>
-          <rect id="chit" fill="transparent" x="0" y="0" width="100%" height="100%"></rect>
-        </svg>
+      <div class="chart-wrap">
+        <div class="tools" id="tools" role="toolbar" aria-label="Chart tools">
+          <button class="tbtn" data-tool="cursor" aria-pressed="true" title="Crosshair">
+            <svg viewBox="0 0 18 18"><path d="M9 1.5v15M1.5 9h15"/><circle cx="9" cy="9" r="2.6"/></svg>
+          </button>
+          <button class="tbtn" data-tool="hline" aria-pressed="false" title="Horizontal price line">
+            <svg viewBox="0 0 18 18"><path d="M1.5 9h15"/><circle cx="5" cy="9" r="1.6"/><circle cx="13" cy="9" r="1.6"/></svg>
+          </button>
+          <button class="tbtn" data-tool="trend" aria-pressed="false" title="Trend line — click two points">
+            <svg viewBox="0 0 18 18"><path d="M3.5 14.5 14.5 3.5"/><circle cx="3.5" cy="14.5" r="1.9"/><circle cx="14.5" cy="3.5" r="1.9"/></svg>
+          </button>
+          <button class="tbtn" data-tool="fib" aria-pressed="false" title="Fib retracement — click high then low">
+            <svg viewBox="0 0 18 18"><path d="M2 3.5h14M2 7h14M2 11h14M2 14.5h14"/><circle cx="4.5" cy="7" r="1.4"/><circle cx="13.5" cy="11" r="1.4"/></svg>
+          </button>
+          <button class="tbtn" data-tool="brush" aria-pressed="false" title="Freehand">
+            <svg viewBox="0 0 18 18"><path d="M2.5 15.5c3-1 2-4 4.5-5.5"/><path d="M7 10 13.6 3.4a1.7 1.7 0 0 1 2.4 2.4L9.4 12.4z"/></svg>
+          </button>
+          <button class="tbtn" data-tool="text" aria-pressed="false" title="Text label">
+            <svg viewBox="0 0 18 18"><path d="M3.5 4.2h11"/><path d="M9 4.2v10"/></svg>
+          </button>
+          <span class="tsep"></span>
+          <button class="tbtn" data-tool="ruler" aria-pressed="false" title="Measure">
+            <svg viewBox="0 0 18 18"><path d="M2.5 12.5 12.5 2.5l3 3-10 10z"/><path d="M5.5 9.5l1.5 1.5M8 7l1.5 1.5M10.5 4.5 12 6"/></svg>
+          </button>
+          <span class="tsep"></span>
+          <button class="tbtn" id="magnetBtn" aria-pressed="false" title="Magnet — snap to candle high/low/close">
+            <svg viewBox="0 0 18 18"><path d="M4.5 3.5v6a4.5 4.5 0 0 0 9 0v-6"/><path d="M4.5 7.5h3M10.5 7.5h3"/></svg>
+          </button>
+          <button class="tbtn" id="lockBtn" aria-pressed="false" title="Lock drawings">
+            <svg viewBox="0 0 18 18"><rect x="4" y="8" width="10" height="7" rx="1.6"/><path d="M6.5 8V6a2.5 2.5 0 0 1 5 0v2"/></svg>
+          </button>
+          <button class="tbtn" id="clearTools" title="Clear drawings">
+            <svg viewBox="0 0 18 18"><path d="M3.5 5.5h11"/><path d="M6.5 5.5V3.8h5v1.7"/>
+              <path d="M5 5.5l.8 9h6.4l.8-9"/></svg>
+          </button>
+        </div>
+        <div class="chart">
+          <svg id="chart" role="img" aria-label="Price chart">
+            <g id="cgrid"></g><g id="cvol"></g><g id="candles"></g><g id="cind"></g>
+            <g id="clast"></g><g id="caxis"></g><g id="cdraw"></g>
+            <g id="ccross" style="display:none"></g>
+            <rect id="chit" fill="transparent" x="0" y="0" width="100%" height="100%"></rect>
+          </svg>
+        </div>
       </div>
     </div>
 
@@ -1490,7 +1564,11 @@ function drawChart() {
     : v => padT + (1 - (v - bot) / span) * plotH2;
   const bw = Math.max(1.5, (plotW / d.length) * 0.62);
   const xOf = i => (i + 0.5) * (plotW / d.length);
-  GEO = { d, xOf, yOf, W, H, plotW, padB, bw };
+  /* invY is the inverse of yOf. Drawings are stored as prices, so a click has
+     to be converted back — without this a horizontal line would have to be
+     kept in pixels and would drift on every rescale. */
+  const invY = yy => bot + (1 - (yy - padT) / plotH2) * span;
+  GEO = { d, xOf, yOf, invY, W, H, plotW, padB, bw };
 
   /* grid + price axis */
   const g = $("cgrid"); clear(g);
@@ -1622,6 +1700,7 @@ function drawChart() {
     ax.appendChild(el("text", { x:Math.min(Math.max(xOf(i), half), plotW - half), y:H - 7,
       fill:"var(--dim)", "font-size":10, "text-anchor":"middle" }, txt));
   }
+  renderDrawings();
 }
 addEventListener("resize", drawChart);
 
@@ -1631,6 +1710,241 @@ addEventListener("resize", drawChart);
 if (window.ResizeObserver) {
   const chartBox = document.querySelector(".chart");
   if (chartBox) new ResizeObserver(() => drawChart()).observe(chartBox);
+}
+
+/* ---- chart tools -----------------------------------------------------------
+ * Four tools that actually do something. A rail of decorative icons is worse
+ * than no rail — it teaches you the controls do not respond.
+ *
+ *   cursor  crosshair on/off
+ *   hline   click to pin a price line; click the line's handle to drop it
+ *   ruler   two clicks measure the move between them, in $ and %
+ *   clear   removes every drawing
+ *
+ * Drawings are stored as PRICES and TIMES, not pixels, so they survive a
+ * resize, a timeframe change and a pair switch — pixel-space drawings would
+ * silently drift the moment the scale changed.
+ */
+const DRAW = { tool:"cursor", lines:[], rulerFrom:null, pending:null,
+               magnet:false, locked:false, stroke:null };
+
+function toolSelect(t) {
+  DRAW.tool = t;
+  document.querySelectorAll("#tools .tbtn[data-tool]").forEach(b =>
+    b.setAttribute("aria-pressed", b.dataset.tool === t));
+  $("chart").style.cursor = t === "cursor" ? "crosshair" : "copy";
+  /* Switching tools abandons a half-finished two-click drawing — otherwise the
+     next click on a different tool completes the previous one. */
+  DRAW.rulerFrom = null; DRAW.pending = null; DRAW.stroke = null;
+  renderDrawings();
+}
+
+$("tools").addEventListener("click", e => {
+  const b = e.target.closest(".tbtn[data-tool]");
+  if (b) toolSelect(b.dataset.tool);
+});
+$("clearTools").addEventListener("click", () => {
+  if (DRAW.locked) return;          /* lock protects drawings from a stray click */
+  DRAW.lines = []; DRAW.rulerFrom = null; DRAW.pending = null; renderDrawings();
+});
+
+/* Magnet and lock are modes, not tools — they modify how the active tool
+   behaves rather than replacing it, so they toggle independently. */
+$("magnetBtn").addEventListener("click", () => {
+  DRAW.magnet = !DRAW.magnet;
+  $("magnetBtn").setAttribute("aria-pressed", DRAW.magnet);
+});
+$("lockBtn").addEventListener("click", () => {
+  DRAW.locked = !DRAW.locked;
+  $("lockBtn").setAttribute("aria-pressed", DRAW.locked);
+  $("clearTools").disabled = DRAW.locked;
+});
+
+/* Freehand needs drag, not click. Points are stored as {i, price} like every
+   other drawing, so the stroke re-projects correctly after a resize or a
+   timeframe change rather than being baked into pixels. */
+(function freehand() {
+  const svg = $("chart");
+  svg.addEventListener("pointerdown", e => {
+    if (DRAW.tool !== "brush" || DRAW.locked) return;
+    const at = atPointer(e); if (!at) return;
+    DRAW.stroke = { kind:"b", pts:[at] };
+    svg.setPointerCapture(e.pointerId);
+  });
+  svg.addEventListener("pointermove", e => {
+    if (!DRAW.stroke) return;
+    const at = atPointer(e); if (!at) return;
+    const last = DRAW.stroke.pts[DRAW.stroke.pts.length - 1];
+    /* Thin the samples — a pointermove fires far more often than the path needs
+       and an unthinned stroke is thousands of near-identical points. */
+    if (Math.abs(at.x - last.x) + Math.abs(at.y - last.y) < 3) return;
+    DRAW.stroke.pts.push(at);
+    renderDrawings();
+  });
+  const finish = e => {
+    if (!DRAW.stroke) return;
+    if (DRAW.stroke.pts.length > 1) DRAW.lines.push(DRAW.stroke);
+    DRAW.stroke = null;
+    try { svg.releasePointerCapture(e.pointerId); } catch {}
+    renderDrawings();
+  };
+  svg.addEventListener("pointerup", finish);
+  svg.addEventListener("pointercancel", finish);
+})();
+
+/* Price and index from a pointer position, using the same geometry the chart
+   drew with — that is what keeps a drawing anchored to the data. */
+function atPointer(e) {
+  if (!GEO) return null;
+  const r = $("chart").getBoundingClientRect();
+  const mx = (e.clientX - r.left) * (GEO.W / r.width);
+  const my = (e.clientY - r.top) * (GEO.H / r.height);
+  if (mx > GEO.plotW) return null;
+  const i = Math.max(0, Math.min(GEO.d.length - 1,
+    Math.round(mx / (GEO.plotW / GEO.d.length) - 0.5)));
+  /* invert yOf — linear only; on a log scale fall back to the candle close */
+  let px = S.scale === "log" ? GEO.d[i].c : GEO.invY ? GEO.invY(my) : GEO.d[i].c;
+
+  /* Magnet snaps to the nearest of that candle's open/high/low/close — the
+     levels you actually want to anchor to. Without it a hand-placed line sits
+     a few cents off every meaningful price. */
+  if (DRAW.magnet) {
+    const k = GEO.d[i];
+    px = [k.o, k.h, k.l, k.c].reduce((best, v) =>
+      Math.abs(v - px) < Math.abs(best - px) ? v : best, k.c);
+  }
+  return { i, price: px, x: mx, y: my };
+}
+
+$("chart").addEventListener("click", e => {
+  if (DRAW.tool === "cursor") return;
+  const at = atPointer(e);
+  if (!at) return;
+
+  if (DRAW.locked) return;
+
+  if (DRAW.tool === "hline") {
+    DRAW.lines.push({ kind:"h", price: at.price });
+
+  } else if (DRAW.tool === "trend" || DRAW.tool === "fib") {
+    /* Both are two-click tools and share the same pending slot. */
+    if (!DRAW.pending) { DRAW.pending = at; }
+    else {
+      DRAW.lines.push({ kind: DRAW.tool === "trend" ? "t" : "f",
+                        a: DRAW.pending, b: at });
+      DRAW.pending = null;
+    }
+
+  } else if (DRAW.tool === "text") {
+    const t = prompt("Label");
+    if (t && t.trim()) DRAW.lines.push({ kind:"x", at, text:t.trim() });
+
+  } else if (DRAW.tool === "ruler") {
+    if (!DRAW.rulerFrom) { DRAW.rulerFrom = at; }
+    else {
+      DRAW.lines.push({ kind:"r", a: DRAW.rulerFrom, b: at });
+      DRAW.rulerFrom = null;
+    }
+  }
+  renderDrawings();
+});
+
+function renderDrawings() {
+  const g = $("cdraw");
+  if (!g || !GEO) return;
+  clear(g);
+
+  const items = DRAW.stroke ? DRAW.lines.concat([DRAW.stroke]) : DRAW.lines;
+  items.forEach(d => {
+    if (d.kind === "h") {
+      const y = GEO.yOf(d.price);
+      g.appendChild(el("line", { x1:0, x2:GEO.plotW, y1:y, y2:y,
+        stroke:"var(--brand-2)", "stroke-width":1, "stroke-dasharray":"4 4",
+        "vector-effect":"non-scaling-stroke", opacity:.9 }));
+      g.appendChild(el("rect", { x:GEO.plotW + 3, y:y - 9, width:70, height:18, rx:4,
+        fill:"var(--brand)" }));
+      g.appendChild(el("text", { x:GEO.plotW + 38, y:y + 4, "text-anchor":"middle",
+        "font-size":10, "font-weight":"600", fill:"#04121c",
+        "font-variant-numeric":"tabular-nums" }, px(d.price)));
+    }
+
+    if (d.kind === "t") {                       /* trend line */
+      g.appendChild(el("line", { x1:GEO.xOf(d.a.i), y1:GEO.yOf(d.a.price),
+        x2:GEO.xOf(d.b.i), y2:GEO.yOf(d.b.price),
+        stroke:"var(--brand-2)", "stroke-width":1.6,
+        "vector-effect":"non-scaling-stroke", "stroke-linecap":"round" }));
+      [[d.a, "a"], [d.b, "b"]].forEach(([pt]) =>
+        g.appendChild(el("circle", { cx:GEO.xOf(pt.i), cy:GEO.yOf(pt.price), r:3,
+          fill:"var(--panel)", stroke:"var(--brand-2)", "stroke-width":1.5 })));
+    }
+
+    if (d.kind === "f") {                       /* fib retracement */
+      /* Levels run from the FIRST click to the second, so clicking high then
+         low gives the conventional orientation without a swap. */
+      const LV = [0, .236, .382, .5, .618, .786, 1];
+      const span = d.b.price - d.a.price;
+      const x1 = Math.min(GEO.xOf(d.a.i), GEO.xOf(d.b.i));
+      const x2 = GEO.plotW;
+      LV.forEach(lv => {
+        const price = d.a.price + span * lv;
+        const y = GEO.yOf(price);
+        const key = lv === 0 || lv === 1 || lv === .618;
+        g.appendChild(el("line", { x1, x2, y1:y, y2:y,
+          stroke: key ? "var(--warn)" : "rgba(251,191,36,.45)",
+          "stroke-width": key ? 1.2 : 1, "stroke-dasharray": key ? "" : "3 4",
+          "vector-effect":"non-scaling-stroke" }));
+        g.appendChild(el("text", { x:x1 + 6, y:y - 4, "font-size":9.5,
+          fill: key ? "var(--warn)" : "rgba(251,191,36,.7)",
+          "paint-order":"stroke", stroke:"#000", "stroke-width":3,
+          "stroke-linejoin":"round", "font-variant-numeric":"tabular-nums" },
+          (lv * 100).toFixed(1).replace(/\.0$/, "") + "%  " + px(price)));
+      });
+    }
+
+    if (d.kind === "b") {                       /* freehand */
+      let path = "";
+      d.pts.forEach((pt, i) =>
+        path += (i ? "L" : "M") + GEO.xOf(pt.i).toFixed(1) + "," + GEO.yOf(pt.price).toFixed(2) + " ");
+      g.appendChild(el("path", { d:path, fill:"none", stroke:"var(--brand-2)",
+        "stroke-width":1.8, "vector-effect":"non-scaling-stroke",
+        "stroke-linejoin":"round", "stroke-linecap":"round", opacity:.9 }));
+    }
+
+    if (d.kind === "x") {                       /* text label */
+      g.appendChild(el("text", { x:GEO.xOf(d.at.i), y:GEO.yOf(d.at.price),
+        "font-size":11.5, fill:"var(--text)", "paint-order":"stroke",
+        stroke:"#000", "stroke-width":3.5, "stroke-linejoin":"round" }, d.text));
+    }
+
+    if (d.kind === "r") {
+      const x1 = GEO.xOf(d.a.i), x2 = GEO.xOf(d.b.i);
+      const y1 = GEO.yOf(d.a.price), y2 = GEO.yOf(d.b.price);
+      const up = d.b.price >= d.a.price;
+      const col = up ? "var(--pos)" : "var(--neg)";
+      g.appendChild(el("rect", { x:Math.min(x1,x2), y:Math.min(y1,y2),
+        width:Math.abs(x2-x1), height:Math.abs(y2-y1),
+        fill: up ? "rgba(52,211,153,.10)" : "rgba(251,113,133,.10)",
+        stroke:col, "stroke-width":1, "stroke-dasharray":"3 3",
+        "vector-effect":"non-scaling-stroke" }));
+      const move = d.b.price - d.a.price;
+      const pc = d.a.price ? (move / d.a.price) * 100 : 0;
+      const bars = Math.abs(d.b.i - d.a.i);
+      const label = (move >= 0 ? "+" : "\u2212") + px(Math.abs(move)) +
+                    "  " + (pc >= 0 ? "+" : "\u2212") + Math.abs(pc).toFixed(2) + "%" +
+                    "  \u00b7 " + bars + " bars";
+      g.appendChild(el("text", { x:(x1+x2)/2, y:Math.min(y1,y2) - 7, "text-anchor":"middle",
+        "font-size":10.5, fill:col, "paint-order":"stroke", stroke:"#000",
+        "stroke-width":3.5, "stroke-linejoin":"round",
+        "font-variant-numeric":"tabular-nums" }, label));
+    }
+  });
+
+  /* the pending first click of a measure */
+  if (DRAW.rulerFrom) {
+    const x = GEO.xOf(DRAW.rulerFrom.i), y = GEO.yOf(DRAW.rulerFrom.price);
+    g.appendChild(el("circle", { cx:x, cy:y, r:3.5, fill:"none",
+      stroke:"var(--brand-2)", "stroke-width":1.6 }));
+  }
 }
 
 /* crosshair */
